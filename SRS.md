@@ -6,8 +6,6 @@
 
 #### TEAM MEMBANGUN NEGERI
 
-![Logo Brawijaya University / Team Membangun Negeri](media/image1.png)
-
 **PORTAL • SIA • SPADA/LMS • PMB**
 
 **Dokumen System Analysis / Software Requirements Specification (SRS)**
