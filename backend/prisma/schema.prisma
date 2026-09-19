@@ -1,0 +1,409 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 1. AUTENTIKASI, AKUN, & RBAC (SRS Bab 28.2)
+// ==========================================
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  id            String          @id @default(uuid())
+  username      String          @unique // NIM, NIDN, NIP, no_pendaftaran, atau username unik
+  email         String          @unique
+  password_hash String
+  status        UserStatus      @default(ACTIVE)
+  last_login_at DateTime?
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+
+  user_roles     UserRole[]
+  refresh_tokens RefreshToken[]
+  audit_logs     AuditLog[]
+  uploaded_files File[]
+
+  // Profil relasional sesuai role (SRS Bab 28.1)
+  mahasiswa_profile Mahasiswa?
+  dosen_profile     Dosen?
+  admin_profile     AdminProfile?
+  calon_mhs_profile CalonMahasiswa?
+
+  @@map("users")
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique // SUPER_ADMIN, ADMIN_AKADEMIK, ADMIN_LMS, DOSEN, DOSEN_WALI, MAHASISWA, CALON_MAHASISWA, USER_UMUM
+  description String?
+  created_at  DateTime         @default(now())
+
+  user_roles       UserRole[]
+  role_permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique // e.g. "user:read", "master:crud", "calendar:manage"
+  name        String
+  description String?
+  created_at  DateTime         @default(now())
+
+  role_permissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id         String   @id @default(uuid())
+  user_id    String
+  role_id    String
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, role_id])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id            String   @id @default(uuid())
+  role_id       String
+  permission_id String
+
+  role       Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@unique([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid())
+  user_id    String
+  token_hash String    @unique
+  expires_at DateTime
+  revoked_at DateTime?
+  created_at DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ==========================================
+// 2. PROFIL PENGGUNA (SRS Bab 28.2)
+// ==========================================
+
+enum StatusAkademik {
+  AKTIF
+  CUTI
+  LULUS
+  DROP_OUT
+}
+
+model Mahasiswa {
+  id              String         @id @default(uuid())
+  user_id         String         @unique
+  nim             String         @unique
+  nama            String
+  prodi_id        String
+  angkatan        Int
+  status_akademik StatusAkademik @default(AKTIF)
+  dosen_wali_id   String?
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  user       User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  prodi      ProgramStudi @relation(fields: [prodi_id], references: [id])
+  dosen_wali Dosen?       @relation("DosenWaliMahasiswa", fields: [dosen_wali_id], references: [id], onDelete: SetNull)
+
+  @@map("mahasiswa")
+}
+
+model Dosen {
+  id             String   @id @default(uuid())
+  user_id        String   @unique
+  nidn           String?  @unique
+  nip            String?  @unique
+  nama           String
+  gelar_depan    String?
+  gelar_belakang String?
+  prodi_id       String?
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user  User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  prodi ProgramStudi? @relation(fields: [prodi_id], references: [id], onDelete: SetNull)
+
+  mahasiswa_bimbingan Mahasiswa[] @relation("DosenWaliMahasiswa")
+  kelas_diampu        Kelas[]
+
+  @@map("dosen")
+}
+
+model AdminProfile {
+  id         String   @id @default(uuid())
+  user_id    String   @unique
+  nip        String?
+  nama       String
+  unit_kerja String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("admin_profiles")
+}
+
+enum StatusSeleksi {
+  MENUNGGU
+  TERVERIFIKASI
+  LULUS
+  TIDAK_LULUS
+  TERDAFTAR_ULANG
+}
+
+model CalonMahasiswa {
+  id                String        @id @default(uuid())
+  user_id           String        @unique
+  no_pendaftaran    String        @unique
+  nama              String
+  status_seleksi    StatusSeleksi @default(MENUNGGU)
+  prodi_pilihan_id  String?
+  jalur_pendaftaran String?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+
+  user  User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  prodi ProgramStudi? @relation(fields: [prodi_pilihan_id], references: [id], onDelete: SetNull)
+
+  @@map("calon_mahasiswa")
+}
+
+// ==========================================
+// 3. MASTER DATA KELEMBAGAAN & KALENDER
+// ==========================================
+
+model Fakultas {
+  id         String   @id @default(uuid())
+  kode       String   @unique
+  nama       String
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  program_studi ProgramStudi[]
+
+  @@map("fakultas")
+}
+
+model ProgramStudi {
+  id          String   @id @default(uuid())
+  fakultas_id String
+  kode        String   @unique
+  nama        String
+  jenjang     String
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  fakultas        Fakultas         @relation(fields: [fakultas_id], references: [id], onDelete: Restrict)
+  kurikulum       Kurikulum[]
+  mahasiswa       Mahasiswa[]
+  dosen           Dosen[]
+  calon_mahasiswa CalonMahasiswa[]
+
+  @@map("program_studi")
+}
+
+model TahunAkademik {
+  id         String   @id @default(uuid())
+  kode       String   @unique
+  nama       String
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  semester Semester[]
+
+  @@map("tahun_akademik")
+}
+
+enum SemesterTipe {
+  GANJIL
+  GENAP
+  ANTARA
+}
+
+model Semester {
+  id                String       @id @default(uuid())
+  tahun_akademik_id String
+  tipe              SemesterTipe
+  tanggal_mulai     DateTime
+  tanggal_selesai   DateTime
+  is_active         Boolean      @default(false)
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
+
+  tahun_akademik    TahunAkademik      @relation(fields: [tahun_akademik_id], references: [id], onDelete: Cascade)
+  kalender_akademik KalenderAkademik[]
+  kelas             Kelas[]
+
+  @@unique([tahun_akademik_id, tipe])
+  @@map("semester")
+}
+
+enum KalenderStatus {
+  DIJADWALKAN
+  BERJALAN
+  SELESAI
+}
+
+model KalenderAkademik {
+  id          String         @id @default(uuid())
+  semester_id String
+  agenda      String
+  mulai       DateTime
+  selesai     DateTime
+  status      KalenderStatus @default(DIJADWALKAN)
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+
+  semester Semester @relation(fields: [semester_id], references: [id], onDelete: Cascade)
+
+  @@map("kalender_akademik")
+}
+
+// ==========================================
+// 4. MASTER KURIKULUM, MATA KULIAH & KELAS
+// ==========================================
+
+model Kurikulum {
+  id          String   @id @default(uuid())
+  prodi_id    String
+  nama        String
+  tahun_mulai Int
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  prodi       ProgramStudi  @relation(fields: [prodi_id], references: [id], onDelete: Restrict)
+  mata_kuliah MataKuliah[]
+
+  @@map("kurikulum")
+}
+
+model MataKuliah {
+  id             String   @id @default(uuid())
+  kurikulum_id   String
+  kode           String   @unique
+  nama           String
+  sks            Int
+  sks_teori      Int      @default(0)
+  sks_praktik    Int      @default(0)
+  semester_paket Int      @default(1)
+  is_wajib       Boolean  @default(true)
+  is_active      Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  kurikulum Kurikulum @relation(fields: [kurikulum_id], references: [id], onDelete: Restrict)
+  kelas     Kelas[]
+
+  @@map("mata_kuliah")
+}
+
+model Gedung {
+  id         String   @id @default(uuid())
+  kode       String   @unique
+  nama       String
+  created_at DateTime @default(now())
+
+  ruangan Ruangan[]
+
+  @@map("gedung")
+}
+
+model Ruangan {
+  id         String   @id @default(uuid())
+  gedung_id  String
+  kode       String   @unique
+  nama       String
+  kapasitas  Int
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  gedung Gedung  @relation(fields: [gedung_id], references: [id], onDelete: Cascade)
+  kelas  Kelas[]
+
+  @@map("ruangan")
+}
+
+model Kelas {
+  id             String   @id @default(uuid())
+  mata_kuliah_id String
+  semester_id    String
+  dosen_id       String
+  ruangan_id     String?
+  kode_kelas     String
+  kapasitas      Int      @default(40)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  mata_kuliah MataKuliah @relation(fields: [mata_kuliah_id], references: [id], onDelete: Restrict)
+  semester    Semester   @relation(fields: [semester_id], references: [id], onDelete: Restrict)
+  dosen       Dosen      @relation(fields: [dosen_id], references: [id], onDelete: Restrict)
+  ruangan     Ruangan?   @relation(fields: [ruangan_id], references: [id], onDelete: SetNull)
+
+  @@unique([mata_kuliah_id, semester_id, kode_kelas])
+  @@map("kelas")
+}
+
+// ==========================================
+// 5. FILE & AUDIT TRAIL (SRS Bab 28.2 & Bab 35)
+// ==========================================
+
+model File {
+  id         String   @id @default(uuid())
+  nama       String
+  path       String
+  mime       String
+  size       Int
+  owner_id   String
+  created_at DateTime @default(now())
+
+  owner User @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+
+  @@map("files")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  user_id    String?
+  action     String
+  entity     String
+  entity_id  String?
+  old_values Json?
+  new_values Json?
+  ip_address String?
+  user_agent String?
+  waktu      DateTime @default(now())
+
+  user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
