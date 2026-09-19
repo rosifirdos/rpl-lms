@@ -1,13 +1,16 @@
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { ENV } from './config/env.js';
 import { apiResponse } from './utils/apiResponse.js';
+import authRoutes from './modules/auth/auth.routes.js';
+import profileRoutes from './modules/profile/profile.routes.js';
+import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
 
-// Middlewares
+// Keamanan HTTP Headers & CORS
 app.use(helmet());
 app.use(cors({ origin: ENV.CORS_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
@@ -28,33 +31,52 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Root API welcome
+// Root API v1 welcome
 app.get('/api/v1', (req, res) => {
   return apiResponse.success(res, {
     message: 'Selamat datang di API Sistem Akademik Kampus Terintegrasi (Portal, SIA, SPADA, PMB)',
     data: {
       version: '1.0.0 (MVP 1)',
       status: 'active',
+      endpoints: {
+        auth: '/api/v1/auth',
+        profile: '/api/v1/profile',
+      },
     },
   });
 });
 
-// 404 Handler
+// Modul MVP 1 (Fase 2: Auth, RBAC & Profile)
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/profile', profileRoutes);
+
+// Endpoint Konseptual Alias (SRS Bab 32 - Tabel 16)
+// Memetakan /api/login, /api/logout, /api/profile langsung ke handler auth & profile
+app.use('/api', (req, res, next) => {
+  if (req.path === '/login') {
+    req.url = '/login';
+    return authRoutes(req, res, next);
+  }
+  if (req.path === '/logout') {
+    req.url = '/logout';
+    return authRoutes(req, res, next);
+  }
+  if (req.path === '/profile') {
+    req.url = '/';
+    return profileRoutes(req, res, next);
+  }
+  next();
+});
+
+// 404 Handler untuk rute tak terdefinisi
 app.use((req, res) => {
   return apiResponse.error(res, {
-    message: `Endpoint ${req.method} ${req.originalUrl} tidak ditemukan`,
     statusCode: 404,
+    message: `Endpoint ${req.method} ${req.originalUrl} tidak ditemukan`,
   });
 });
 
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error('Unhandled Error:', err);
-  return apiResponse.error(res, {
-    message: err.message || 'Terjadi kesalahan pada server internal',
-    statusCode: err.statusCode || 500,
-    errors: ENV.NODE_ENV === 'development' ? err.stack : undefined,
-  });
-});
+// Global Error Handler Terpusat
+app.use(errorHandler);
 
 export default app;
