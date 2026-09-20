@@ -1,4 +1,4 @@
-﻿import { ZodError } from 'zod';
+import { ZodError } from 'zod';
 import { AppError } from '../utils/errors.js';
 import { apiResponse } from '../utils/apiResponse.js';
 import { ENV } from '../config/env.js';
@@ -47,6 +47,13 @@ export function errorHandler(err, req, res, next) {
     return apiResponse.error(res, {
       statusCode: 409,
       message: `Konflik data: Nilai pada ${target} sudah terdaftar dalam sistem`,
+    });
+  }
+
+  if (err.code === 'P2003') {
+    return apiResponse.error(res, {
+      statusCode: 409,
+      message: 'Gagal memproses relasi data: Referensi entitas tidak valid atau data masih digunakan oleh entitas lain',
     });
   }
 
