@@ -1,11 +1,11 @@
-﻿# Backend API: Sistem Akademik Kampus Terintegrasi
+# Backend API: Sistem Akademik Kampus Terintegrasi
 *(Portal, SIA, SPADA/LMS, PMB)*
 
 Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan PostgreSQL, dirancang mengacu pada dokumen spesifikasi [PRD.md](../PRD.md) dan [SRS.md](../SRS.md).
 
 ## Fitur & Status Implementasi
 
-### ✅ Fase 1: Setup Lingkungan & Skema Database (Selesai)
+### ? Fase 1: Setup Lingkungan & Skema Database (Selesai)
 - [x] Inisialisasi proyek Node.js backend (`package.json`, `.gitignore`, `.env.example`).
 - [x] Konfigurasi Prisma ORM dan koneksi ke PostgreSQL `rpl_lms`.
 - [x] Migrasi skema database `init_mvp1` mencakup seluruh entitas kamus data SRS Bab 28.2.
@@ -16,7 +16,7 @@ Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan P
   - Master data rintisan: Fakultas (FILKOM, FT), Prodi (TIF, SI, TE), Tahun Akademik 2026/2027, Semester Ganjil aktif, Kalender Akademik, Kurikulum 2024, Mata Kuliah, Gedung, Ruangan, dan Penawaran Kelas.
   - Pencatatan log audit inisialisasi di tabel `audit_logs`.
 
-### ✅ Fase 2: Autentikasi, Profil & RBAC Engine (Selesai)
+### ? Fase 2: Autentikasi, Profil & RBAC Engine (Selesai)
 - [x] Helper hashing & verifikasi password bcrypt (`src/utils/password.js`).
 - [x] Token management JWT (`src/utils/token.js`) dengan Access Token (15m), Refresh Token bertanda tangan kriptografis (7d) disimpan aman dalam bentuk hash SHA-256 di tabel database `refresh_tokens`.
 - [x] Middleware proteksi:
@@ -24,7 +24,7 @@ Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan P
   - `requireRole`: Pembatasan endpoint berdasarkan role tertentu (mendukung multi-role dan bypass Super Admin).
   - `requirePermission` & `requireAnyPermission`: Otorisasi granular berbasis permission (*SRS Bab 31*).
   - `validate`: Middleware validasi request body/params/query berbasis skema Zod DTO.
-  - `errorHandler`: Penanganan terpusat untuk `AppError`, validasi Zod, token JWT, dan Prisma conflict error.
+  - `errorHandler`: Penanganan terpusat untuk `AppError`, validasi Zod, token JWT, Prisma conflict error (`P2002`), foreign key constraint (`P2003`), dan not found (`P2025`).
 - [x] Modul Autentikasi (`/api/v1/auth`):
   - `POST /api/v1/auth/login`: Autentikasi multi-kredensial (username/NIM/NIDN/NIP atau email), pencatatan audit log `LOGIN`, pengembalian token dan ringkasan profil entitas aktif.
   - `POST /api/v1/auth/refresh`: Penerbitan access token baru dari refresh token valid.
@@ -40,11 +40,31 @@ Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan P
   - `GET /api/profile` dan `PUT /api/profile` -> alias ke modul profil.
 - [x] Automated Integration Test Suite (`tests/phase2.test.js`) mencakup 13 skenario pengujian dengan status 100% lulus.
 
-### ⏳ Fase Berikutnya (Roadmap MVP 1)
-- **Fase 3:** Layanan Audit Trail & Keamanan Server.
-- **Fase 4:** Endpoint CRUD Master Data & Kalender Akademik.
-- **Fase 5:** Dasbor Portal & Integrasi Launcher Modul.
-- **Fase 6:** Pengujian Otomatis & Dokumentasi API.
+### ? Fase 4: Modul Master Data Dasar & Kalender Akademik (Selesai)
+- [x] Skema validasi Zod DTO komprehensif untuk seluruh entitas master data (`src/modules/master/master.validation.js` & `src/modules/calendar/calendar.validation.js`).
+- [x] Master Kelembagaan:
+  - CRUD Fakultas (`/api/v1/master/fakultas`): Validasi kode unik uppercase, proteksi penghapusan jika masih memuat program studi.
+  - CRUD Program Studi (`/api/v1/master/prodi`): Relasi berjenjang (D3/S1/S2/Profesi) ke Fakultas, proteksi integritas data mahasiswa/kurikulum.
+- [x] Master Kalender Dasar & Validasi Bisnis Semester:
+  - CRUD Tahun Akademik (`/api/v1/master/tahun-akademik`).
+  - CRUD Semester (`/api/v1/master/semester`): Tipe GANJIL/GENAP/ANTARA, validasi rentang tanggal (`tanggal_mulai < tanggal_selesai`).
+  - Aturan Bisnis Semester Aktif (`PATCH /api/v1/master/semester/:id/activate`): Transaksi atomik Prisma memastikan tepat satu semester yang berstatus aktif operasional di seluruh sistem kampus.
+- [x] Master Fasilitas, Kurikulum, Mata Kuliah & Penawaran Kelas:
+  - Fasilitas Gedung (`/api/v1/master/gedung`) & Ruangan Kelas (`/api/v1/master/ruangan`) dengan kontrol akses Admin Akademik & Admin LMS (*SRS Bab 4.5*).
+  - Kurikulum Berbasis Prodi (`/api/v1/master/kurikulum`).
+  - Mata Kuliah (`/api/v1/master/mata-kuliah`): Bobot SKS total, SKS teori, SKS praktik, semester paket, dan status wajib/pilihan.
+  - Buka Penawaran Kelas Semester Aktif (`/api/v1/master/kelas`): Validasi relasi multi-entitas (Mata Kuliah, Semester, Dosen Pengampu, dan Ruangan) serta proteksi duplikasi kelas per semester.
+- [x] Modul Kalender Akademik (*SRS Bab 22 & Bab 32*):
+  - `GET /api/v1/calendar` & Alias Konseptual `GET /api/calendar`: Akses baca seluruh pengguna terautentikasi (*FR-130 & FR-131*).
+  - `POST /api/v1/calendar`, `PUT /api/v1/calendar/:id`, `DELETE /api/v1/calendar/:id`: Pengelolaan agenda, tanggal periode, dan status (`DIJADWALKAN`, `BERJALAN`, `SELESAI`) oleh Admin Akademik & Super Admin (*FR-126 - FR-129*).
+- [x] Standarisasi Respons API: Format terpadu `{ success: true, message: "...", data: ..., meta: { page, limit, total, totalPages } }`.
+- [x] Audit Trail Logging: Perekaman otomatis setiap mutasi entitas master dan kalender pada tabel `audit_logs` (`src/utils/audit.js`).
+- [x] Automated Integration Test Suite (`tests/phase4.test.js`): 11 skenario pengujian dengan status 100% lulus. Total 24 skenario pengujian suite backend lulus seluruhnya.
+
+### ? Fase Berikutnya (Roadmap MVP 1)
+- **Fase 3:** Layanan Audit Trail Query & Keamanan Server (Rate Limiting, Advanced HTTP security).
+- **Fase 5:** Dasbor Portal & Integrator Modul (SRS Bab 9 & Bab 19).
+- **Fase 6:** Pengujian E2E Kepatuhan SRS & Handoff.
 
 ## Panduan Menjalankan Backend
 

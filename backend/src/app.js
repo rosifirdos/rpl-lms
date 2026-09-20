@@ -8,6 +8,8 @@ import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
 import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
+import calendarRoutes from './modules/calendar/calendar.routes.js';
+import masterRoutes from './modules/master/master.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
 import { generalLimiter, authLimiter } from './middlewares/rateLimit.middleware.js';
@@ -73,6 +75,8 @@ app.get('/api/v1', (req, res) => {
         profile: '/api/v1/profile',
         auditLogs: '/api/v1/audit-logs',
         users: '/api/v1/users',
+        calendar: '/api/v1/calendar',
+        master: '/api/v1/master',
       },
     },
   });
@@ -82,14 +86,16 @@ app.get('/api/v1', (req, res) => {
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/forgot-password', authLimiter);
 
-// Modul MVP 1 (Fase 2 & Fase 3)
+// Modul MVP 1 (Fase 2, Fase 3 & Fase 4)
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/audit-logs', auditLogRoutes);
 app.use('/api/v1/users', usersRoutes);
+app.use('/api/v1/calendar', calendarRoutes);
+app.use('/api/v1/master', masterRoutes);
 
 // Endpoint Konseptual Alias (SRS Bab 32 - Tabel 16)
-// Memetakan /api/login, /api/logout, /api/profile langsung ke handler auth & profile
+// Memetakan /api/login, /api/logout, /api/profile, /api/calendar langsung ke handler modul terkait
 app.use('/api', (req, res, next) => {
   if (req.path === '/login') {
     return authLimiter(req, res, () => {
@@ -104,6 +110,10 @@ app.use('/api', (req, res, next) => {
   if (req.path === '/profile') {
     req.url = '/';
     return profileRoutes(req, res, next);
+  }
+  if (req.path === '/calendar') {
+    req.url = '/';
+    return calendarRoutes(req, res, next);
   }
   next();
 });
