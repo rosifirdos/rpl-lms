@@ -8,6 +8,7 @@ import {
   getRefreshTokenExpiryDate,
 } from '../../utils/token.js';
 import { AppError } from '../../utils/errors.js';
+import { AuditLogService } from '../audit-log/audit-log.service.js';
 
 export class AuthService {
   /**
@@ -117,19 +118,17 @@ export class AuthService {
     });
 
     // Catat jejak login di AuditLog (SRS Bab 35)
-    await prisma.auditLog.create({
-      data: {
-        user_id: user.id,
-        action: 'LOGIN',
-        entity: 'users',
-        entity_id: user.id,
-        ip_address: ipAddress || null,
-        user_agent: userAgent || null,
-        new_values: {
-          username: user.username,
-          roles,
-          timestamp: new Date().toISOString(),
-        },
+    await AuditLogService.record({
+      userId: user.id,
+      action: 'LOGIN',
+      entity: 'users',
+      entityId: user.id,
+      ipAddress,
+      userAgent,
+      newValues: {
+        username: user.username,
+        roles,
+        timestamp: new Date().toISOString(),
       },
     });
 
@@ -242,15 +241,13 @@ export class AuthService {
     }
 
     if (userId) {
-      await prisma.auditLog.create({
-        data: {
-          user_id: userId,
-          action: 'LOGOUT',
-          entity: 'users',
-          entity_id: userId,
-          ip_address: ipAddress || null,
-          user_agent: userAgent || null,
-        },
+      await AuditLogService.record({
+        userId,
+        action: 'LOGOUT',
+        entity: 'users',
+        entityId: userId,
+        ipAddress,
+        userAgent,
       });
     }
 
@@ -295,16 +292,14 @@ export class AuthService {
     });
 
     // Catat jejak audit
-    await prisma.auditLog.create({
-      data: {
-        user_id: userId,
+    await AuditLogService.record({
+        userId,
         action: 'CHANGE_PASSWORD',
         entity: 'users',
-        entity_id: userId,
-        ip_address: ipAddress || null,
-        user_agent: userAgent || null,
-      },
-    });
+        entityId: userId,
+        ipAddress,
+        userAgent,
+      });
 
     return {
       message: 'Kata sandi berhasil diperbarui. Silakan login kembali dengan kata sandi baru.',
@@ -322,16 +317,14 @@ export class AuthService {
     });
 
     if (user) {
-      await prisma.auditLog.create({
-        data: {
-          user_id: user.id,
-          action: 'FORGOT_PASSWORD_REQUEST',
-          entity: 'users',
-          entity_id: user.id,
-          ip_address: ipAddress || null,
-          user_agent: userAgent || null,
-          new_values: { identifier },
-        },
+      await AuditLogService.record({
+        userId: user.id,
+        action: 'FORGOT_PASSWORD_REQUEST',
+        entity: 'users',
+        entityId: user.id,
+        ipAddress,
+        userAgent,
+        newValues: { identifier },
       });
     }
 

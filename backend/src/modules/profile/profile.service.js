@@ -1,5 +1,6 @@
 ﻿import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
+import { AuditLogService } from '../audit-log/audit-log.service.js';
 
 export class ProfileService {
   /**
@@ -232,17 +233,15 @@ export class ProfileService {
 
     // Catat mutasi pada AuditLog jika ada data yang berubah
     if (Object.keys(newValues).length > 0) {
-      await prisma.auditLog.create({
-        data: {
-          user_id: userId,
-          action: 'UPDATE_PROFILE',
-          entity: 'users',
-          entity_id: userId,
-          old_values: oldValues,
-          new_values: newValues,
-          ip_address: ipAddress || null,
-          user_agent: userAgent || null,
-        },
+      await AuditLogService.record({
+        userId,
+        action: 'UPDATE_PROFILE',
+        entity: 'users',
+        entityId: userId,
+        oldValues,
+        newValues,
+        ipAddress,
+        userAgent,
       });
     }
 
