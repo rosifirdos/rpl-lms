@@ -1,11 +1,11 @@
-# Backend API: Sistem Akademik Kampus Terintegrasi
+﻿# Backend API: Sistem Akademik Kampus Terintegrasi
 *(Portal, SIA, SPADA/LMS, PMB)*
 
 Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan PostgreSQL, dirancang mengacu pada dokumen spesifikasi [PRD.md](../PRD.md) dan [SRS.md](../SRS.md).
 
 ## Fitur & Status Implementasi
 
-### ? Fase 1: Setup Lingkungan & Skema Database (Selesai)
+### ✅ Fase 1: Setup Lingkungan & Skema Database (Selesai)
 - [x] Inisialisasi proyek Node.js backend (`package.json`, `.gitignore`, `.env.example`).
 - [x] Konfigurasi Prisma ORM dan koneksi ke PostgreSQL `rpl_lms`.
 - [x] Migrasi skema database `init_mvp1` mencakup seluruh entitas kamus data SRS Bab 28.2.
@@ -13,10 +13,10 @@ Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan P
   - 8 Role resmi sistem: `SUPER_ADMIN`, `ADMIN_AKADEMIK`, `ADMIN_LMS`, `DOSEN`, `DOSEN_WALI`, `MAHASISWA`, `CALON_MAHASISWA`, `USER_UMUM`.
   - 11 Permission dasar dan relasi role-permission.
   - Akun awal untuk setiap peran (Super Admin, Admin Akademik, Admin LMS, Dosen Wali, Dosen, Mahasiswa, Calon Mahasiswa).
-  - Master data rintisan: Fakultas (FILKOM, FT), Prodi (TIF, SI, TE), Tahun Akademik 2026/2027, Semester Ganjil aktif, Kalender Akademik, Kurikulum 2024, Mata Kuliah, Gedung, Ruangan, dan Penawaran Kelas.
+  - Master data rintisan: Fakultas (FILKOM, FT), Prodi (TIF, SI), Tahun Akademik 2026/2027, Semester Ganjil aktif, Kalender Akademik, Kurikulum 2024, Mata Kuliah, Gedung, Ruangan, dan Penawaran Kelas.
   - Pencatatan log audit inisialisasi di tabel `audit_logs`.
 
-### ? Fase 2: Autentikasi, Profil & RBAC Engine (Selesai)
+### ✅ Fase 2: Autentikasi, Profil & RBAC Engine (Selesai)
 - [x] Helper hashing & verifikasi password bcrypt (`src/utils/password.js`).
 - [x] Token management JWT (`src/utils/token.js`) dengan Access Token (15m), Refresh Token bertanda tangan kriptografis (7d) disimpan aman dalam bentuk hash SHA-256 di tabel database `refresh_tokens`.
 - [x] Middleware proteksi:
@@ -40,31 +40,47 @@ Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan P
   - `GET /api/profile` dan `PUT /api/profile` -> alias ke modul profil.
 - [x] Automated Integration Test Suite (`tests/phase2.test.js`) mencakup 13 skenario pengujian dengan status 100% lulus.
 
-### ? Fase 4: Modul Master Data Dasar & Kalender Akademik (Selesai)
+### ✅ Fase 3: Layanan Audit Trail & Keamanan Server (Selesai)
+- [x] Modul Audit Log Query (`/api/v1/audit-logs`) dengan filter pagination, entitas, aksi, dan rentang tanggal.
+- [x] Middleware Keamanan HTTP: Helmet yang disesuaikan, CORS terproteksi (*SRS Bab 35*).
+- [x] Rate Limiter: General limiter untuk seluruh endpoint dan auth limiter untuk proteksi brute-force login.
+- [x] Interceptor Audit Helper (`attachAuditHelper`) untuk otomatisasi pencatatan IP dan user-agent klien.
+
+### ✅ Fase 4: Modul Master Data Dasar & Kalender Akademik (Selesai)
 - [x] Skema validasi Zod DTO komprehensif untuk seluruh entitas master data (`src/modules/master/master.validation.js` & `src/modules/calendar/calendar.validation.js`).
 - [x] Master Kelembagaan:
   - CRUD Fakultas (`/api/v1/master/fakultas`): Validasi kode unik uppercase, proteksi penghapusan jika masih memuat program studi.
-  - CRUD Program Studi (`/api/v1/master/prodi`): Relasi berjenjang (D3/S1/S2/Profesi) ke Fakultas, proteksi integritas data mahasiswa/kurikulum.
+  - CRUD Program Studi (`/api/v1/master/prodi`): Relasi berjenjang ke Fakultas, proteksi integritas data mahasiswa/kurikulum.
 - [x] Master Kalender Dasar & Validasi Bisnis Semester:
   - CRUD Tahun Akademik (`/api/v1/master/tahun-akademik`).
   - CRUD Semester (`/api/v1/master/semester`): Tipe GANJIL/GENAP/ANTARA, validasi rentang tanggal (`tanggal_mulai < tanggal_selesai`).
   - Aturan Bisnis Semester Aktif (`PATCH /api/v1/master/semester/:id/activate`): Transaksi atomik Prisma memastikan tepat satu semester yang berstatus aktif operasional di seluruh sistem kampus.
 - [x] Master Fasilitas, Kurikulum, Mata Kuliah & Penawaran Kelas:
-  - Fasilitas Gedung (`/api/v1/master/gedung`) & Ruangan Kelas (`/api/v1/master/ruangan`) dengan kontrol akses Admin Akademik & Admin LMS (*SRS Bab 4.5*).
+  - Fasilitas Gedung (`/api/v1/master/gedung`) & Ruangan Kelas (`/api/v1/master/ruangan`).
   - Kurikulum Berbasis Prodi (`/api/v1/master/kurikulum`).
   - Mata Kuliah (`/api/v1/master/mata-kuliah`): Bobot SKS total, SKS teori, SKS praktik, semester paket, dan status wajib/pilihan.
   - Buka Penawaran Kelas Semester Aktif (`/api/v1/master/kelas`): Validasi relasi multi-entitas (Mata Kuliah, Semester, Dosen Pengampu, dan Ruangan) serta proteksi duplikasi kelas per semester.
 - [x] Modul Kalender Akademik (*SRS Bab 22 & Bab 32*):
   - `GET /api/v1/calendar` & Alias Konseptual `GET /api/calendar`: Akses baca seluruh pengguna terautentikasi (*FR-130 & FR-131*).
   - `POST /api/v1/calendar`, `PUT /api/v1/calendar/:id`, `DELETE /api/v1/calendar/:id`: Pengelolaan agenda, tanggal periode, dan status (`DIJADWALKAN`, `BERJALAN`, `SELESAI`) oleh Admin Akademik & Super Admin (*FR-126 - FR-129*).
-- [x] Standarisasi Respons API: Format terpadu `{ success: true, message: "...", data: ..., meta: { page, limit, total, totalPages } }`.
-- [x] Audit Trail Logging: Perekaman otomatis setiap mutasi entitas master dan kalender pada tabel `audit_logs` (`src/utils/audit.js`).
-- [x] Automated Integration Test Suite (`tests/phase4.test.js`): 11 skenario pengujian dengan status 100% lulus. Total 24 skenario pengujian suite backend lulus seluruhnya.
 
-### ? Fase Berikutnya (Roadmap MVP 1)
-- **Fase 3:** Layanan Audit Trail Query & Keamanan Server (Rate Limiting, Advanced HTTP security).
-- **Fase 5:** Dasbor Portal & Integrator Modul (SRS Bab 9 & Bab 19).
-- **Fase 6:** Pengujian E2E Kepatuhan SRS & Handoff.
+### ✅ Fase 5: Dasbor Portal & Integrator Modul (Selesai)
+- [x] Modul Portal Gateway (`src/modules/portal/`):
+  - `GET /api/v1/portal/modules`: Layanan evaluasi hak akses modul kampus (PORTAL, SIA, SPADA, PMB, ADMIN_PORTAL) berbasis 8 peran pengguna dan prinsip *least privilege*.
+  - `GET /api/v1/portal/dashboard`: Agregator data metrik kontekstual ringkas sesuai spesifikasi SRS Bab 9 & Bab 19:
+    - **Mahasiswa:** Biodata akademik (NIM, prodi, status), info Dosen Wali/PA lengkap, status pembukaan periode KRS & kalender, tautan launcher SIA dan SPADA (*FR-018 s/d FR-022*).
+    - **Dosen & Dosen Wali:** Rekap biodata bergelar, statistik & daftar kelas diampu semester berjalan (matakuliah, SKS, ruangan, kapasitas), serta ringkasan mahasiswa bimbingan PA aktif.
+    - **Admin Akademik:** Metrik menyeluruh (total mahasiswa aktif, total dosen, total prodi, total fakultas, total matakuliah, kelas aktif), serta status kalender operasional (*SRS Bab 19.1*).
+    - **Admin LMS:** Metrik platform pembelajaran SPADA (total kelas daring aktif, total dosen pengampu, daftar modul 16 pertemuan, tugas, kuis, presensi) (*SRS Bab 19.2*).
+    - **Super Admin:** Metrik pengguna & sebaran status akun, distribusi peran civitas, status audit log, serta kesehatan sistem (*SRS Bab 19.3*).
+    - **Calon Mahasiswa:** Status seleksi PMB, prodi pilihan, nomor pendaftaran, dan pemantauan 5 tahapan pendaftaran.
+- [x] Endpoint Alias Konseptual:
+  - `GET /api/dashboard` -> memetakan langsung ke agregator dasbor portal.
+  - `GET /api/portal/modules` -> memetakan langsung ke launcher modul.
+- [x] Automated Integration Test Suite (`tests/phase5.test.js`) mencakup 9 skenario pengujian dengan status 100% lulus.
+
+### ⏳ Fase Berikutnya (Roadmap MVP 1)
+- **Fase 6:** Pengujian Menyeluruh (E2E & Concurrency) & Dokumentasi API Eksternal (Swagger / OpenAPI).
 
 ## Panduan Menjalankan Backend
 

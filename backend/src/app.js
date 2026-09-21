@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -10,6 +10,7 @@ import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
 import calendarRoutes from './modules/calendar/calendar.routes.js';
 import masterRoutes from './modules/master/master.routes.js';
+import portalRoutes from './modules/portal/portal.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
 import { generalLimiter, authLimiter } from './middlewares/rateLimit.middleware.js';
@@ -73,6 +74,7 @@ app.get('/api/v1', (req, res) => {
       endpoints: {
         auth: '/api/v1/auth',
         profile: '/api/v1/profile',
+        portal: '/api/v1/portal',
         auditLogs: '/api/v1/audit-logs',
         users: '/api/v1/users',
         calendar: '/api/v1/calendar',
@@ -86,16 +88,17 @@ app.get('/api/v1', (req, res) => {
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/forgot-password', authLimiter);
 
-// Modul MVP 1 (Fase 2, Fase 3 & Fase 4)
+// Modul MVP 1 (Fase 2, Fase 3, Fase 4 & Fase 5)
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/profile', profileRoutes);
+app.use('/api/v1/portal', portalRoutes);
 app.use('/api/v1/audit-logs', auditLogRoutes);
 app.use('/api/v1/users', usersRoutes);
 app.use('/api/v1/calendar', calendarRoutes);
 app.use('/api/v1/master', masterRoutes);
 
 // Endpoint Konseptual Alias (SRS Bab 32 - Tabel 16)
-// Memetakan /api/login, /api/logout, /api/profile, /api/calendar langsung ke handler modul terkait
+// Memetakan /api/login, /api/logout, /api/profile, /api/calendar, /api/dashboard, /api/portal langsung ke handler modul terkait
 app.use('/api', (req, res, next) => {
   if (req.path === '/login') {
     return authLimiter(req, res, () => {
@@ -114,6 +117,14 @@ app.use('/api', (req, res, next) => {
   if (req.path === '/calendar') {
     req.url = '/';
     return calendarRoutes(req, res, next);
+  }
+  if (req.path === '/dashboard') {
+    req.url = '/dashboard';
+    return portalRoutes(req, res, next);
+  }
+  if (req.path.startsWith('/portal')) {
+    req.url = req.url.replace('/portal', '') || '/';
+    return portalRoutes(req, res, next);
   }
   next();
 });
