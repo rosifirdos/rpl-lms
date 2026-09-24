@@ -9,6 +9,7 @@ import {
   createRoleSchema,
   updateRolePermissionsSchema,
   roleListQuerySchema,
+  roleIdParamSchema,
 } from './roles.validation.js';
 
 const router = Router();
@@ -34,6 +35,7 @@ router.get(
 router.get(
   '/:id',
   requirePermission(PERMISSIONS.ROLE_MANAGE),
+  validate(roleIdParamSchema),
   RolesController.getRoleById
 );
 

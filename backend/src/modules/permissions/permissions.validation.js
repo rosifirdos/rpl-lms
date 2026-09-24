@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+/**
+ * Skema parameter ID permission (dipakai untuk validasi UUID pada GET /:id
+ * agar id non-UUID ditolak 400, bukan 500).
+ */
+export const permissionIdParamSchema = {
+  params: z.object({
+    id: z.string().uuid({ message: 'Format ID permission harus UUID valid' }),
+  }),
+};
+
 export const createPermissionSchema = {
   body: z.object({
     code: z

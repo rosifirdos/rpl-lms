@@ -7,6 +7,47 @@ import { AuditLogService } from '../audit-log/audit-log.service.js';
  */
 export class RolesService {
   /**
+   * Resolver permission: menerima array identifier (boleh berisi code ATAU id
+   * UUID, boleh duplikat/campuran) dan mengembalikan daftar permission yang
+   * unik & lengkap beserta mappingnya. Melempar AppError bila ada identifier
+   * yang tidak cocok ke permission manapun (validasi eksplisit per elemen
+   * menggantikan perbandingan panjang array yang rapuh terhadap duplikat).
+   */
+  static async resolvePermissions(identifiers) {
+    const input = Array.from(new Set((identifiers ?? []).map((s) => String(s).trim()))).filter(
+      (s) => s.length > 0
+    );
+    if (input.length === 0) return [];
+
+    const records = await prisma.permission.findMany({
+      where: {
+        OR: [{ code: { in: input } }, { id: { in: input } }],
+      },
+    });
+
+    // Bangun map code->record dan id->record, lalu validasi tiap input.
+    const byCode = new Map(records.map((r) => [r.code, r]));
+    const byId = new Map(records.map((r) => [r.id, r]));
+    const resolved = new Map();
+    const missing = [];
+    for (const ident of input) {
+      const rec = byCode.get(ident) ?? byId.get(ident);
+      if (rec) {
+        resolved.set(rec.id, rec); // dedup lagi berdasarkan id permission
+      } else {
+        missing.push(ident);
+      }
+    }
+    if (missing.length > 0) {
+      throw new AppError(
+        `Permission tidak ditemukan di sistem: [${missing.join(', ')}]`,
+        400
+      );
+    }
+    return Array.from(resolved.values());
+  }
+
+  /**
    * Mengambil daftar seluruh role sistem beserta permissions dan jumlah user
    */
   static async getRoles({ search } = {}) {
@@ -42,7 +83,6 @@ export class RolesService {
       createdAt: r.created_at,
       userCount: r._count.user_roles,
       permissions: r.role_permissions.map((rp) => rp.permission.code),
-      rolePermissions: r.role_permissions.map((rp) => rp.permission),
     }));
   }
 
@@ -77,7 +117,6 @@ export class RolesService {
       createdAt: role.created_at,
       userCount: role._count.user_roles,
       permissions: role.role_permissions.map((rp) => rp.permission.code),
-      rolePermissions: role.role_permissions.map((rp) => rp.permission),
     };
   }
 
@@ -94,18 +133,8 @@ export class RolesService {
       throw new AppError(`Role dengan nama '${name}' sudah ada`, 409);
     }
 
-    let permissionRecords = [];
-    if (permissions && permissions.length > 0) {
-      permissionRecords = await prisma.permission.findMany({
-        where: {
-          OR: [{ code: { in: permissions } }, { id: { in: permissions } }],
-        },
-      });
-
-      if (permissionRecords.length !== permissions.length) {
-        throw new AppError('Satu atau lebih permission tidak ditemukan di sistem', 400);
-      }
-    }
+    // Resolver terpusat: dedup + validasi eksplisit per elemen (code ATAU id)
+    const permissionRecords = await this.resolvePermissions(permissions);
 
     const createdRole = await prisma.$transaction(async (tx) => {
       const role = await tx.role.create({
@@ -163,18 +192,8 @@ export class RolesService {
 
     const oldPermissions = role.role_permissions.map((rp) => rp.permission.code);
 
-    let permissionRecords = [];
-    if (permissions && permissions.length > 0) {
-      permissionRecords = await prisma.permission.findMany({
-        where: {
-          OR: [{ code: { in: permissions } }, { id: { in: permissions } }],
-        },
-      });
-
-      if (permissionRecords.length !== permissions.length) {
-        throw new AppError('Satu atau lebih permission tidak ditemukan di sistem', 400);
-      }
-    }
+    // Resolver terpusat: dedup + validasi eksplisit per elemen (code ATAU id)
+    const permissionRecords = await this.resolvePermissions(permissions);
 
     await prisma.$transaction(async (tx) => {
       await tx.rolePermission.deleteMany({

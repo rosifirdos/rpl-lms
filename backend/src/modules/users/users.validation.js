@@ -1,13 +1,23 @@
 import { z } from 'zod';
 import { ALL_ROLES } from '../../constants/roles.js';
 
+/**
+ * Skema parameter ID pengguna (dipakai untuk validasi UUID pada GET /:id,
+ * PATCH /:id/status, dan PUT /:id/roles agar id non-UUID ditolak 400, bukan 500).
+ */
+export const userIdParamSchema = {
+  params: z.object({
+    id: z.string().uuid({ message: 'Format ID pengguna harus UUID valid' }),
+  }),
+};
+
 export const updateUserRolesSchema = {
   params: z.object({
     id: z.string().uuid({ message: 'Format ID pengguna harus UUID valid' }),
   }),
   body: z.object({
     roles: z.array(z.enum(ALL_ROLES, { message: 'Nama role tidak valid' }))
-      .min(1, { message: 'Pengguna minimal harus memiliki sampai satu role' }),
+      .min(1, { message: 'Pengguna minimal harus memiliki satu role' }),
   }),
 };
 
