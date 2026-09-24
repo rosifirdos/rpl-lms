@@ -895,6 +895,237 @@ test('10.2 E2E API Root: Root API v1 menampilkan katalog endpoint', async () => 
   assert.ok(data.data.endpoints.portal);
   assert.ok(data.data.endpoints.auditLogs);
   assert.ok(data.data.endpoints.users);
+  assert.ok(data.data.endpoints.roles);
+  assert.ok(data.data.endpoints.permissions);
   assert.ok(data.data.endpoints.calendar);
   assert.ok(data.data.endpoints.master);
+});
+
+// ============================================================
+// BAGIAN 11: MANAJEMEN USER, ROLE & PERMISSION (SECTION 4.6)
+// ============================================================
+
+let createdUserId;
+let testRoleId;
+let testPermissionId;
+
+test('11.1 E2E Users: Pembuatan akun baru manual (POST /api/v1/users) beserta profil mahasiswa & dosen', async () => {
+  const saHeaders = await authHeaders('superadmin');
+
+  // Ambil salah satu prodi dari master
+  const resProdi = await fetch(`${baseUrl}/api/v1/master/prodi`, { headers: saHeaders });
+  const dataProdi = await resProdi.json();
+  assert.ok(dataProdi.data.length > 0, 'Harus ada program studi');
+  const prodiId = dataProdi.data[0].id;
+
+  // 1. Buat akun mahasiswa baru
+  const uniqueMhs = `mhs_${Date.now()}`;
+  const resMhs = await fetch(`${baseUrl}/api/v1/users`, {
+    method: 'POST',
+    headers: saHeaders,
+    body: JSON.stringify({
+      username: uniqueMhs,
+      email: `${uniqueMhs}@kampus.ac.id`,
+      password: 'Password123!',
+      roles: ['MAHASISWA'],
+      mahasiswa_profile: {
+        nim: `NIM_${Date.now().toString().slice(-8)}`,
+        nama: 'Mahasiswa Baru Uji',
+        prodi_id: prodiId,
+        angkatan: 2026,
+      },
+    }),
+  });
+  const dataMhs = await resMhs.json();
+  assert.equal(resMhs.status, 201, `Gagal buat user mhs: ${dataMhs.message}`);
+  assert.equal(dataMhs.success, true);
+  assert.equal(dataMhs.data.username, uniqueMhs);
+  assert.deepEqual(dataMhs.data.roles, ['MAHASISWA']);
+  assert.ok(dataMhs.data.mahasiswa_profile, 'Profil mahasiswa harus terbentuk');
+  assert.equal(dataMhs.data.password_hash, undefined, 'password_hash tidak boleh bocor');
+  createdUserId = dataMhs.data.id;
+
+  // Verifikasi akun baru bisa langsung login
+  const loginMhs = await login(uniqueMhs, 'Password123!');
+  assert.ok(loginMhs.token, 'Mahasiswa baru harus bisa login dengan kredensialnya');
+
+  // 2. Buat akun dosen baru
+  const uniqueDsn = `dsn_${Date.now()}`;
+  const resDsn = await fetch(`${baseUrl}/api/v1/users`, {
+    method: 'POST',
+    headers: saHeaders,
+    body: JSON.stringify({
+      username: uniqueDsn,
+      email: `${uniqueDsn}@kampus.ac.id`,
+      password: 'Password123!',
+      roles: ['DOSEN'],
+      dosen_profile: {
+        nidn: `NIDN_${Date.now().toString().slice(-8)}`,
+        nama: 'Dosen Baru Uji',
+        gelar_depan: 'Dr.',
+        gelar_belakang: 'M.Kom',
+        prodi_id: prodiId,
+      },
+    }),
+  });
+  const dataDsn = await resDsn.json();
+  assert.equal(resDsn.status, 201);
+  assert.ok(dataDsn.data.dosen_profile, 'Profil dosen harus terbentuk');
+});
+
+test('11.2 E2E Users: Validasi duplikasi (409) dan penolakan non-SuperAdmin (403) pada POST /api/v1/users', async () => {
+  const saHeaders = await authHeaders('superadmin');
+  const mhsHeaders = await authHeaders('2024001001');
+
+  // Non-SuperAdmin ditolak (403)
+  const resForbidden = await fetch(`${baseUrl}/api/v1/users`, {
+    method: 'POST',
+    headers: mhsHeaders,
+    body: JSON.stringify({
+      username: 'illegal_user',
+      email: 'illegal@kampus.ac.id',
+      password: 'Password123!',
+      roles: ['MAHASISWA'],
+    }),
+  });
+  assert.equal(resForbidden.status, 403);
+
+  // Duplikasi username ditolak (409)
+  const resDup = await fetch(`${baseUrl}/api/v1/users`, {
+    method: 'POST',
+    headers: saHeaders,
+    body: JSON.stringify({
+      username: 'superadmin',
+      email: 'unique_superadmin@kampus.ac.id',
+      password: 'Password123!',
+      roles: ['SUPER_ADMIN'],
+    }),
+  });
+  assert.equal(resDup.status, 409);
+  const dataDup = await resDup.json();
+  assert.equal(dataDup.success, false);
+});
+
+test('11.3 E2E Roles: List, Detail, Create, & Update Permissions pada /api/v1/roles', async () => {
+  const saHeaders = await authHeaders('superadmin');
+  const mhsHeaders = await authHeaders('2024001001');
+
+  // Non-authorized user ditolak list roles (403)
+  const resForbidden = await fetch(`${baseUrl}/api/v1/roles`, { headers: mhsHeaders });
+  assert.equal(resForbidden.status, 403);
+
+  // Super Admin list roles (200)
+  const resList = await fetch(`${baseUrl}/api/v1/roles`, { headers: saHeaders });
+  const dataList = await resList.json();
+  assert.equal(resList.status, 200);
+  assert.ok(Array.isArray(dataList.data));
+  assert.ok(dataList.data.length >= 8, 'Minimal 8 role bawaan sistem');
+
+  // Buat role kustom baru (POST /api/v1/roles)
+  const roleName = `AUDITOR_${Date.now().toString().slice(-4)}`;
+  const resCreate = await fetch(`${baseUrl}/api/v1/roles`, {
+    method: 'POST',
+    headers: saHeaders,
+    body: JSON.stringify({
+      name: roleName,
+      description: 'Role auditor mutu akademik',
+      permissions: ['audit:view', 'profile:read'],
+    }),
+  });
+  const dataCreate = await resCreate.json();
+  assert.equal(resCreate.status, 201);
+  assert.equal(dataCreate.data.name, roleName);
+  assert.ok(dataCreate.data.permissions.includes('audit:view'));
+  testRoleId = dataCreate.data.id;
+
+  // Detail role (GET /api/v1/roles/:id)
+  const resDetail = await fetch(`${baseUrl}/api/v1/roles/${testRoleId}`, { headers: saHeaders });
+  const dataDetail = await resDetail.json();
+  assert.equal(resDetail.status, 200);
+  assert.equal(dataDetail.data.id, testRoleId);
+
+  // Update permissions role (PUT /api/v1/roles/:id/permissions)
+  const resUpdatePerm = await fetch(`${baseUrl}/api/v1/roles/${testRoleId}/permissions`, {
+    method: 'PUT',
+    headers: saHeaders,
+    body: JSON.stringify({
+      permissions: ['audit:view', 'profile:read', 'portal:view'],
+    }),
+  });
+  const dataUpdatePerm = await resUpdatePerm.json();
+  assert.equal(resUpdatePerm.status, 200);
+  assert.ok(dataUpdatePerm.data.permissions.includes('portal:view'));
+
+  // Duplikasi nama role ditolak (409)
+  const resDupRole = await fetch(`${baseUrl}/api/v1/roles`, {
+    method: 'POST',
+    headers: saHeaders,
+    body: JSON.stringify({
+      name: roleName,
+      description: 'Duplikasi role',
+    }),
+  });
+  assert.equal(resDupRole.status, 409);
+});
+
+test('11.4 E2E Permissions: List, Detail, & Create pada /api/v1/permissions', async () => {
+  const saHeaders = await authHeaders('superadmin');
+  const mhsHeaders = await authHeaders('2024001001');
+
+  // Non-authorized user ditolak list permissions (403)
+  const resForbidden = await fetch(`${baseUrl}/api/v1/permissions`, { headers: mhsHeaders });
+  assert.equal(resForbidden.status, 403);
+
+  // Super Admin list permissions (200)
+  const resList = await fetch(`${baseUrl}/api/v1/permissions`, { headers: saHeaders });
+  const dataList = await resList.json();
+  assert.equal(resList.status, 200);
+  assert.ok(Array.isArray(dataList.data));
+  assert.ok(dataList.data.length > 0);
+
+  // Buat permission baru (POST /api/v1/permissions)
+  const permCode = `report:export:${Date.now().toString().slice(-4)}`;
+  const resCreate = await fetch(`${baseUrl}/api/v1/permissions`, {
+    method: 'POST',
+    headers: saHeaders,
+    body: JSON.stringify({
+      code: permCode,
+      name: 'Ekspor Laporan Mutu',
+      description: 'Hak akses untuk mengunduh berkas laporan mutu akademik',
+    }),
+  });
+  const dataCreate = await resCreate.json();
+  assert.equal(resCreate.status, 201);
+  assert.equal(dataCreate.data.code, permCode);
+  testPermissionId = dataCreate.data.id;
+
+  // Detail permission (GET /api/v1/permissions/:id)
+  const resDetail = await fetch(`${baseUrl}/api/v1/permissions/${testPermissionId}`, { headers: saHeaders });
+  const dataDetail = await resDetail.json();
+  assert.equal(resDetail.status, 200);
+  assert.equal(dataDetail.data.id, testPermissionId);
+
+  // Duplikasi kode permission ditolak (409)
+  const resDupPerm = await fetch(`${baseUrl}/api/v1/permissions`, {
+    method: 'POST',
+    headers: saHeaders,
+    body: JSON.stringify({
+      code: permCode,
+      name: 'Duplikasi Permission',
+    }),
+  });
+  assert.equal(resDupPerm.status, 409);
+});
+
+test('11.5 E2E Audit: Mutasi user, role, dan permission baru terekam akurat di audit_logs', async () => {
+  const saHeaders = await authHeaders('superadmin');
+
+  const resAudit = await fetch(`${baseUrl}/api/v1/audit-logs?limit=50`, { headers: saHeaders });
+  const dataAudit = await resAudit.json();
+  assert.equal(resAudit.status, 200);
+
+  const actions = dataAudit.data.map((log) => log.action);
+  assert.ok(actions.includes('CREATE_USER'), 'Audit trail harus memuat aksi CREATE_USER');
+  assert.ok(actions.includes('CREATE_ROLE'), 'Audit trail harus memuat aksi CREATE_ROLE');
+  assert.ok(actions.includes('CREATE_PERMISSION'), 'Audit trail harus memuat aksi CREATE_PERMISSION');
 });

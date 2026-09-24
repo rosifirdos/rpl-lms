@@ -8,6 +8,7 @@ import { ROLES } from '../../constants/roles.js';
 import { PERMISSIONS } from '../../constants/permissions.js';
 
 import {
+  createUserSchema,
   updateUserRolesSchema,
   updateUserStatusSchema,
   userListQuerySchema,
@@ -18,6 +19,18 @@ const router = Router();
 
 // Seluruh endpoint pengguna memerlukan login berbasis JWT
 router.use(authenticateToken);
+
+/**
+ * POST /api/v1/users
+ * Pembuatan akun pengguna baru manual beserta profilnya
+ * Akses: Super Admin
+ */
+router.post(
+  '/',
+  requireRole(ROLES.SUPER_ADMIN),
+  validate(createUserSchema),
+  UsersController.createUser
+);
 
 /**
 * GET /api/v1/users

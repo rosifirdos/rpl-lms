@@ -3,6 +3,28 @@ import { apiResponse } from '../../utils/apiResponse.js';
 import { extractClientInfo } from '../../middlewares/audit.middleware.js';
 
 export class UsersController {
+  static async createUser(req, res, next) {
+    try {
+      const adminId = req.user.id;
+      const { ipAddress, userAgent } = extractClientInfo(req);
+
+      const user = await UsersService.createUser({
+        adminId,
+        userData: req.body,
+        ipAddress,
+        userAgent,
+      });
+
+      return apiResponse.success(res, {
+        statusCode: 201,
+        message: 'Akun pengguna baru berhasil dibuat',
+        data: user,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   static async getUsers(req, res, next) {
     try {
       const result = await UsersService.getUsers(req.query);
