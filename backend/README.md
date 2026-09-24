@@ -79,8 +79,25 @@ Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan P
   - `GET /api/portal/modules` -> memetakan langsung ke launcher modul.
 - [x] Automated Integration Test Suite (`tests/phase5.test.js`) mencakup 9 skenario pengujian dengan status 100% lulus.
 
-### ⏳ Fase Berikutnya (Roadmap MVP 1)
-- **Fase 6:** Pengujian Menyeluruh (E2E & Concurrency) & Dokumentasi API Eksternal (Swagger / OpenAPI).
+### ✅ Fase 6: Pengujian, Validasi Kepatuhan SRS & Handoff (Selesai)
+- [x] **Test Suite Integrasi End-to-End** (`tests/phase6.test.js`): 35 skenario yang memvalidasi keseluruhan alur MVP 1:
+  - Alur lengkap siklus autentikasi (login → akses → refresh → *change password* → logout → penolakan token).
+  - Multi-kredensial login (username, NIM, NIDN, No. Pendaftaran) untuk seluruh tipe aktor.
+  - Penolakan akun `INACTIVE`/`SUSPENDED` dan kredensial tidak valid.
+  - Profil mandiri (`GET`/`PUT /api/v1/profile`) untuk seluruh role.
+  - Proteksi keamanan lintas modul (401 tanpa token, 403 untuk role tidak berwenang, *Super Admin bypass*).
+  - Manajemen pengguna: list dengan pagination/filter/search, detail, penugasan role & perubahan status + verifikasi jejak audit.
+  - Kesesuaian 6 endpoint alias konseptual SRS Bab 32 (`/api/login`, `/api/profile`, `/api/logout`, `/api/calendar`, `/api/dashboard`, `/api/portal/modules`).
+  - Konsistensi data antara modul `/profile` dan `/portal/dashboard` untuk Mahasiswa & Dosen.
+  - Pencatatan mutasi pada tabel `audit_logs` (autentikasi & master data).
+  - Standarisasi respons JSON `{ success, data, message, meta }` di seluruh endpoint.
+- [x] **Perbaikan bug kritis** yang ditemukan selama pengujian E2E:
+  - `UsersService.updateStatus`: pencabutan refresh token keliru menggunakan field `revoked` (tidak ada di skema); diperbaiki ke `revoked_at` sesuai `schema.prisma`.
+- [x] **Dokumentasi API OpenAPI 3.0** (`docs/openapi.yaml`): 37 path & 68 operasi terdokumentasi, mencakup seluruh modul MVP 1 (Auth, Profile, Portal, Users, Calendar, Master Data, Audit Log), skema request/response, kode error terstandar (401/403/404/409/400), dan skema keamanan Bearer JWT.
+- [x] **Skrip Verifikasi Cakupan Dokumentasi** (`scripts/check-openapi-coverage.mjs`): memastikan tidak ada endpoint yang diuji di test suite tapi tidak terdokumentasi di OpenAPI (cakupan 100%).
+
+### 🎉 Status MVP 1: **Selesai**
+Seluruh 6 fase backend MVP 1 telah diimplementasikan dan terverifikasi melalui **83 skenario pengujian otomatis** dengan status 100% lulus.
 
 ## Panduan Menjalankan Backend
 
@@ -101,8 +118,18 @@ npm run db:seed      # Mengisi data master awal & akun pengguna
 ```bash
 npm run dev   # Menjalankan server dalam mode development (nodemon)
 npm start     # Menjalankan server dalam mode production
-npm test      # Menjalankan seluruh skenario pengujian otomatis
+npm test      # Menjalankan seluruh skenario pengujian otomatis (83 test, 6 fase)
+npm run docs:check  # Verifikasi cakupan dokumentasi OpenAPI vs endpoint yang diuji
 ```
+
+### 4. Dokumentasi API (OpenAPI 3.0)
+Spesifikasi API lengkap tersedia di [`docs/openapi.yaml`](./docs/openapi.yaml). Berkas dapat diimpor ke:
+- [Swagger Editor](https://editor.swagger.io/)
+- [Redoc](https://redocly.github.io/redoc/)
+- Postman / Insomnia / Bruno (sebagai koleksi)
+- Cursor, VS Code (OpenAPI extension), atau Stoplight Studio
+
+Endpoint alias konseptual SRS Bab 32 (`/api/login`, `/api/profile`, `/api/logout`, `/api/calendar`, `/api/dashboard`, `/api/portal/modules`) didokumentasikan pada bagian `info.description`.
 
 ### Akun Bawaan Seeder
 | Peran | Username | Email | Password Default |
