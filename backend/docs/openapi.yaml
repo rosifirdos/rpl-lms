@@ -1,0 +1,2575 @@
+openapi: '3.0.3'
+info:
+  title: Sistem Akademik Kampus Terintegrasi - Backend API
+  description: |
+    **API Backend MVP 1** untuk Sistem Akademik Kampus Terintegrasi (Portal, SIA, SPADA/LMS, PMB).
+
+    Dibangun berdasarkan spesifikasi [SRS.md](../SRS.md) — mencakup Bab 3, 5, 9, 10, 11, 14, 15, 19, 28, 31, 32, 34, 35, dan 39.
+
+    ## Cakupan MVP 1
+    - Autentikasi multi-kredensial & manajemen sesi JWT
+    - Otorisasi berbasis 8 role aktor (RBAC)
+    - Manajemen profil mandiri
+    - Dasbor portal kontekstual per role
+    - Master data kelembagaan, akademik, fasilitas & kalender
+    - Manajemen pengguna & hak akses
+    - Jejak audit (Audit Trail)
+
+    ## Autentikasi
+    Menggunakan **Bearer Token (JWT)**. Kirim header `Authorization: Bearer <accessToken>` pada setiap endpoint yang memerlukan autentikasi.
+
+    ## Standar Respons
+    Semua respons mengikuti format:
+    ```json
+    {
+      "success": true|false,
+      "message": "Deskripsi hasil operasi",
+      "data": { ... },
+      "meta": { "page": 1, "limit": 10, "total": 100, "totalPages": 10 }
+    }
+    ```
+
+    ## Endpoint Alias Konseptual (SRS Bab 32)
+    | Alias | Redirect Ke |
+    |---|---|
+    | `POST /api/login` | `POST /api/v1/auth/login` |
+    | `POST /api/logout` | `POST /api/v1/auth/logout` |
+    | `GET /api/profile` | `GET /api/v1/profile` |
+    | `GET /api/calendar` | `GET /api/v1/calendar` |
+    | `GET /api/dashboard` | `GET /api/v1/portal/dashboard` |
+    | `GET /api/portal/modules` | `GET /api/v1/portal/modules` |
+  version: 1.0.0
+  contact:
+    name: Tim Pengembang RPL-LMS
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Server Pengembangan Lokal
+
+tags:
+  - name: Health
+    description: Status operasional API
+  - name: Auth
+    description: Autentikasi, sesi, dan keamanan akun (SRS Bab 14 & 15)
+  - name: Profile
+    description: Manajemen profil mandiri (SRS Bab 31 & 32)
+  - name: Portal
+    description: Dasbor portal & launcher modul (SRS Bab 9 & 19)
+  - name: Users
+    description: Manajemen pengguna & hak akses (SRS Bab 31)
+  - name: Calendar
+    description: Kalender akademik (SRS Bab 22)
+  - name: Master - Kelembagaan
+    description: Fakultas & Program Studi (SRS Bab 10)
+  - name: Master - Waktu
+    description: Tahun Akademik & Semester (SRS Bab 10 & 22)
+  - name: Master - Akademik
+    description: Kurikulum, Mata Kuliah & Kelas (SRS Bab 10 & 28.2)
+  - name: Master - Fasilitas
+    description: Gedung & Ruangan (SRS Bab 10)
+  - name: Audit Log
+    description: Jejak audit sistem (SRS Bab 35)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access Token JWT (masa berlaku 15 menit)
+
+  schemas:
+    # ── Standar Respons ──
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          type: object
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 50
+        totalPages:
+          type: integer
+          example: 5
+
+    # ── Auth ──
+    LoginRequest:
+      type: object
+      required:
+        - password
+      properties:
+        identifier:
+          type: string
+          description: Username, NIM, NIDN, NIP, No. Pendaftaran, atau email
+          example: superadmin
+        username:
+          type: string
+          description: Alias untuk identifier
+        email:
+          type: string
+          format: email
+          description: Alias untuk identifier
+        password:
+          type: string
+          format: password
+          example: Password123!
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Login berhasil
+        data:
+          type: object
+          properties:
+            accessToken:
+              type: string
+              description: JWT Access Token (15 menit)
+            refreshToken:
+              type: string
+              description: JWT Refresh Token (7 hari)
+            user:
+              $ref: '#/components/schemas/UserSummary'
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleName'
+        permissions:
+          type: array
+          items:
+            type: string
+          example: ['profile:read', 'profile:update', 'portal:view']
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE, SUSPENDED]
+
+    RoleName:
+      type: string
+      enum: [SUPER_ADMIN, ADMIN_AKADEMIK, ADMIN_LMS, DOSEN, DOSEN_WALI, MAHASISWA, CALON_MAHASISWA, USER_UMUM]
+
+    UserProfile:
+      type: object
+      description: Profil entitas spesifik berdasarkan role
+      properties:
+        type:
+          type: string
+          enum: [MAHASISWA, DOSEN, ADMIN, CALON_MAHASISWA]
+        nim:
+          type: string
+        nidn:
+          type: string
+        nip:
+          type: string
+        nama:
+          type: string
+        no_pendaftaran:
+          type: string
+        status_akademik:
+          type: string
+          enum: [AKTIF, CUTI, LULUS, DROP_OUT]
+        prodi:
+          type: object
+          properties:
+            id:
+              type: string
+            kode:
+              type: string
+            nama:
+              type: string
+            jenjang:
+              type: string
+            fakultas:
+              type: object
+              properties:
+                id:
+                  type: string
+                kode:
+                  type: string
+                nama:
+                  type: string
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+        - confirmPassword
+      properties:
+        oldPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+        confirmPassword:
+          type: string
+          format: password
+
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+        email:
+          type: string
+          format: email
+
+    # ── Portal ──
+    PortalModule:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+          example: SIA
+        name:
+          type: string
+          example: Sistem Informasi Akademik
+        description:
+          type: string
+        icon:
+          type: string
+        url:
+          type: string
+        allowed_roles:
+          type: array
+          items:
+            type: string
+        features:
+          type: array
+          items:
+            type: string
+        is_accessible:
+          type: boolean
+        badge:
+          type: string
+          nullable: true
+
+    DashboardResponse:
+      type: object
+      properties:
+        system_context:
+          type: object
+          properties:
+            tahun_akademik:
+              type: object
+            semester_aktif:
+              type: object
+            agenda_aktif:
+              type: array
+              items:
+                type: object
+            agenda_mendatang:
+              type: array
+              items:
+                type: object
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            username:
+              type: string
+            email:
+              type: string
+            roles:
+              type: array
+              items:
+                type: string
+        role_dashboards:
+          type: object
+          description: Dashboard spesifik per role (mahasiswa, dosen, admin_akademik, admin_lms, super_admin, calon_mahasiswa)
+
+    # ── Calendar ──
+    KalenderAkademik:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        semester_id:
+          type: string
+          format: uuid
+        agenda:
+          type: string
+          example: Periode KRS
+        mulai:
+          type: string
+          format: date-time
+        selesai:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [DIJADWALKAN, BERJALAN, SELESAI]
+        created_at:
+          type: string
+          format: date-time
+        semester:
+          type: object
+          properties:
+            id:
+              type: string
+            tipe:
+              type: string
+            tahun_akademik:
+              type: object
+
+    CreateCalendarRequest:
+      type: object
+      required:
+        - semester_id
+        - agenda
+        - mulai
+        - selesai
+      properties:
+        semester_id:
+          type: string
+          format: uuid
+        agenda:
+          type: string
+          minLength: 3
+          maxLength: 200
+        mulai:
+          type: string
+          format: date-time
+        selesai:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [DIJADWALKAN, BERJALAN, SELESAI]
+          default: DIJADWALKAN
+
+    UpdateCalendarRequest:
+      type: object
+      properties:
+        agenda:
+          type: string
+        mulai:
+          type: string
+          format: date-time
+        selesai:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [DIJADWALKAN, BERJALAN, SELESAI]
+
+    # ── Master Kelembagaan ──
+    Fakultas:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          example: FILKOM
+        nama:
+          type: string
+          example: Fakultas Ilmu Komputer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        _count:
+          type: object
+          properties:
+            program_studi:
+              type: integer
+
+    CreateFakultasRequest:
+      type: object
+      required:
+        - kode
+        - nama
+      properties:
+        kode:
+          type: string
+          minLength: 2
+          maxLength: 20
+        nama:
+          type: string
+          minLength: 2
+          maxLength: 100
+        is_active:
+          type: boolean
+          default: true
+
+    ProgramStudi:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fakultas_id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          example: TIF
+        nama:
+          type: string
+          example: Teknik Informatika
+        jenjang:
+          type: string
+          enum: [D3, S1, S2]
+        is_active:
+          type: boolean
+        fakultas:
+          $ref: '#/components/schemas/Fakultas'
+
+    CreateProdiRequest:
+      type: object
+      required:
+        - fakultas_id
+        - kode
+        - nama
+      properties:
+        fakultas_id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          minLength: 2
+          maxLength: 20
+        nama:
+          type: string
+          minLength: 2
+          maxLength: 100
+        jenjang:
+          type: string
+          enum: [D3, S1, S2]
+          default: S1
+        is_active:
+          type: boolean
+          default: true
+
+    # ── Master Waktu ──
+    TahunAkademik:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          example: '2026/2027'
+        nama:
+          type: string
+          example: Tahun Ajaran 2026/2027
+        is_active:
+          type: boolean
+        semester:
+          type: array
+          items:
+            $ref: '#/components/schemas/Semester'
+
+    CreateTahunAkademikRequest:
+      type: object
+      required:
+        - kode
+        - nama
+      properties:
+        kode:
+          type: string
+          minLength: 4
+          maxLength: 20
+        nama:
+          type: string
+          minLength: 3
+          maxLength: 100
+        is_active:
+          type: boolean
+          default: true
+
+    Semester:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tahun_akademik_id:
+          type: string
+          format: uuid
+        tipe:
+          type: string
+          enum: [GANJIL, GENAP, ANTARA]
+        tanggal_mulai:
+          type: string
+          format: date-time
+        tanggal_selesai:
+          type: string
+          format: date-time
+        is_active:
+          type: boolean
+        tahun_akademik:
+          $ref: '#/components/schemas/TahunAkademik'
+
+    CreateSemesterRequest:
+      type: object
+      required:
+        - tahun_akademik_id
+        - tipe
+        - tanggal_mulai
+        - tanggal_selesai
+      properties:
+        tahun_akademik_id:
+          type: string
+          format: uuid
+        tipe:
+          type: string
+          enum: [GANJIL, GENAP, ANTARA]
+        tanggal_mulai:
+          type: string
+          format: date-time
+        tanggal_selesai:
+          type: string
+          format: date-time
+        is_active:
+          type: boolean
+          default: false
+
+    # ── Master Akademik ──
+    Kurikulum:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        prodi_id:
+          type: string
+          format: uuid
+        nama:
+          type: string
+          example: Kurikulum Merdeka TIF 2024
+        tahun_mulai:
+          type: integer
+          example: 2024
+        is_active:
+          type: boolean
+        prodi:
+          $ref: '#/components/schemas/ProgramStudi'
+
+    CreateKurikulumRequest:
+      type: object
+      required:
+        - prodi_id
+        - nama
+        - tahun_mulai
+      properties:
+        prodi_id:
+          type: string
+          format: uuid
+        nama:
+          type: string
+          minLength: 3
+          maxLength: 100
+        tahun_mulai:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+        is_active:
+          type: boolean
+          default: true
+
+    MataKuliah:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kurikulum_id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          example: TIF-201
+        nama:
+          type: string
+          example: Rekayasa Perangkat Lunak
+        sks:
+          type: integer
+          example: 3
+        sks_teori:
+          type: integer
+        sks_praktik:
+          type: integer
+        semester_paket:
+          type: integer
+          example: 3
+        is_wajib:
+          type: boolean
+        is_active:
+          type: boolean
+
+    CreateMataKuliahRequest:
+      type: object
+      required:
+        - kurikulum_id
+        - kode
+        - nama
+        - sks
+      properties:
+        kurikulum_id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          minLength: 2
+          maxLength: 30
+        nama:
+          type: string
+          minLength: 2
+          maxLength: 150
+        sks:
+          type: integer
+          minimum: 1
+          maximum: 12
+        sks_teori:
+          type: integer
+          default: 0
+        sks_praktik:
+          type: integer
+          default: 0
+        semester_paket:
+          type: integer
+          minimum: 1
+          maximum: 14
+          default: 1
+        is_wajib:
+          type: boolean
+          default: true
+        is_active:
+          type: boolean
+          default: true
+
+    Kelas:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        mata_kuliah_id:
+          type: string
+          format: uuid
+        semester_id:
+          type: string
+          format: uuid
+        dosen_id:
+          type: string
+          format: uuid
+        ruangan_id:
+          type: string
+          format: uuid
+          nullable: true
+        kode_kelas:
+          type: string
+          example: TI-3A
+        kapasitas:
+          type: integer
+          example: 40
+        mata_kuliah:
+          $ref: '#/components/schemas/MataKuliah'
+        semester:
+          $ref: '#/components/schemas/Semester'
+        dosen:
+          type: object
+        ruangan:
+          type: object
+          nullable: true
+
+    CreateKelasRequest:
+      type: object
+      required:
+        - mata_kuliah_id
+        - semester_id
+        - dosen_id
+        - kode_kelas
+      properties:
+        mata_kuliah_id:
+          type: string
+          format: uuid
+        semester_id:
+          type: string
+          format: uuid
+        dosen_id:
+          type: string
+          format: uuid
+        ruangan_id:
+          type: string
+          format: uuid
+          nullable: true
+        kode_kelas:
+          type: string
+          minLength: 1
+          maxLength: 20
+        kapasitas:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 40
+
+    # ── Master Fasilitas ──
+    Gedung:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          example: G-F
+        nama:
+          type: string
+          example: Gedung F Ilmu Komputer
+        created_at:
+          type: string
+          format: date-time
+        _count:
+          type: object
+          properties:
+            ruangan:
+              type: integer
+
+    CreateGedungRequest:
+      type: object
+      required:
+        - kode
+        - nama
+      properties:
+        kode:
+          type: string
+          minLength: 1
+          maxLength: 20
+        nama:
+          type: string
+          minLength: 2
+          maxLength: 100
+
+    Ruangan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        gedung_id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          example: RT-F101
+        nama:
+          type: string
+          example: Ruang Teori F-101
+        kapasitas:
+          type: integer
+          example: 50
+        is_active:
+          type: boolean
+        gedung:
+          $ref: '#/components/schemas/Gedung'
+
+    CreateRuanganRequest:
+      type: object
+      required:
+        - gedung_id
+        - kode
+        - nama
+        - kapasitas
+      properties:
+        gedung_id:
+          type: string
+          format: uuid
+        kode:
+          type: string
+          minLength: 1
+          maxLength: 30
+        nama:
+          type: string
+          minLength: 2
+          maxLength: 100
+        kapasitas:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        is_active:
+          type: boolean
+          default: true
+
+    # ── Users ──
+    UpdateUserRolesRequest:
+      type: object
+      required:
+        - roles
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleName'
+          minItems: 1
+
+    UpdateUserStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        reason:
+          type: string
+          description: Alasan perubahan status (opsional)
+
+    # ── Audit Log ──
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        action:
+          type: string
+          example: LOGIN
+        entity:
+          type: string
+          example: users
+        entity_id:
+          type: string
+          nullable: true
+        old_values:
+          type: object
+          nullable: true
+        new_values:
+          type: object
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+          nullable: true
+        waktu:
+          type: string
+          format: date-time
+        user:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+            username:
+              type: string
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+    SearchParam:
+      name: search
+      in: query
+      schema:
+        type: string
+      description: Pencarian teks pada field nama/kode
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Token JWT tidak valid atau tidak disertakan
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Akses ditolak. Token tidak valid atau tidak ditemukan.
+    Forbidden:
+      description: Tidak memiliki hak akses untuk operasi ini
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Akses ditolak. Anda tidak memiliki izin yang diperlukan.
+    NotFound:
+      description: Resource tidak ditemukan
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Data tidak ditemukan
+    Conflict:
+      description: Konflik duplikasi data (unique constraint)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Data dengan kode tersebut sudah ada
+    ValidationError:
+      description: Validasi input gagal
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+# ================================================================
+# PATHS
+# ================================================================
+paths:
+  # ── Health ──
+  /health:
+    get:
+      tags: [Health]
+      summary: Cek status operasional API
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API aktif dan berjalan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                      env:
+                        type: string
+
+  /api/v1:
+    get:
+      tags: [Health]
+      summary: Katalog endpoint API v1
+      operationId: apiCatalog
+      responses:
+        '200':
+          description: Daftar endpoint yang tersedia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ── Auth ──
+  /api/v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (autentikasi multi-kredensial)
+      description: |
+        Autentikasi menggunakan `username`, `email`, NIM, NIDN, NIP, atau No. Pendaftaran.
+        Mengembalikan JWT Access Token (15 menit) dan Refresh Token (7 hari).
+
+        **Alias SRS:** `POST /api/login`
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              superadmin:
+                summary: Login Super Admin
+                value:
+                  identifier: superadmin
+                  password: Password123!
+              mahasiswa:
+                summary: Login Mahasiswa (NIM)
+                value:
+                  identifier: '2024001001'
+                  password: Password123!
+              dosen:
+                summary: Login Dosen (NIDN)
+                value:
+                  identifier: '198501152010121002'
+                  password: Password123!
+      responses:
+        '200':
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Kredensial tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akun tidak aktif atau ditangguhkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Perbarui Access Token
+      description: Mendapatkan Access Token baru menggunakan Refresh Token yang masih valid.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token baru diterbitkan
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (cabut sesi)
+      description: |
+        Mencabut Refresh Token dan mengakhiri sesi. **Alias SRS:** `POST /api/logout`
+      operationId: logout
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Logout berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /api/v1/auth/change-password:
+    put:
+      tags: [Auth]
+      summary: Ganti kata sandi (FR-016)
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Kata sandi berhasil diganti
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Kata sandi lama tidak cocok atau validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Permintaan reset kata sandi (FR-015)
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Permintaan diterima (respons generik untuk keamanan)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  # ── Profile ──
+  /api/v1/profile:
+    get:
+      tags: [Profile]
+      summary: Ambil profil pengguna aktif (FR-021)
+      description: |
+        Mengembalikan data akun, profil entitas (Mahasiswa/Dosen/Admin/Calon Mahasiswa),
+        daftar role, dan permission. **Alias SRS:** `GET /api/profile`
+      operationId: getProfile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profil berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/UserSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [Profile]
+      summary: Perbarui profil mandiri
+      description: |
+        Field yang dapat diperbarui: `nama`, `email`, `gelar_depan`/`gelar_belakang` (Dosen),
+        `jalur_pendaftaran` (Calon Mahasiswa).
+      operationId: updateProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nama:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                gelar_depan:
+                  type: string
+                gelar_belakang:
+                  type: string
+                jalur_pendaftaran:
+                  type: string
+      responses:
+        '200':
+          description: Profil berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── Portal ──
+  /api/v1/portal/modules:
+    get:
+      tags: [Portal]
+      summary: Daftar modul kampus yang berhak diakses (SRS Bab 9)
+      description: |
+        Mengembalikan 5 modul utama (PORTAL, SIA, SPADA, PMB, ADMIN_PORTAL) dengan
+        flag `is_accessible` berdasarkan role pengguna. **Alias SRS:** `GET /api/portal/modules`
+      operationId: getModules
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Daftar modul
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      total_modules:
+                        type: integer
+                      accessible_count:
+                        type: integer
+                      user_roles:
+                        type: array
+                        items:
+                          type: string
+                      modules:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PortalModule'
+                      accessible_modules:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PortalModule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/portal/dashboard:
+    get:
+      tags: [Portal]
+      summary: Dasbor ringkasan metrik kontekstual (SRS Bab 19)
+      description: |
+        Data agregasi spesifik per role:
+        - **Mahasiswa:** biodata, dosen wali, status KRS, modul SIA/SPADA
+        - **Dosen/PA:** kelas diampu, mahasiswa perwalian
+        - **Admin Akademik:** total mhs/dosen/prodi/fakultas, status kalender
+        - **Admin LMS:** total kelas SPADA, rekap prodi
+        - **Super Admin:** metrik user, distribusi peran, audit terkini
+        - **Calon Mahasiswa:** status seleksi, tahapan PMB
+
+        **Alias SRS:** `GET /api/dashboard`
+      operationId: getDashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Data dashboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/DashboardResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ── Calendar ──
+  /api/v1/calendar:
+    get:
+      tags: [Calendar]
+      summary: Daftar agenda kalender akademik semester aktif
+      description: |
+        Mengembalikan agenda kalender untuk semester aktif (default) atau semester tertentu.
+        **Alias SRS:** `GET /api/calendar`
+      operationId: listCalendar
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DIJADWALKAN, BERJALAN, SELESAI]
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        '200':
+          description: Daftar agenda kalender
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/KalenderAkademik'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Calendar]
+      summary: Buat agenda kalender akademik baru
+      operationId: createCalendar
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCalendarRequest'
+      responses:
+        '201':
+          description: Agenda berhasil dibuat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/KalenderAkademik'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/calendar/{id}:
+    get:
+      tags: [Calendar]
+      summary: Detail agenda kalender
+      operationId: getCalendarById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail agenda
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/KalenderAkademik'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Calendar]
+      summary: Ubah agenda kalender
+      operationId: updateCalendar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCalendarRequest'
+      responses:
+        '200':
+          description: Agenda berhasil diperbarui
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Calendar]
+      summary: Hapus agenda kalender
+      operationId: deleteCalendar
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Agenda berhasil dihapus
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Master Fakultas ──
+  /api/v1/master/fakultas:
+    get:
+      tags: [Master - Kelembagaan]
+      summary: Daftar fakultas
+      operationId: listFakultas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Daftar fakultas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Fakultas'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+    post:
+      tags: [Master - Kelembagaan]
+      summary: Tambah fakultas baru
+      operationId: createFakultas
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFakultasRequest'
+      responses:
+        '201':
+          description: Fakultas berhasil ditambahkan
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/master/fakultas/{id}:
+    get:
+      tags: [Master - Kelembagaan]
+      summary: Detail fakultas
+      operationId: detailFakultas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail fakultas
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Kelembagaan]
+      summary: Ubah data fakultas
+      operationId: updateFakultas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                kode:
+                  type: string
+                nama:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Fakultas berhasil diperbarui
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Master - Kelembagaan]
+      summary: Hapus fakultas
+      description: Fakultas yang masih memiliki Program Studi tidak dapat dihapus (400).
+      operationId: deleteFakultas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Fakultas berhasil dihapus
+        '400':
+          description: Fakultas masih memiliki Program Studi terkait
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Master Prodi ──
+  /api/v1/master/prodi:
+    get:
+      tags: [Master - Kelembagaan]
+      summary: Daftar program studi
+      operationId: listProdi
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: fakultas_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: jenjang
+          in: query
+          schema:
+            type: string
+            enum: [D3, S1, S2]
+      responses:
+        '200':
+          description: Daftar program studi
+    post:
+      tags: [Master - Kelembagaan]
+      summary: Tambah program studi baru
+      operationId: createProdi
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProdiRequest'
+      responses:
+        '201':
+          description: Program studi berhasil ditambahkan
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/master/prodi/{id}:
+    get:
+      tags: [Master - Kelembagaan]
+      summary: Detail program studi
+      operationId: detailProdi
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail program studi
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Kelembagaan]
+      summary: Ubah data program studi
+      operationId: updateProdi
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fakultas_id:
+                  type: string
+                  format: uuid
+                kode:
+                  type: string
+                nama:
+                  type: string
+                jenjang:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Program studi berhasil diperbarui
+    delete:
+      tags: [Master - Kelembagaan]
+      summary: Hapus program studi
+      operationId: deleteProdi
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Program studi berhasil dihapus
+        '400':
+          description: Prodi masih memiliki data terkait (mahasiswa/kurikulum)
+
+  # ── Master Tahun Akademik ──
+  /api/v1/master/tahun-akademik:
+    get:
+      tags: [Master - Waktu]
+      summary: Daftar tahun akademik
+      operationId: listTahunAkademik
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        '200':
+          description: Daftar tahun akademik
+    post:
+      tags: [Master - Waktu]
+      summary: Tambah tahun akademik baru
+      operationId: createTahunAkademik
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTahunAkademikRequest'
+      responses:
+        '201':
+          description: Tahun akademik berhasil ditambahkan
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/master/tahun-akademik/{id}:
+    get:
+      tags: [Master - Waktu]
+      summary: Detail tahun akademik
+      operationId: detailTahunAkademik
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail tahun akademik
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Waktu]
+      summary: Ubah data tahun akademik
+      operationId: updateTahunAkademik
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                kode:
+                  type: string
+                nama:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Tahun akademik berhasil diperbarui
+    delete:
+      tags: [Master - Waktu]
+      summary: Hapus tahun akademik
+      operationId: deleteTahunAkademik
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Tahun akademik berhasil dihapus
+        '400':
+          description: Masih memiliki semester terkait
+
+  # ── Master Semester ──
+  /api/v1/master/semester:
+    get:
+      tags: [Master - Waktu]
+      summary: Daftar semester
+      operationId: listSemester
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: tahun_akademik_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: tipe
+          in: query
+          schema:
+            type: string
+            enum: [GANJIL, GENAP, ANTARA]
+      responses:
+        '200':
+          description: Daftar semester
+    post:
+      tags: [Master - Waktu]
+      summary: Tambah semester baru
+      description: Validasi bisnis - tanggal_mulai harus sebelum tanggal_selesai. Duplikasi tipe pada tahun akademik yang sama ditolak (409).
+      operationId: createSemester
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSemesterRequest'
+      responses:
+        '201':
+          description: Semester berhasil ditambahkan
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/master/semester/{id}:
+    get:
+      tags: [Master - Waktu]
+      summary: Detail semester
+      operationId: detailSemester
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail semester
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Waktu]
+      summary: Ubah data semester
+      operationId: updateSemester
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tipe:
+                  type: string
+                tanggal_mulai:
+                  type: string
+                  format: date-time
+                tanggal_selesai:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Semester berhasil diperbarui
+    delete:
+      tags: [Master - Waktu]
+      summary: Hapus semester
+      operationId: deleteSemester
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Semester berhasil dihapus
+        '400':
+          description: Semester aktif atau masih memiliki kelas
+
+  /api/v1/master/semester/{id}/activate:
+    patch:
+      tags: [Master - Waktu]
+      summary: Aktifkan semester operasional utama
+      description: |
+        Mengaktifkan semester sebagai semester operasional kampus.
+        **Aturan Bisnis:** Hanya 1 semester yang boleh aktif pada satu waktu.
+        Semester lain yang sedang aktif akan otomatis dinonaktifkan.
+      operationId: activateSemester
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Semester berhasil diaktifkan
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── Master Kurikulum ──
+  /api/v1/master/kurikulum:
+    get:
+      tags: [Master - Akademik]
+      summary: Daftar kurikulum
+      operationId: listKurikulum
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: prodi_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Daftar kurikulum
+    post:
+      tags: [Master - Akademik]
+      summary: Tambah kurikulum baru
+      operationId: createKurikulum
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKurikulumRequest'
+      responses:
+        '201':
+          description: Kurikulum berhasil ditambahkan
+
+  /api/v1/master/kurikulum/{id}:
+    get:
+      tags: [Master - Akademik]
+      summary: Detail kurikulum
+      operationId: detailKurikulum
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail kurikulum
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Akademik]
+      summary: Ubah data kurikulum
+      operationId: updateKurikulum
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nama:
+                  type: string
+                tahun_mulai:
+                  type: integer
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Kurikulum berhasil diperbarui
+    delete:
+      tags: [Master - Akademik]
+      summary: Hapus kurikulum
+      operationId: deleteKurikulum
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Kurikulum berhasil dihapus
+        '400':
+          description: Masih memiliki mata kuliah terkait
+
+  # ── Master Mata Kuliah ──
+  /api/v1/master/mata-kuliah:
+    get:
+      tags: [Master - Akademik]
+      summary: Daftar mata kuliah
+      operationId: listMataKuliah
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: kurikulum_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: semester_paket
+          in: query
+          schema:
+            type: integer
+        - name: is_wajib
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Daftar mata kuliah
+    post:
+      tags: [Master - Akademik]
+      summary: Tambah mata kuliah baru
+      operationId: createMataKuliah
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMataKuliahRequest'
+      responses:
+        '201':
+          description: Mata kuliah berhasil ditambahkan
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/master/mata-kuliah/{id}:
+    get:
+      tags: [Master - Akademik]
+      summary: Detail mata kuliah
+      operationId: detailMataKuliah
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail mata kuliah
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Akademik]
+      summary: Ubah data mata kuliah
+      operationId: updateMataKuliah
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nama:
+                  type: string
+                sks:
+                  type: integer
+                sks_teori:
+                  type: integer
+                sks_praktik:
+                  type: integer
+                semester_paket:
+                  type: integer
+                is_wajib:
+                  type: boolean
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Mata kuliah berhasil diperbarui
+    delete:
+      tags: [Master - Akademik]
+      summary: Hapus mata kuliah
+      operationId: deleteMataKuliah
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Mata kuliah berhasil dihapus
+        '400':
+          description: Masih memiliki kelas terkait
+
+  # ── Master Kelas ──
+  /api/v1/master/kelas:
+    get:
+      tags: [Master - Akademik]
+      summary: Daftar penawaran kelas
+      description: Default filter menampilkan kelas semester aktif.
+      operationId: listKelas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: semester_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: mata_kuliah_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: dosen_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Daftar kelas
+    post:
+      tags: [Master - Akademik]
+      summary: Buka penawaran kelas baru
+      description: Validasi duplikasi kode_kelas pada mata_kuliah + semester yang sama (409).
+      operationId: createKelas
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKelasRequest'
+      responses:
+        '201':
+          description: Kelas berhasil dibuka
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/master/kelas/{id}:
+    get:
+      tags: [Master - Akademik]
+      summary: Detail kelas
+      operationId: detailKelas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail kelas
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Akademik]
+      summary: Ubah data kelas
+      operationId: updateKelas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dosen_id:
+                  type: string
+                  format: uuid
+                ruangan_id:
+                  type: string
+                  format: uuid
+                kode_kelas:
+                  type: string
+                kapasitas:
+                  type: integer
+      responses:
+        '200':
+          description: Kelas berhasil diperbarui
+    delete:
+      tags: [Master - Akademik]
+      summary: Hapus kelas
+      operationId: deleteKelas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Kelas berhasil dihapus
+
+  # ── Master Gedung ──
+  /api/v1/master/gedung:
+    get:
+      tags: [Master - Fasilitas]
+      summary: Daftar gedung
+      operationId: listGedung
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+      responses:
+        '200':
+          description: Daftar gedung
+    post:
+      tags: [Master - Fasilitas]
+      summary: Tambah gedung baru
+      operationId: createGedung
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGedungRequest'
+      responses:
+        '201':
+          description: Gedung berhasil ditambahkan
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/master/gedung/{id}:
+    get:
+      tags: [Master - Fasilitas]
+      summary: Detail gedung
+      operationId: detailGedung
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail gedung
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Fasilitas]
+      summary: Ubah data gedung
+      operationId: updateGedung
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                kode:
+                  type: string
+                nama:
+                  type: string
+      responses:
+        '200':
+          description: Gedung berhasil diperbarui
+    delete:
+      tags: [Master - Fasilitas]
+      summary: Hapus gedung
+      description: Gedung yang masih memiliki ruangan tidak dapat dihapus (400).
+      operationId: deleteGedung
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Gedung berhasil dihapus
+        '400':
+          description: Masih memiliki ruangan terkait
+
+  # ── Master Ruangan ──
+  /api/v1/master/ruangan:
+    get:
+      tags: [Master - Fasilitas]
+      summary: Daftar ruangan
+      operationId: listRuangan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: gedung_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Daftar ruangan
+    post:
+      tags: [Master - Fasilitas]
+      summary: Tambah ruangan baru
+      operationId: createRuangan
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRuanganRequest'
+      responses:
+        '201':
+          description: Ruangan berhasil ditambahkan
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/master/ruangan/{id}:
+    get:
+      tags: [Master - Fasilitas]
+      summary: Detail ruangan
+      operationId: detailRuangan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail ruangan
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Master - Fasilitas]
+      summary: Ubah data ruangan
+      operationId: updateRuangan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                kode:
+                  type: string
+                nama:
+                  type: string
+                kapasitas:
+                  type: integer
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Ruangan berhasil diperbarui
+    delete:
+      tags: [Master - Fasilitas]
+      summary: Hapus ruangan
+      description: Ruangan yang masih memiliki kelas tidak dapat dihapus (400).
+      operationId: deleteRuangan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Ruangan berhasil dihapus
+        '400':
+          description: Masih memiliki kelas terkait
+
+  # ── Users ──
+  /api/v1/users:
+    get:
+      tags: [Users]
+      summary: Daftar akun pengguna
+      description: Dengan pagination, filter berdasarkan role/status, dan search.
+      operationId: listUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SearchParam'
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/RoleName'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+      responses:
+        '200':
+          description: Daftar pengguna
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/users/{id}:
+    get:
+      tags: [Users]
+      summary: Detail akun pengguna
+      description: Termasuk profil entitas (mahasiswa/dosen/admin) dan daftar role.
+      operationId: getUserById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail pengguna
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/users/{id}/roles:
+    put:
+      tags: [Users]
+      summary: Penugasan/pencabutan role pengguna
+      description: |
+        Hanya **SUPER_ADMIN** yang berhak mengubah role.
+        Perubahan dicatat di tabel Audit Log (SRS Bab 35).
+      operationId: updateUserRoles
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRolesRequest'
+      responses:
+        '200':
+          description: Role berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                      username:
+                        type: string
+                      oldRoles:
+                        type: array
+                        items:
+                          type: string
+                      newRoles:
+                        type: array
+                        items:
+                          type: string
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/users/{id}/status:
+    patch:
+      tags: [Users]
+      summary: Ubah status akun pengguna
+      description: |
+        Hanya **SUPER_ADMIN** yang berhak mengubah status (ACTIVE, INACTIVE, SUSPENDED).
+        Perubahan dicatat di tabel Audit Log.
+      operationId: updateUserStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserStatusRequest'
+      responses:
+        '200':
+          description: Status berhasil diperbarui
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ── Audit Log ──
+  /api/v1/audit-logs:
+    get:
+      tags: [Audit Log]
+      summary: Daftar jejak audit sistem
+      description: |
+        Memantau seluruh rekaman aksi krusial di sistem.
+        Mendukung filter berdasarkan action, entity, userId, rentang tanggal, dan pencarian teks.
+      operationId: listAuditLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: action
+          in: query
+          schema:
+            type: string
+          description: Filter berdasarkan tipe aksi (LOGIN, CREATE_FAKULTAS, dll.)
+        - name: entity
+          in: query
+          schema:
+            type: string
+          description: Filter berdasarkan nama entitas target
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/SearchParam'
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [waktu, action, entity]
+            default: waktu
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Daftar audit log
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/audit-logs/{id}:
+    get:
+      tags: [Audit Log]
+      summary: Detail jejak audit
+      description: Menampilkan riwayat perubahan detail termasuk `old_values` vs `new_values`.
+      operationId: getAuditLogById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail audit log
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/AuditLog'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'

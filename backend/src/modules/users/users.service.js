@@ -103,8 +103,8 @@ export class UsersService {
     // cabut semua refresh token pengguna untuk memutus sesi aktif (security)
     if (newStatus !== 'ACTIVE') {
       await prisma.refreshToken.updateMany({
-        where: { user_id: targetUserId, revoked: false },
-        data: { revoked: true },
+        where: { user_id: targetUserId, revoked_at: null },
+        data: { revoked_at: new Date() },
       });
     }
 

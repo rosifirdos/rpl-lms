@@ -465,7 +465,6 @@ test('13. Audit Trail: Aktivitas autentikasi & mutasi profil tercatat di databas
     where: {
       action: { in: ['LOGIN', 'UPDATE_PROFILE', 'CHANGE_PASSWORD', 'LOGOUT', 'FORGOT_PASSWORD_REQUEST'] },
     },
-    take: 10,
     orderBy: { waktu: 'desc' },
   });
 
