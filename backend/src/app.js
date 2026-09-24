@@ -8,6 +8,8 @@ import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
 import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
+import rolesRoutes from './modules/roles/roles.routes.js';
+import permissionsRoutes from './modules/permissions/permissions.routes.js';
 import calendarRoutes from './modules/calendar/calendar.routes.js';
 import masterRoutes from './modules/master/master.routes.js';
 import portalRoutes from './modules/portal/portal.routes.js';
@@ -77,6 +79,8 @@ app.get('/api/v1', (req, res) => {
         portal: '/api/v1/portal',
         auditLogs: '/api/v1/audit-logs',
         users: '/api/v1/users',
+        roles: '/api/v1/roles',
+        permissions: '/api/v1/permissions',
         calendar: '/api/v1/calendar',
         master: '/api/v1/master',
       },
@@ -88,12 +92,14 @@ app.get('/api/v1', (req, res) => {
 app.use('/api/v1/auth/login', authLimiter);
 app.use('/api/v1/auth/forgot-password', authLimiter);
 
-// Modul MVP 1 (Fase 2, Fase 3, Fase 4 & Fase 5)
+// Modul MVP 1 (Fase 2, Fase 3, Fase 4, Fase 5 & Fase 6)
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/portal', portalRoutes);
 app.use('/api/v1/audit-logs', auditLogRoutes);
 app.use('/api/v1/users', usersRoutes);
+app.use('/api/v1/roles', rolesRoutes);
+app.use('/api/v1/permissions', permissionsRoutes);
 app.use('/api/v1/calendar', calendarRoutes);
 app.use('/api/v1/master', masterRoutes);
 
