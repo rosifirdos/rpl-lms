@@ -8,6 +8,7 @@ import { PERMISSIONS } from '../../constants/permissions.js';
 import {
   createPermissionSchema,
   permissionListQuerySchema,
+  permissionIdParamSchema,
 } from './permissions.validation.js';
 
 const router = Router();
@@ -33,6 +34,7 @@ router.get(
 router.get(
   '/:id',
   requirePermission(PERMISSIONS.ROLE_MANAGE),
+  validate(permissionIdParamSchema),
   PermissionsController.getPermissionById
 );
 

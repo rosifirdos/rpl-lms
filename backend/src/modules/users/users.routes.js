@@ -12,6 +12,7 @@ import {
   updateUserRolesSchema,
   updateUserStatusSchema,
   userListQuerySchema,
+  userIdParamSchema,
 } from './users.validation.js';
 
 const router = Router();
@@ -44,12 +45,13 @@ router.get(
 );
 
 /**
- * GET /api/v1/users:/id
+ * GET /api/v1/users/:id
  * Detail akun pengguna
  */
 router.get(
   '/:id',
   requirePermission(PERMISSIONS.USER_MANAGE),
+  validate(userIdParamSchema),
   UsersController.getUserById
 );
 
