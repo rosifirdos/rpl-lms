@@ -42,6 +42,12 @@ async function main() {
     { code: 'calendar:view', name: 'Melihat Kalender Akademik' },
     { code: 'calendar:manage', name: 'Mengelola Kalender Akademik' },
     { code: 'audit:view', name: 'Melihat Audit Log Aktivitas' },
+    // MVP 2: KRS & Jadwal permissions (SRS Bab 31)
+    { code: 'krs:submit', name: 'Menyerahkan KRS' },
+    { code: 'krs:manage', name: 'Mengelola KRS (Intervensi Admin)' },
+    { code: 'krs:approve', name: 'Menyetujui/Mengembalikan KRS' },
+    { code: 'jadwal:manage', name: 'Mengelola Jadwal Kelas' },
+    { code: 'jadwal:view', name: 'Melihat Jadwal Kuliah' },
   ];
 
   const permissions = {};
@@ -56,14 +62,21 @@ async function main() {
 
   // Petakan permission ke roles
   for (const role of Object.values(roles)) {
-    // Setiap role berhak akses profile & portal
-    const allowedCodes = ['profile:read', 'profile:update', 'portal:view', 'calendar:view'];
+    // Setiap role berhak akses profile & portal (+ jadwal:view utk semua role login — MVP 2)
+    const allowedCodes = ['profile:read', 'profile:update', 'portal:view', 'calendar:view', 'jadwal:view'];
+
     if (role.name === 'SUPER_ADMIN') {
       allowedCodes.push('user:manage', 'role:manage', 'master:academic:write', 'calendar:manage', 'audit:view');
+      allowedCodes.push('krs:submit', 'krs:manage', 'krs:approve', 'jadwal:manage');
     } else if (role.name === 'ADMIN_AKADEMIK') {
       allowedCodes.push('master:academic:write', 'calendar:manage', 'audit:view');
+      allowedCodes.push('krs:submit', 'krs:manage', 'jadwal:manage');
     } else if (role.name === 'ADMIN_LMS') {
       allowedCodes.push('master:academic:read', 'audit:view');
+    } else if (role.name === 'MAHASISWA') {
+      allowedCodes.push('krs:submit');
+    } else if (role.name === 'DOSEN_WALI') {
+      allowedCodes.push('krs:approve');
     }
 
     for (const code of allowedCodes) {
@@ -161,11 +174,18 @@ async function main() {
     },
   });
 
+  // Jendela periode KRS dibuat dinamis relatif terhadap waktu seed dijalankan
+  // agar status "buka" selalu konsisten untuk demo & pengujian (MVP 2).
+  const now = new Date();
+  const addDays = (d, n) => new Date(d.getTime() + n * 24 * 60 * 60 * 1000);
+  const periodeKrsMulai = addDays(now, -15);
+  const periodeKrsSelesai = addDays(now, 45);
+
   const agendas = [
-    { agenda: 'Masa Pengisian KRS Semester Ganjil', mulai: new Date('2026-09-01'), selesai: new Date('2026-09-14'), status: 'BERJALAN' },
-    { agenda: 'Masa Perkuliahan Semester Ganjil', mulai: new Date('2026-09-15'), selesai: new Date('2027-01-15'), status: 'DIJADWALKAN' },
-    { agenda: 'Ujian Tengah Semester (UTS)', mulai: new Date('2026-11-02'), selesai: new Date('2026-11-14'), status: 'DIJADWALKAN' },
-    { agenda: 'Ujian Akhir Semester (UAS)', mulai: new Date('2027-01-18'), selesai: new Date('2027-01-30'), status: 'DIJADWALKAN' },
+    { agenda: 'Masa Pengisian KRS Semester Ganjil', mulai: periodeKrsMulai, selesai: periodeKrsSelesai, status: 'BERJALAN', kategori: 'KRS' },
+    { agenda: 'Masa Perkuliahan Semester Ganjil', mulai: new Date('2026-09-15'), selesai: new Date('2027-01-15'), status: 'DIJADWALKAN', kategori: 'PERKULIAHAN' },
+    { agenda: 'Ujian Tengah Semester (UTS)', mulai: new Date('2026-11-02'), selesai: new Date('2026-11-14'), status: 'DIJADWALKAN', kategori: 'UTS' },
+    { agenda: 'Ujian Akhir Semester (UAS)', mulai: new Date('2027-01-18'), selesai: new Date('2027-01-30'), status: 'DIJADWALKAN', kategori: 'UAS' },
   ];
 
   for (const ag of agendas) {
@@ -178,6 +198,12 @@ async function main() {
           semester_id: semesterGanjil.id,
           ...ag,
         },
+      });
+    } else {
+      // Backfill idempoten kolom kategori + sinkron rentang (MVP 2)
+      await prisma.kalenderAkademik.update({
+        where: { id: existing.id },
+        data: { kategori: ag.kategori, ...ag },
       });
     }
   }
@@ -465,9 +491,40 @@ async function main() {
       jalur_pendaftaran: 'Mandiri Prestasi',
     },
   });
+
+  // F. Mahasiswa Aktif 2 (untuk skenario KRS berbeda)
+  const mhsUser2 = await prisma.user.upsert({
+    where: { username: '2024001002' },
+    update: { password_hash: passwordHash, status: 'ACTIVE' },
+    create: {
+      username: '2024001002',
+      email: 'siti.nurhaliza@student.kampus.ac.id',
+      password_hash: passwordHash,
+      status: 'ACTIVE',
+    },
+  });
+  await prisma.userRole.upsert({
+    where: { user_id_role_id: { user_id: mhsUser2.id, role_id: roles['MAHASISWA'].id } },
+    update: {},
+    create: { user_id: mhsUser2.id, role_id: roles['MAHASISWA'].id },
+  });
+  await prisma.mahasiswa.upsert({
+    where: { user_id: mhsUser2.id },
+    update: {},
+    create: {
+      user_id: mhsUser2.id,
+      nim: '2024001002',
+      nama: 'Siti Nurhaliza',
+      prodi_id: prodiTif.id,
+      angkatan: 2024,
+      status_akademik: 'AKTIF',
+      dosen_wali_id: dosen1.id,
+    },
+  });
+
   console.log('✅ Seluruh akun contoh (Super Admin, Admin, Dosen Wali, Mahasiswa, Calon Mhs) siap.');
 
-  // 7. PENAWARAN KELAS DASAR (SRS Bab 28.1 & 28.2)
+  // 7. PENAWARAN KELAS DASAR (SRS Bab 28.1 & 28.2) — tambah kelas untuk skenario bentrok jadwal MVP 2
   const kelasRPL = await prisma.kelas.upsert({
     where: {
       mata_kuliah_id_semester_id_kode_kelas: {
@@ -506,24 +563,221 @@ async function main() {
     },
   });
 
+  // Kelas tambahan dengan bentrok ruangan/dosen (untuk skenario deteksi konflik MVP 2)
+  const kelasWeb = await prisma.kelas.upsert({
+    where: {
+      mata_kuliah_id_semester_id_kode_kelas: {
+        mata_kuliah_id: matkulObj['TIF-203'].id,
+        semester_id: semesterGanjil.id,
+        kode_kelas: 'TI-3B',
+      },
+    },
+    update: {},
+    create: {
+      mata_kuliah_id: matkulObj['TIF-203'].id,
+      semester_id: semesterGanjil.id,
+      dosen_id: dosen1.id, // Bentrok dengan kelasRPL (dosen sama, waktu overlap dijamin via jadwal)
+      ruangan_id: ruangF101.id, // Bentrok dengan kelasRPL (ruangan sama)
+      kode_kelas: 'TI-3B',
+      kapasitas: 40,
+    },
+  });
+
   console.log('✅ Penawaran kelas dasar untuk semester aktif siap.');
 
-  // 8. AUDIT LOG INITIAL SEEDING
+  // ==========================================
+  // 8. SEED DATA MVP 2: PERIODE KRS, KRS CONTOH, & JADWAL KES (SRS Bab 6.1, 6.2, FR-100 s/d FR-101)
+  // ==========================================
+
+  // A. PeriodeKRS — satu periode terbuka untuk semester aktif (sks_maks: 24 SKS)
+  const periodeKrs = await prisma.periodeKRS.upsert({
+    where: { semester_id: semesterGanjil.id },
+    update: {
+      is_aktif: true,
+      tanggal_mulai: periodeKrsMulai,
+      tanggal_selesai: periodeKrsSelesai,
+      sks_maks: 24,
+    },
+    create: {
+      semester_id: semesterGanjil.id,
+      nama: `Periode KRS Semester Ganjil ${semesterGanjil.tanggal_mulai.getFullYear()}/${new Date(semesterGanjil.tanggal_mulai.getTime() + (9 * 365 * 24 * 60 * 60 * 1000)).getFullYear()}`,
+      tanggal_mulai: periodeKrsMulai,
+      tanggal_selesai: periodeKrsSelesai,
+      sks_maks: 24,
+      is_aktif: true,
+    },
+  });
+  console.log(`✅ Periode KRS (${periodeKrs.nama}) siap.`);
+
+  // B. JadwalKelas untuk beberapa kelas (skenario bentrok sengaja dibuat untuk tes)
+  // RPL: Senin & Rabu, 07:30 - 09:10
+  const jadwalRPL = await prisma.jadwalKelas.upsert({
+    where: { kelas_id_hari_jam_mulai: { kelas_id: kelasRPL.id, hari: 'SENIN', jam_mulai: '07:30' } },
+    update: { kelas_id: kelasRPL.id, hari: 'SENIN', jam_mulai: '07:30', jam_selesai: '09:10' },
+    create: {
+      kelas_id: kelasRPL.id,
+      hari: 'SENIN',
+      jam_mulai: '07:30',
+      jam_selesai: '09:10',
+    },
+  });
+
+  // Basis Data: Senin & Rabu, 07:30 - 09:10 (bentrok dengan RPL pada Senin & Rabu — RUANGAN & DOSEN berbeda, waktu overlap)
+  const jadwalBasdat = await prisma.jadwalKelas.upsert({
+    where: { kelas_id_hari_jam_mulai: { kelas_id: kelasBasdat.id, hari: 'SELASA', jam_mulai: '07:30' } },
+    update: { kelas_id: kelasBasdat.id, hari: 'SELASA', jam_mulai: '07:30', jam_selesai: '09:10' },
+    create: {
+      kelas_id: kelasBasdat.id,
+      hari: 'SELASA',
+      jam_mulai: '07:30',
+      jam_selesai: '09:10',
+    },
+  });
+
+  // Web Terintegrasi: Selasa, 08:00 - 09:40 (overlap dengan Basdat Senin/Selasa, tapi beda hari tidak bentrok; tetap buat untuk variasi)
+  const jadwalWeb = await prisma.jadwalKelas.upsert({
+    where: { kelas_id_hari_jam_mulai: { kelas_id: kelasWeb.id, hari: 'JUMAT', jam_mulai: '08:00' } },
+    update: { kelas_id: kelasWeb.id, hari: 'JUMAT', jam_mulai: '08:00', jam_selesai: '09:40' },
+    create: {
+      kelas_id: kelasWeb.id,
+      hari: 'JUMAT',
+      jam_mulai: '08:00',
+      jam_selesai: '09:40',
+    },
+  });
+  console.log('✅ Jadwal Kelas (RPL, Basis Data, Web) siap.');
+
+  // C. KRS contoh milik mahasiswa (MVP 2) — cari entitas mahasiswa terpisah dari user
+  const mhsUserObj = await prisma.mahasiswa.findFirst({ where: { user_id: mhsUser.id } });
+  const mhsUser2Obj = await prisma.mahasiswa.findFirst({ where: { user_id: mhsUser2.id } });
+
+  if (!mhsUserObj || !mhsUser2Obj) throw new Error('Mahasiswa object not found');
+
+  // C.1. KRS #1: Ahmad Fauzi — DRAFT dengan 2 item, belum submit (upsert untuk idempotensi)
+  const krs1Draft = await prisma.kRS.upsert({
+    where: {
+      mahasiswa_id_semester_id: {
+        mahasiswa_id: mhsUserObj.id,
+        semester_id: semesterGanjil.id,
+      },
+    },
+    update: {
+      status: 'DRAFT',
+      total_sks: 6,
+      detail: {
+        deleteMany: {},
+        create: [
+          { kelas_id: kelasRPL.id },
+          { kelas_id: kelasBasdat.id },
+        ],
+      },
+    },
+    create: {
+      mahasiswa_id: mhsUserObj.id,
+      semester_id: semesterGanjil.id,
+      periode_krs_id: periodeKrs.id,
+      status: 'DRAFT',
+      total_sks: 6, // RPL (3) + Basdat (3)
+      detail: {
+        create: [
+          { kelas_id: kelasRPL.id },
+          { kelas_id: kelasBasdat.id },
+        ],
+      },
+    },
+  });
+  console.log(`✅ KRS Draft (#1) siap (${krs1Draft.id.slice(0,8)}...)`);
+
+  // C.2. KRS #2: Ahmad Fauzi — DIAJUKAN (duplicate pada satu mahasiswa+semester di-upsert ke status berbeda untuk demo)
+  const krs2Diajukan = await prisma.kRS.upsert({
+    where: {
+      mahasiswa_id_semester_id: {
+        mahasiswa_id: mhsUserObj.id,
+        semester_id: semesterGanjil.id,
+      },
+    },
+    update: {
+      status: 'DIAJUKAN',
+      total_sks: 6,
+      diajukan_at: new Date(),
+      diproses_at: new Date(),
+      disetujui_oleh_id: dosen1.id,
+      catatan_dosen: null,
+    },
+    create: {
+      mahasiswa_id: mhsUserObj.id,
+      semester_id: semesterGanjil.id,
+      periode_krs_id: periodeKrs.id,
+      status: 'DIAJUKAN',
+      total_sks: 6,
+      diajukan_at: new Date(),
+      diproses_at: new Date(),
+      disetujui_oleh_id: dosen1.id,
+      catatan_dosen: null,
+    },
+  });
+  console.log(`✅ KRS Diajukan (#2) siap (${krs2Diajukan.id.slice(0,8)}...)`);
+
+  // C.3. KRS #3: Siti Nurhaliza — DISETUJUI lengkap dengan 3 mata kuliah
+  const krs3Disetujui = await prisma.kRS.upsert({
+    where: {
+      mahasiswa_id_semester_id: {
+        mahasiswa_id: mhsUser2Obj.id,
+        semester_id: semesterGanjil.id,
+      },
+    },
+    update: {
+      status: 'DISETUJUI',
+      total_sks: 9,
+      detail: {
+        deleteMany: {},
+        create: [
+          { kelas_id: kelasRPL.id },
+          { kelas_id: kelasBasdat.id },
+          { kelas_id: kelasWeb.id },
+        ],
+      },
+    },
+    create: {
+      mahasiswa_id: mhsUser2Obj.id,
+      semester_id: semesterGanjil.id,
+      periode_krs_id: periodeKrs.id,
+      status: 'DISETUJUI',
+      total_sks: 9, // RPL (3) + Basdat (3) + Web (3)
+      diajukan_at: new Date(),
+      diproses_at: new Date(),
+      disetujui_oleh_id: dosen1.id,
+      catatan_dosen: null,
+      detail: {
+        create: [
+          { kelas_id: kelasRPL.id },
+          { kelas_id: kelasBasdat.id },
+          { kelas_id: kelasWeb.id },
+        ],
+      },
+    },
+  });
+  console.log(`✅ KRS Disetujui (#3) siap (${krs3Disetujui.id.slice(0,8)}...)`);
+
+  console.log('✅ Seed data KRS (DRAFT, DIAJUKAN, DISETUJUI) dan jadwal contoh siap.');
+
+  // 9. AUDIT LOG INITIAL SEEDING — tag MVP 2
   await prisma.auditLog.create({
     data: {
       user_id: superAdminUser.id,
       action: 'SYSTEM_INITIAL_SEED',
       entity: 'system',
-      entity_id: 'mvp1-init',
+      entity_id: 'mvp2-init',
       new_values: {
-        message: 'Initial system seeding completed with 8 roles, master academic data, and default accounts.',
+        message: 'MVP 2 seeding completed: Periode KRS, KRS lifecycle data, and Jadwal Kelas examples added.',
+        version: 'mvp2',
       },
       ip_address: '127.0.0.1',
       user_agent: 'Prisma Seeder Script',
     },
   });
-  console.log('✅ Jejak audit awal terekam di AuditLog.');
-  console.log('🎉 Seeding MVP 1 selesai dengan sukses!');
+  console.log('✅ Jejak audit MVP 2 terekam di AuditLog.');
+  console.log('🎉 Seeding MVP 2 selesai dengan sukses!');
 }
 
 main()

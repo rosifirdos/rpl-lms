@@ -130,6 +130,8 @@ model Mahasiswa {
   prodi      ProgramStudi @relation(fields: [prodi_id], references: [id])
   dosen_wali Dosen?       @relation("DosenWaliMahasiswa", fields: [dosen_wali_id], references: [id], onDelete: SetNull)
 
+  krs KRS[]
+
   @@map("mahasiswa")
 }
 
@@ -146,11 +148,11 @@ model Dosen {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  user  User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  prodi ProgramStudi? @relation(fields: [prodi_id], references: [id], onDelete: SetNull)
-
-  mahasiswa_bimbingan Mahasiswa[] @relation("DosenWaliMahasiswa")
-  kelas_diampu        Kelas[]
+  user               User                          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  prodi              ProgramStudi?                 @relation(fields: [prodi_id], references: [id], onDelete: SetNull)
+  mahasiswa_bimbingan Mahasiswa[]                  @relation("DosenWaliMahasiswa")
+  kelas_diampu       Kelas[]
+  krs_diproses       KRS[]                          @relation("DosenPemprosesKRS")
 
   @@map("dosen")
 }
@@ -262,6 +264,8 @@ model Semester {
   tahun_akademik    TahunAkademik      @relation(fields: [tahun_akademik_id], references: [id], onDelete: Cascade)
   kalender_akademik KalenderAkademik[]
   kelas             Kelas[]
+  krs               KRS[]
+  periode_krs       PeriodeKRS?
 
   @@unique([tahun_akademik_id, tipe])
   @@map("semester")
@@ -280,6 +284,7 @@ model KalenderAkademik {
   mulai       DateTime
   selesai     DateTime
   status      KalenderStatus @default(DIJADWALKAN)
+  kategori    KategoriAgenda @default(LAINNYA) // MVP 2: kategori agenda (SRS Bab 22)
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
 
@@ -364,10 +369,12 @@ model Kelas {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
-  mata_kuliah MataKuliah @relation(fields: [mata_kuliah_id], references: [id], onDelete: Restrict)
-  semester    Semester   @relation(fields: [semester_id], references: [id], onDelete: Restrict)
-  dosen       Dosen      @relation(fields: [dosen_id], references: [id], onDelete: Restrict)
-  ruangan     Ruangan?   @relation(fields: [ruangan_id], references: [id], onDelete: SetNull)
+  mata_kuliah  MataKuliah    @relation(fields: [mata_kuliah_id], references: [id], onDelete: Restrict)
+  semester     Semester      @relation(fields: [semester_id], references: [id], onDelete: Restrict)
+  dosen        Dosen         @relation(fields: [dosen_id], references: [id], onDelete: Restrict)
+  ruangan      Ruangan?      @relation(fields: [ruangan_id], references: [id], onDelete: SetNull)
+  jadwal       JadwalKelas[]
+  krs_detail   KRSDetail[]
 
   @@unique([mata_kuliah_id, semester_id, kode_kelas])
   @@map("kelas")
@@ -406,4 +413,105 @@ model AuditLog {
   user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
   @@map("audit_logs")
+}
+
+// ==========================================
+// 6. MVP 2 — PERIODE KRS, KRS & JADWAL (SRS Bab 6.1, 6.2, 28.2)
+// ==========================================
+
+enum StatusKRS {
+  DRAFT
+  DIAJUKAN
+  DISETUJUI
+  DIKEMBALIKAN
+}
+
+enum HariJadwal {
+  SENIN
+  SELASA
+  RABU
+  KAMIS
+  JUMAT
+  SABTU
+}
+
+enum KategoriAgenda {
+  KRS
+  PERKULIAHAN
+  UTS
+  UAS
+  LAINNYA
+}
+
+model PeriodeKRS {
+  id              String    @id @default(uuid())
+  semester_id     String    @unique // satu periode resmi per semester
+  nama            String    // "Periode KRS Semester Ganjil 2026/2027"
+  tanggal_mulai   DateTime
+  tanggal_selesai DateTime
+  sks_maks        Int       @default(24) // batas maksimal SKS (FR-102)
+  is_aktif        Boolean   @default(false) // hanya 1 terbuka serentak
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  semester Semester @relation(fields: [semester_id], references: [id])
+  krs      KRS[]
+
+  @@map("periode_krs")
+}
+
+model KRS {
+  id                String    @id @default(uuid())
+  mahasiswa_id      String
+  semester_id       String
+  periode_krs_id    String?
+  status            StatusKRS @default(DRAFT)
+  total_sks         Int       @default(0)
+  catatan_dosen     String?   // alasan revisi saat DIKEMBALIKAN (FR-035)
+  diajukan_at       DateTime?
+  diproses_at       DateTime?
+  disetujui_oleh_id String?   // dosen PA yang memproses (FR-033/034)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  mahasiswa      Mahasiswa   @relation(fields: [mahasiswa_id], references: [id], onDelete: Cascade)
+  semester       Semester    @relation(fields: [semester_id], references: [id])
+  periode_krs    PeriodeKRS? @relation(fields: [periode_krs_id], references: [id])
+  disetujui_oleh Dosen?      @relation("DosenPemprosesKRS", fields: [disetujui_oleh_id], references: [id], onDelete: SetNull)
+
+  detail KRSDetail[]
+
+  @@unique([mahasiswa_id, semester_id]) // 1 KRS per mhs per semester
+  @@index([status])
+  @@index([mahasiswa_id])
+  @@map("krs")
+}
+
+model KRSDetail {
+  id         String   @id @default(uuid())
+  krs_id     String
+  kelas_id   String
+  created_at DateTime @default(now())
+
+  krs   KRS   @relation(fields: [krs_id], references: [id], onDelete: Cascade)
+  kelas Kelas @relation(fields: [kelas_id], references: [id], onDelete: Restrict)
+
+  @@unique([krs_id, kelas_id])
+  @@map("krs_detail")
+}
+
+model JadwalKelas {
+  id          String     @id @default(uuid())
+  kelas_id    String
+  hari        HariJadwal
+  jam_mulai   String     @db.VarChar(5) // "07:30"
+  jam_selesai String     @db.VarChar(5) // "09:10"
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  kelas Kelas @relation(fields: [kelas_id], references: [id], onDelete: Cascade)
+
+  @@unique([kelas_id, hari, jam_mulai]) // cegah entri ganda per kelas
+  @@index([hari, jam_mulai])            // percepat scan bentrok ruangan/dosen
+  @@map("jadwal_kelas")
 }
