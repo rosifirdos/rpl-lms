@@ -13,6 +13,7 @@ let kelasNormalId;
 let kelasBesarId;
 let krsId;
 let activePeriodeSebelum = [];
+let tahunAkademikTestId;
 const suffix = `phase8-${Date.now()}`;
 
 async function request(path, { method = 'GET', token, body } = {}) {
@@ -69,9 +70,13 @@ test.before(async () => {
   });
   mahasiswaId = mahasiswa.id;
 
+  const tahunAkademikTest = await prisma.tahunAkademik.create({
+    data: { kode: `${suffix}-ta`, nama: 'Tahun Akademik Uji Fase 8', is_active: true },
+  });
+  tahunAkademikTestId = tahunAkademikTest.id;
   const semester = await prisma.semester.create({
     data: {
-      tahun_akademik_id: tahunAkademik.id,
+      tahun_akademik_id: tahunAkademikTest.id,
       tipe: 'ANTARA',
       tanggal_mulai: new Date(),
       tanggal_selesai: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
@@ -116,13 +121,15 @@ test.before(async () => {
 
 test.after(async () => {
   if (krsId) await prisma.kRS.deleteMany({ where: { id: krsId } });
+  await prisma.kRS.deleteMany({ where: { semester_id: semesterId } });
+  await prisma.periodeKRS.deleteMany({ where: { semester_id: semesterId } });
   await prisma.kelas.deleteMany({ where: { semester_id: semesterId } });
   await prisma.mataKuliah.deleteMany({ where: { kode: { startsWith: suffix } } });
-  await prisma.periodeKRS.deleteMany({ where: { semester_id: semesterId } });
+  await prisma.semester.delete({ where: { id: semesterId } });
+  await prisma.tahunAkademik.delete({ where: { id: tahunAkademikTestId } });
   for (const periode of activePeriodeSebelum) {
     await prisma.periodeKRS.update({ where: { id: periode.id }, data: { is_aktif: true } });
   }
-  await prisma.semester.deleteMany({ where: { id: semesterId } });
   await prisma.mahasiswa.deleteMany({ where: { id: mahasiswaId } });
   await prisma.user.deleteMany({ where: { username: suffix } });
   await new Promise((resolve) => server?.close(resolve));
