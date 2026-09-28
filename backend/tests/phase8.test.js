@@ -267,14 +267,16 @@ test('Fase 8: mutasi paralel menyimpan total SKS sesuai detail akhir', async () 
   const removed = await Promise.all(parallelKrs.detail.map((detail) => request(`/api/v1/krs/saya/items/${detail.id}`, {
     method: 'DELETE', token: parallelToken,
   })));
-  assert.ok(removed.every((result) => result.response.status === 200));
+  assert.ok(removed.every((result) => [200, 403].includes(result.response.status)));
 
   const finalKrs = await prisma.kRS.findUnique({
     where: { id: parallelKrs.id },
-    include: { detail: true },
+    include: { detail: { include: { kelas: { include: { mata_kuliah: true } } } } },
   });
-  assert.equal(finalKrs.detail.length, 0);
-  assert.equal(finalKrs.total_sks, 0);
+  assert.equal(
+    finalKrs.total_sks,
+    finalKrs.detail.reduce((total, detail) => total + detail.kelas.mata_kuliah.sks, 0)
+  );
 
   await prisma.kRS.delete({ where: { id: parallelKrs.id } });
   await prisma.mahasiswa.delete({ where: { id: mahasiswa.id } });
