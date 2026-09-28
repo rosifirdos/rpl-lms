@@ -54,13 +54,13 @@ export function timesOverlap(s1, e1, s2, e2) {
  * @returns {Promise<{ok: boolean, conflicts: Array}>}
  *         conflicts: [{ kode, pesan, detail: { hari, jam, kelas_1, kelas_2 } }]
  */
-export async function detectConflictsBetweenClasses(kelasIds) {
+export async function detectConflictsBetweenClasses(kelasIds, client = prisma) {
   if (!Array.isArray(kelasIds) || kelasIds.length < 2) {
     return { ok: true, conflicts: [] };
   }
 
   // Ambil seluruh jadwal untuk kelas-kelas terpilih beserta info kelas/mk/dosen/ruangan
-  const jadwal = await prisma.jadwalKelas.findMany({
+  const jadwal = await client.jadwalKelas.findMany({
     where: { kelas_id: { in: kelasIds } },
     include: {
       kelas: {
@@ -88,6 +88,7 @@ export async function detectConflictsBetweenClasses(kelasIds) {
       for (let j = i + 1; j < slots.length; j++) {
         const a = slots[i];
         const b = slots[j];
+        if (a.kelas_id === b.kelas_id) continue;
         if (timesOverlap(a.jam_mulai, a.jam_selesai, b.jam_mulai, b.jam_selesai)) {
           conflicts.push({
             kode: KRS_ERROR_CODES.JAM_BENTROK,

@@ -12,6 +12,7 @@ let semesterId;
 let kelasNormalId;
 let kelasBesarId;
 let krsId;
+let activePeriodeSebelum = [];
 const suffix = `phase8-${Date.now()}`;
 
 async function request(path, { method = 'GET', token, body } = {}) {
@@ -34,6 +35,9 @@ test.before(async () => {
       resolve();
     });
   });
+
+  activePeriodeSebelum = await prisma.periodeKRS.findMany({ where: { is_aktif: true } });
+  await prisma.periodeKRS.updateMany({ where: { is_aktif: true }, data: { is_aktif: false } });
 
   const [role, prodi, kurikulum, dosen, tahunAkademik] = await Promise.all([
     prisma.role.findUnique({ where: { name: 'MAHASISWA' } }),
@@ -71,7 +75,7 @@ test.before(async () => {
       tipe: 'ANTARA',
       tanggal_mulai: new Date(),
       tanggal_selesai: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-      is_active: false,
+      is_active: true,
     },
   });
   semesterId = semester.id;
@@ -115,6 +119,9 @@ test.after(async () => {
   await prisma.kelas.deleteMany({ where: { semester_id: semesterId } });
   await prisma.mataKuliah.deleteMany({ where: { kode: { startsWith: suffix } } });
   await prisma.periodeKRS.deleteMany({ where: { semester_id: semesterId } });
+  for (const periode of activePeriodeSebelum) {
+    await prisma.periodeKRS.update({ where: { id: periode.id }, data: { is_aktif: true } });
+  }
   await prisma.semester.deleteMany({ where: { id: semesterId } });
   await prisma.mahasiswa.deleteMany({ where: { id: mahasiswaId } });
   await prisma.user.deleteMany({ where: { username: suffix } });
@@ -200,4 +207,108 @@ test('Fase 8: hapus item merekalkulasi SKS dan submit menutup siklus draft', asy
   });
   assert.ok(audits.some((audit) => audit.action === 'CREATE_KRS_DRAFT'));
   assert.ok(audits.some((audit) => audit.action === 'SUBMIT_KRS'));
+});
+
+test('Fase 8: mutasi paralel menyimpan total SKS sesuai detail akhir', async () => {
+  const [mkSatu, mkDua] = await Promise.all([
+    prisma.mataKuliah.create({
+      data: { kurikulum_id: (await prisma.kurikulum.findFirst({ where: { is_active: true } })).id, kode: `${suffix}-parallel-1`, nama: 'MK Paralel Satu', sks: 2, semester_paket: 1, is_active: true },
+    }),
+    prisma.mataKuliah.create({
+      data: { kurikulum_id: (await prisma.kurikulum.findFirst({ where: { is_active: true } })).id, kode: `${suffix}-parallel-2`, nama: 'MK Paralel Dua', sks: 4, semester_paket: 1, is_active: true },
+    }),
+  ]);
+  const [kelasSatu, kelasDua] = await Promise.all([
+    prisma.kelas.create({ data: { mata_kuliah_id: mkSatu.id, semester_id: semesterId, dosen_id: (await prisma.dosen.findFirst()).id, kode_kelas: `${suffix}-P1`, kapasitas: 20 } }),
+    prisma.kelas.create({ data: { mata_kuliah_id: mkDua.id, semester_id: semesterId, dosen_id: (await prisma.dosen.findFirst()).id, kode_kelas: `${suffix}-P2`, kapasitas: 20 } }),
+  ]);
+
+  // KRS sebelumnya sudah DIAJUKAN, sehingga buat mahasiswa terpisah untuk race add/remove.
+  const role = await prisma.role.findUnique({ where: { name: 'MAHASISWA' } });
+  const prodi = await prisma.programStudi.findFirst();
+  const user = await prisma.user.create({
+    data: {
+      username: `${suffix}-parallel`,
+      email: `${suffix}-parallel@kampus.test`,
+      password_hash: await hashPassword('Password123!'),
+      status: 'ACTIVE',
+      user_roles: { create: { role_id: role.id } },
+    },
+  });
+  const mahasiswa = await prisma.mahasiswa.create({
+    data: { user_id: user.id, nim: `97${Date.now().toString().slice(-8)}`, nama: 'Mahasiswa Paralel', prodi_id: prodi.id, angkatan: 2024, status_akademik: 'AKTIF' },
+  });
+  const login = await request('/api/v1/auth/login', {
+    method: 'POST',
+    body: { identifier: `${suffix}-parallel`, password: 'Password123!' },
+  });
+  const parallelToken = login.data.data.accessToken;
+
+  const add = (kelasId) => request(`/api/v1/krs/saya/items?semester_id=${semesterId}`, {
+    method: 'POST', token: parallelToken, body: { kelas_id: kelasId },
+  });
+  const added = await Promise.all([add(kelasSatu.id), add(kelasDua.id)]);
+  assert.ok(added.every((result) => result.response.status === 201));
+
+  const parallelKrs = await prisma.kRS.findUnique({
+    where: { mahasiswa_id_semester_id: { mahasiswa_id: mahasiswa.id, semester_id: semesterId } },
+    include: { detail: { include: { kelas: { include: { mata_kuliah: true } } } } },
+  });
+  assert.equal(parallelKrs.total_sks, 6);
+  assert.equal(parallelKrs.detail.reduce((total, detail) => total + detail.kelas.mata_kuliah.sks, 0), 6);
+
+  const removed = await Promise.all(parallelKrs.detail.map((detail) => request(`/api/v1/krs/saya/items/${detail.id}`, {
+    method: 'DELETE', token: parallelToken,
+  })));
+  assert.ok(removed.every((result) => result.response.status === 200));
+
+  const finalKrs = await prisma.kRS.findUnique({
+    where: { id: parallelKrs.id },
+    include: { detail: true },
+  });
+  assert.equal(finalKrs.detail.length, 0);
+  assert.equal(finalKrs.total_sks, 0);
+
+  await prisma.kRS.delete({ where: { id: parallelKrs.id } });
+  await prisma.mahasiswa.delete({ where: { id: mahasiswa.id } });
+  await prisma.user.delete({ where: { id: user.id } });
+});
+
+test('Fase 8: periode untuk semester nonaktif dan mahasiswa CUTI ditolak', async () => {
+  const inactiveTahunAkademik = await prisma.tahunAkademik.create({
+    data: { kode: `${suffix}-inactive`, nama: 'Tahun Akademik Nonaktif', is_active: false },
+  });
+  const inactiveSemester = await prisma.semester.create({
+    data: {
+      tahun_akademik_id: inactiveTahunAkademik.id,
+      tipe: 'GANJIL',
+      tanggal_mulai: new Date(),
+      tanggal_selesai: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      is_active: false,
+    },
+  });
+  await prisma.periodeKRS.create({
+    data: {
+      semester_id: inactiveSemester.id,
+      nama: 'Periode Semester Nonaktif',
+      tanggal_mulai: new Date(Date.now() - 60_000),
+      tanggal_selesai: new Date(Date.now() + 60_000),
+      is_aktif: false,
+    },
+  });
+  const rejectedSemester = await request(`/api/v1/krs/saya/items?semester_id=${inactiveSemester.id}`, {
+    method: 'POST', token: tokenMahasiswa, body: { kelas_id: kelasNormalId },
+  });
+  assert.equal(rejectedSemester.response.status, 403);
+
+  await prisma.mahasiswa.update({ where: { id: mahasiswaId }, data: { status_akademik: 'CUTI' } });
+  const rejectedCuti = await request(`/api/v1/krs/saya/items?semester_id=${semesterId}`, {
+    method: 'POST', token: tokenMahasiswa, body: { kelas_id: kelasNormalId },
+  });
+  assert.equal(rejectedCuti.response.status, 403);
+  await prisma.mahasiswa.update({ where: { id: mahasiswaId }, data: { status_akademik: 'AKTIF' } });
+
+  await prisma.periodeKRS.delete({ where: { semester_id: inactiveSemester.id } });
+  await prisma.semester.delete({ where: { id: inactiveSemester.id } });
+  await prisma.tahunAkademik.delete({ where: { id: inactiveTahunAkademik.id } });
 });

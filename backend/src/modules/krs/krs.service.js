@@ -19,7 +19,6 @@ import {
   checkEligibility,
   checkCapacity,
   recomputeTotalSKS,
-  checkSKSLimit,
   validateSubmission,
   getAvailableClasses,
 } from './krs-rules.service.js';
@@ -48,6 +47,21 @@ const KRS_FULL_INCLUDE = {
   },
   disetujui_oleh: true,
 };
+
+async function lockTransaction(tx, key) {
+  // Advisory locks make KRS/detail mutations and enrollment checks deterministic
+  // without relying on stale read-modify-write values.
+  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))::text AS lock_acquired`;
+}
+
+function assertMahasiswaAktif(mahasiswa) {
+  if (mahasiswa.status_akademik !== 'AKTIF') {
+    throw new AppError(
+      `Mahasiswa berstatus ${mahasiswa.status_akademik} tidak dapat mengisi KRS`,
+      403
+    );
+  }
+}
 
 export const krsService = {
   // ================================================================
@@ -229,109 +243,114 @@ export const krsService = {
 
   async addItem(userId, { semester_id, kelas_id }, meta = {}) {
     const mhs = await this._getMahasiswa(userId);
+    assertMahasiswaAktif(mhs);
 
-    // Cek periode aktif
     const periodeResult = await getActivePeriode(semester_id);
-    if (!periodeResult.ok) {
-      throw new AppError(periodeResult.error.pesan, 403);
-    }
+    if (!periodeResult.ok) throw new AppError(periodeResult.error.pesan, 403);
 
-    // Dapatkan atau buat KRS
-    let createdDraft = false;
-    let krs = await prisma.kRS.findUnique({
-      where: {
-        mahasiswa_id_semester_id: {
-          mahasiswa_id: mhs.id,
-          semester_id,
-        },
-      },
-      include: { detail: true },
-    });
-
-    if (!krs) {
-      // Auto-create DRAFT
-      krs = await prisma.kRS.create({
-        data: {
-          mahasiswa_id: mhs.id,
-          semester_id,
-          periode_krs_id: periodeResult.periode.id,
-          status: 'DRAFT',
-          total_sks: 0,
-        },
-        include: { detail: true },
-      });
-      createdDraft = true;
-    }
-
-    // Hanya DRAFT dan DIKEMBALIKAN yang boleh diedit
-    if (!KRS_EDITABLE_STATES.includes(krs.status)) {
-      throw new AppError(
-        `KRS dalam status ${krs.status} tidak dapat diubah. Status yang diizinkan: ${KRS_EDITABLE_STATES.join(', ')}`,
-        400
-      );
-    }
-
-    // Cek eligibilitas kelas
+    // Validate first so an invalid request cannot leave an unaudited empty draft.
     const eligResult = await checkEligibility(mhs.id, kelas_id, semester_id);
-    if (!eligResult.ok) {
-      throw new AppError(eligResult.error.pesan, 409);
-    }
+    if (!eligResult.ok) throw new AppError(eligResult.error.pesan, 409);
 
-    // Cek duplikat
-    const existingDetail = await prisma.kRSDetail.findUnique({
-      where: { krs_id_kelas_id: { krs_id: krs.id, kelas_id } },
-    });
-    if (existingDetail) {
-      throw new AppError('Kelas sudah ada dalam KRS Anda', 409);
-    }
+    let mutation;
+    try {
+      mutation = await prisma.$transaction(async (tx) => {
+        await lockTransaction(tx, `krs:${mhs.id}:${semester_id}`);
 
-    // Cek kapasitas
-    const capResult = await checkCapacity(kelas_id, eligResult.kelas.kapasitas);
-    if (!capResult.ok) {
-      throw new AppError(capResult.error.pesan, 409);
-    }
+        let krs = await tx.kRS.findUnique({
+          where: {
+            mahasiswa_id_semester_id: {
+              mahasiswa_id: mhs.id,
+              semester_id,
+            },
+          },
+          include: { detail: true },
+        });
+        let createdDraft = false;
+        if (!krs) {
+          krs = await tx.kRS.create({
+            data: {
+              mahasiswa_id: mhs.id,
+              semester_id,
+              periode_krs_id: periodeResult.periode.id,
+              status: 'DRAFT',
+              total_sks: 0,
+            },
+            include: { detail: true },
+          });
+          createdDraft = true;
+        }
 
-    // Draft boleh melampaui batas SKS; seluruh aturan akademik dikumpulkan saat submit.
-    const currentSks = await recomputeTotalSKS(krs.id);
-    const newSks = currentSks + eligResult.kelas.mata_kuliah.sks;
+        if (!KRS_EDITABLE_STATES.includes(krs.status)) {
+          throw new AppError(
+            `KRS dalam status ${krs.status} tidak dapat diubah. Status yang diizinkan: ${KRS_EDITABLE_STATES.join(', ')}`,
+            400
+          );
+        }
 
-    // Tambah detail + update total SKS dalam transaksi
-    const updated = await prisma.$transaction(async (tx) => {
-      await tx.kRSDetail.create({
-        data: { krs_id: krs.id, kelas_id },
+        const existingDetail = await tx.kRSDetail.findUnique({
+          where: { krs_id_kelas_id: { krs_id: krs.id, kelas_id } },
+        });
+        if (existingDetail) throw new AppError('Kelas sudah ada dalam KRS Anda', 409);
+
+        const duplicateCourse = await tx.kRSDetail.findFirst({
+          where: {
+            krs_id: krs.id,
+            kelas: { mata_kuliah_id: eligResult.kelas.mata_kuliah_id },
+          },
+        });
+        if (duplicateCourse) {
+          throw new AppError('Mata kuliah ini sudah diambil pada kelas lain', 409);
+        }
+
+        const capResult = await checkCapacity(kelas_id, eligResult.kelas.kapasitas, tx);
+        if (!capResult.ok) throw new AppError(capResult.error.pesan, 409);
+
+        await tx.kRSDetail.create({ data: { krs_id: krs.id, kelas_id } });
+        const newSks = await recomputeTotalSKS(krs.id, tx);
+        const updated = await tx.kRS.update({
+          where: { id: krs.id },
+          data: { total_sks: newSks },
+          include: KRS_FULL_INCLUDE,
+        });
+
+        return {
+          updated,
+          createdDraft,
+          krsId: krs.id,
+          oldSks: krs.total_sks,
+          oldItemCount: krs.detail.length,
+          newSks,
+        };
       });
+    } catch (error) {
+      if (error.code === 'P2002') throw new AppError('Kelas sudah ada dalam KRS Anda', 409);
+      throw error;
+    }
 
-      return tx.kRS.update({
-        where: { id: krs.id },
-        data: { total_sks: newSks },
-        include: KRS_FULL_INCLUDE,
-      });
-    });
-
-    if (createdDraft) {
+    if (mutation.createdDraft) {
       await logAudit({
         userId,
         action: 'CREATE_KRS_DRAFT',
         entity: 'krs',
-        entityId: krs.id,
+        entityId: mutation.krsId,
         newValues: { mahasiswa_id: mhs.id, semester_id, status: 'DRAFT' },
         ipAddress: meta.ipAddress,
         userAgent: meta.userAgent,
       });
     }
-
     await logAudit({
       userId,
       action: 'UPDATE_KRS_ITEM',
       entity: 'krs',
-      entityId: krs.id,
-      oldValues: { total_sks: currentSks, item_count: krs.detail.length },
-      newValues: { total_sks: newSks, added_kelas_id: kelas_id },
+      entityId: mutation.krsId,
+      oldValues: { total_sks: mutation.oldSks, item_count: mutation.oldItemCount },
+      newValues: { total_sks: mutation.newSks, added_kelas_id: kelas_id },
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     });
 
-    return updated;
+    return mutation.updated;
   },
 
   // ================================================================
@@ -340,63 +359,65 @@ export const krsService = {
 
   async removeItem(userId, detailId, meta = {}) {
     const mhs = await this._getMahasiswa(userId);
+    assertMahasiswaAktif(mhs);
 
-    // Cari detail beserta KRS-nya
-    const detail = await prisma.kRSDetail.findUnique({
+    const initialDetail = await prisma.kRSDetail.findUnique({
       where: { id: detailId },
-      include: {
-        krs: true,
-        kelas: { include: { mata_kuliah: true } },
-      },
+      include: { krs: true },
     });
-
-    if (!detail) throw new AppError('Detail KRS tidak ditemukan', 404);
-
-    // Ownership check
-    if (detail.krs.mahasiswa_id !== mhs.id) {
+    if (!initialDetail) throw new AppError('Detail KRS tidak ditemukan', 404);
+    if (initialDetail.krs.mahasiswa_id !== mhs.id) {
       throw new AppError('Anda tidak memiliki akses untuk mengubah KRS ini', 403);
     }
 
-    // Status check
-    if (!KRS_EDITABLE_STATES.includes(detail.krs.status)) {
-      throw new AppError(
-        `KRS dalam status ${detail.krs.status} tidak dapat diubah`,
-        400
-      );
-    }
+    const periodeResult = await getActivePeriode(initialDetail.krs.semester_id);
+    if (!periodeResult.ok) throw new AppError(periodeResult.error.pesan, 403);
 
-    const periodeResult = await getActivePeriode(detail.krs.semester_id);
-    if (!periodeResult.ok) {
-      throw new AppError(periodeResult.error.pesan, 403);
-    }
+    const mutation = await prisma.$transaction(async (tx) => {
+      await lockTransaction(tx, `krs:${mhs.id}:${initialDetail.krs.semester_id}`);
+      const detail = await tx.kRSDetail.findUnique({
+        where: { id: detailId },
+        include: {
+          krs: true,
+          kelas: { include: { mata_kuliah: true } },
+        },
+      });
+      if (!detail) throw new AppError('Detail KRS tidak ditemukan', 404);
+      if (detail.krs.mahasiswa_id !== mhs.id) {
+        throw new AppError('Anda tidak memiliki akses untuk mengubah KRS ini', 403);
+      }
+      if (!KRS_EDITABLE_STATES.includes(detail.krs.status)) {
+        throw new AppError(`KRS dalam status ${detail.krs.status} tidak dapat diubah`, 400);
+      }
 
-    const removedSks = detail.kelas.mata_kuliah.sks;
-    const oldSks = detail.krs.total_sks;
-    const newSks = Math.max(0, oldSks - removedSks);
-
-    // Hapus detail + update total SKS
-    const updated = await prisma.$transaction(async (tx) => {
       await tx.kRSDetail.delete({ where: { id: detailId } });
-
-      return tx.kRS.update({
+      const newSks = await recomputeTotalSKS(detail.krs.id, tx);
+      const updated = await tx.kRS.update({
         where: { id: detail.krs.id },
         data: { total_sks: newSks },
         include: KRS_FULL_INCLUDE,
       });
+      return {
+        updated,
+        krsId: detail.krs.id,
+        oldSks: detail.krs.total_sks,
+        newSks,
+        kelasId: detail.kelas_id,
+      };
     });
 
     await logAudit({
       userId,
       action: 'UPDATE_KRS_ITEM',
       entity: 'krs',
-      entityId: detail.krs.id,
-      oldValues: { total_sks: oldSks, removed_kelas_id: detail.kelas_id },
-      newValues: { total_sks: newSks },
+      entityId: mutation.krsId,
+      oldValues: { total_sks: mutation.oldSks, removed_kelas_id: mutation.kelasId },
+      newValues: { total_sks: mutation.newSks },
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     });
 
-    return updated;
+    return mutation.updated;
   },
 
   // ================================================================
@@ -405,93 +426,101 @@ export const krsService = {
 
   async submitKRS(userId, semester_id, meta = {}) {
     const mhs = await this._getMahasiswa(userId);
+    assertMahasiswaAktif(mhs);
 
-    let semId = semester_id;
-    if (!semId) {
-      const activeSem = await this._getActiveSemester();
-      semId = activeSem.id;
-    }
+    const semId = semester_id || (await this._getActiveSemester()).id;
 
-    // Cek periode aktif
     const periodeResult = await getActivePeriode(semId);
-    if (!periodeResult.ok) {
-      throw new AppError(periodeResult.error.pesan, 403);
+    if (!periodeResult.ok) throw new AppError(periodeResult.error.pesan, 403);
+
+    let transactionResult;
+    try {
+      transactionResult = await prisma.$transaction(async (tx) => {
+        await lockTransaction(tx, `krs:${mhs.id}:${semId}`);
+        const krs = await tx.kRS.findUnique({
+          where: {
+            mahasiswa_id_semester_id: {
+              mahasiswa_id: mhs.id,
+              semester_id: semId,
+            },
+          },
+        });
+        if (!krs) throw new AppError('KRS tidak ditemukan. Buat draft terlebih dahulu.', 404);
+        if (!isLegalTransition(krs.status, 'DIAJUKAN')) {
+          throw new AppError(illegalTransitionMessage(krs.status, 'DIAJUKAN'), 400);
+        }
+
+        const details = await tx.kRSDetail.findMany({
+          where: { krs_id: krs.id },
+          select: { kelas_id: true },
+          orderBy: { kelas_id: 'asc' },
+        });
+        for (const detail of details) {
+          await lockTransaction(tx, `kelas:${detail.kelas_id}`);
+        }
+
+        const validation = await validateSubmission({
+          krsId: krs.id,
+          semesterId: semId,
+          mahasiswaId: mhs.id,
+          sksMaks: periodeResult.periode.sks_maks,
+          client: tx,
+        });
+        if (!validation.ok) return { submitted: false, validation };
+
+        const result = await tx.kRS.updateMany({
+          where: { id: krs.id, status: { in: ['DRAFT', 'DIKEMBALIKAN'] } },
+          data: {
+            status: 'DIAJUKAN',
+            total_sks: validation.totalSks,
+            diajukan_at: new Date(),
+            catatan_dosen: null,
+          },
+        });
+        if (result.count === 0) {
+          throw new AppError('KRS sudah tidak dalam status yang dapat diajukan (konflik konkurensi)', 409);
+        }
+
+        const updated = await tx.kRS.findUnique({
+          where: { id: krs.id },
+          include: KRS_FULL_INCLUDE,
+        });
+        return { submitted: true, updated, validation, krs };
+      });
+    } catch (error) {
+      if (error.code === 'P2034') {
+        throw new AppError('Terjadi konflik saat mengajukan KRS, silakan coba kembali', 409);
+      }
+      throw error;
     }
 
-    // Ambil KRS
-    const krs = await prisma.kRS.findUnique({
-      where: {
-        mahasiswa_id_semester_id: {
-          mahasiswa_id: mhs.id,
-          semester_id: semId,
-        },
-      },
-    });
-
-    if (!krs) throw new AppError('KRS tidak ditemukan. Buat draft terlebih dahulu.', 404);
-
-    // State machine check: hanya DRAFT dan DIKEMBALIKAN yang bisa disubmit
-    if (!isLegalTransition(krs.status, 'DIAJUKAN')) {
-      throw new AppError(illegalTransitionMessage(krs.status, 'DIAJUKAN'), 400);
-    }
-
-    // Validasi penuh (SKS, kapasitas, bentrok jam)
-    const validation = await validateSubmission({
-      krsId: krs.id,
-      semesterId: semId,
-      mahasiswaId: mhs.id,
-      sksMaks: periodeResult.periode.sks_maks,
-    });
-
-    if (!validation.ok) {
-      // Format SRS Bab 4.7 — reason terstruktur
+    if (!transactionResult.submitted) {
       return {
         submitted: false,
-        errors: validation.errors,
-        warnings: validation.warnings,
+        errors: transactionResult.validation.errors,
+        warnings: transactionResult.validation.warnings,
       };
     }
-
-    // Submit: guard status lama + update ke DIAJUKAN (optimistic lock)
-    const updated = await prisma.$transaction(async (tx) => {
-      const result = await tx.kRS.updateMany({
-        where: {
-          id: krs.id,
-          status: { in: ['DRAFT', 'DIKEMBALIKAN'] },
-        },
-        data: {
-          status: 'DIAJUKAN',
-          total_sks: validation.totalSks,
-          diajukan_at: new Date(),
-          catatan_dosen: null,
-        },
-      });
-
-      if (result.count === 0) {
-        throw new AppError('KRS sudah tidak dalam status yang dapat diajukan (konflik konkurensi)', 409);
-      }
-
-      return tx.kRS.findUnique({
-        where: { id: krs.id },
-        include: KRS_FULL_INCLUDE,
-      });
-    });
 
     await logAudit({
       userId,
       action: 'SUBMIT_KRS',
       entity: 'krs',
-      entityId: krs.id,
-      oldValues: { status: krs.status },
-      newValues: { status: 'DIAJUKAN', total_sks: validation.totalSks, diajukan_at: updated.diajukan_at },
+      entityId: transactionResult.krs.id,
+      oldValues: { status: transactionResult.krs.status },
+      newValues: {
+        status: 'DIAJUKAN',
+        total_sks: transactionResult.validation.totalSks,
+        diajukan_at: transactionResult.updated.diajukan_at,
+      },
       ipAddress: meta.ipAddress,
       userAgent: meta.userAgent,
     });
 
     return {
       submitted: true,
-      krs: updated,
-      warnings: validation.warnings,
+      krs: transactionResult.updated,
+      warnings: transactionResult.validation.warnings,
     };
   },
 
@@ -736,25 +765,23 @@ export const krsService = {
       mahasiswa: `${krs.mahasiswa.nama} (${krs.mahasiswa.nim})`,
     };
 
-    const updated = await prisma.kRS.update({
-      where: { id: krsId },
-      data: {
-        status: 'DRAFT',
-        diajukan_at: null,
-        diproses_at: null,
-        disetujui_oleh_id: null,
-        catatan_dosen: null,
-      },
-      include: KRS_FULL_INCLUDE,
+    const { updated, recalc } = await prisma.$transaction(async (tx) => {
+      await lockTransaction(tx, `krs:${krs.mahasiswa_id}:${krs.semester_id}`);
+      const recalc = await recomputeTotalSKS(krsId, tx);
+      const updated = await tx.kRS.update({
+        where: { id: krsId },
+        data: {
+          status: 'DRAFT',
+          total_sks: recalc,
+          diajukan_at: null,
+          diproses_at: null,
+          disetujui_oleh_id: null,
+          catatan_dosen: null,
+        },
+        include: KRS_FULL_INCLUDE,
+      });
+      return { updated, recalc };
     });
-
-    // Recompute total SKS dari detail yang masih ada
-    const recalc = await recomputeTotalSKS(krsId);
-    await prisma.kRS.update({
-      where: { id: krsId },
-      data: { total_sks: recalc },
-    });
-    updated.total_sks = recalc;
 
     await logAudit({
       userId: meta.userId,

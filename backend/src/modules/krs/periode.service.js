@@ -99,7 +99,10 @@ export const periodeService = {
       });
     } catch (error) {
       if (error.code === 'P2002') {
-        throw new AppError('Periode KRS untuk semester ini sudah terdaftar', 409);
+        throw new AppError(
+          'Periode KRS untuk semester ini sudah terdaftar atau periode aktif lain masih terbuka',
+          409
+        );
       }
       throw error;
     }
@@ -180,20 +183,28 @@ export const periodeService = {
     if (!existing) throw new AppError('Periode KRS tidak ditemukan', 404);
     if (existing.is_aktif) throw new AppError('Periode KRS ini sudah aktif', 400);
 
-    const result = await prisma.$transaction(async (tx) => {
-      await tx.periodeKRS.updateMany({
-        where: { is_aktif: true, id: { not: id } },
-        data: { is_aktif: false },
-      });
+    let result;
+    try {
+      result = await prisma.$transaction(async (tx) => {
+        await tx.periodeKRS.updateMany({
+          where: { is_aktif: true, id: { not: id } },
+          data: { is_aktif: false },
+        });
 
-      return tx.periodeKRS.update({
-        where: { id },
-        data: { is_aktif: true },
-        include: {
-          semester: { include: { tahun_akademik: true } },
-        },
+        return tx.periodeKRS.update({
+          where: { id },
+          data: { is_aktif: true },
+          include: {
+            semester: { include: { tahun_akademik: true } },
+          },
+        });
       });
-    });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new AppError('Konflik aktivasi periode KRS, silakan coba kembali', 409);
+      }
+      throw error;
+    }
 
     await logAudit({
       userId: meta.userId,
