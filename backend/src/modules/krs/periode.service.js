@@ -66,6 +66,9 @@ export const periodeService = {
     // Cek semester exists dan pastikan satu periode resmi per semester.
     const semester = await prisma.semester.findUnique({ where: { id: data.semester_id } });
     if (!semester) throw new AppError('Semester tidak ditemukan', 404);
+    if (data.is_aktif && !semester.is_active) {
+      throw new AppError('Periode KRS hanya dapat diaktifkan pada semester operasional yang sedang berjalan', 400);
+    }
 
     const existing = await prisma.periodeKRS.findUnique({ where: { semester_id: data.semester_id } });
     if (existing) {
@@ -179,9 +182,15 @@ export const periodeService = {
    * Buka/aktifkan periode KRS (auto-close periode aktif lainnya, atomik).
    */
   async activate(id, meta = {}) {
-    const existing = await prisma.periodeKRS.findUnique({ where: { id } });
+    const existing = await prisma.periodeKRS.findUnique({
+      where: { id },
+      include: { semester: true },
+    });
     if (!existing) throw new AppError('Periode KRS tidak ditemukan', 404);
     if (existing.is_aktif) throw new AppError('Periode KRS ini sudah aktif', 400);
+    if (!existing.semester?.is_active) {
+      throw new AppError('Periode KRS hanya dapat diaktifkan pada semester operasional yang sedang berjalan', 400);
+    }
 
     let result;
     try {

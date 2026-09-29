@@ -28,7 +28,7 @@ export const krsController = {
 
   async getMyKRS(req, res, next) {
     try {
-      const data = await krsService.getMyKRS(req.user.id, req.query?.semester_id);
+      const data = await krsService.getMyKRS(req.user.id, req.query?.semester_id, getReqMeta(req));
       return apiResponse.success(res, {
         message: 'Data KRS mahasiswa berhasil diambil',
         data,

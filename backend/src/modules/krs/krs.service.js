@@ -9,7 +9,6 @@ import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
 import { logAudit } from '../../utils/audit.js';
 import {
-  KRS_ERROR_CODES,
   KRS_EDITABLE_STATES,
   isLegalTransition,
   illegalTransitionMessage,
@@ -61,6 +60,18 @@ function assertMahasiswaAktif(mahasiswa) {
       403
     );
   }
+}
+
+function assertPeriodeAktif(periodeResult) {
+  if (!periodeResult.ok) {
+    throw new AppError(periodeResult.error.pesan, 403);
+  }
+}
+
+function isKrsIdentityConflict(error) {
+  if (error?.code !== 'P2002') return false;
+  const target = Array.isArray(error.meta?.target) ? error.meta.target.join(',') : String(error.meta?.target || '');
+  return target.includes('mahasiswa_id') && target.includes('semester_id');
 }
 
 export const krsService = {
@@ -132,7 +143,7 @@ export const krsService = {
   // Mahasiswa: GET /api/v1/krs/saya
   // ================================================================
 
-  async getMyKRS(userId, semesterId) {
+  async getMyKRS(userId, semesterId, meta = {}) {
     const mhs = await this._getMahasiswa(userId);
 
     // Gunakan semester_id dari query, atau semester aktif
@@ -142,8 +153,7 @@ export const krsService = {
       semId = activeSem.id;
     }
 
-    // Cari KRS yang sudah ada
-    let krs = await prisma.kRS.findUnique({
+    const existing = await prisma.kRS.findUnique({
       where: {
         mahasiswa_id_semester_id: {
           mahasiswa_id: mhs.id,
@@ -152,27 +162,61 @@ export const krsService = {
       },
       include: KRS_FULL_INCLUDE,
     });
+    if (existing) return existing;
 
-    if (!krs) {
-      // Belum ada KRS — cek apakah ada periode aktif
-      const periodeResult = await getActivePeriode(semId);
-      if (!periodeResult.ok) {
-        // Tidak ada periode aktif: kembalikan null tanpa membuat draft
-        return null;
-      }
+    const periodeResult = await getActivePeriode(semId);
+    if (!periodeResult.ok) return null;
+    assertMahasiswaAktif(mhs);
 
-      // Auto-create DRAFT
-      krs = await prisma.kRS.create({
-        data: {
-          mahasiswa_id: mhs.id,
-          semester_id: semId,
-          periode_krs_id: periodeResult.periode.id,
-          status: 'DRAFT',
-          total_sks: 0,
-        },
-        include: KRS_FULL_INCLUDE,
+    let createdDraft = false;
+    let krs;
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        await lockTransaction(tx, `krs:${mhs.id}:${semId}`);
+        const again = await tx.kRS.findUnique({
+          where: {
+            mahasiswa_id_semester_id: {
+              mahasiswa_id: mhs.id,
+              semester_id: semId,
+            },
+          },
+          include: KRS_FULL_INCLUDE,
+        });
+        if (again) return { krs: again, createdDraft: false };
+
+        const livePeriode = await getActivePeriode(semId, tx);
+        if (!livePeriode.ok) return { krs: null, createdDraft: false };
+
+        const created = await tx.kRS.create({
+          data: {
+            mahasiswa_id: mhs.id,
+            semester_id: semId,
+            periode_krs_id: livePeriode.periode.id,
+            status: 'DRAFT',
+            total_sks: 0,
+          },
+          include: KRS_FULL_INCLUDE,
+        });
+        return { krs: created, createdDraft: true };
       });
+      krs = result?.krs;
+      createdDraft = Boolean(result?.createdDraft);
+    } catch (error) {
+      if (error.code === 'P2002') {
+        return prisma.kRS.findUnique({
+          where: {
+            mahasiswa_id_semester_id: {
+              mahasiswa_id: mhs.id,
+              semester_id: semId,
+            },
+          },
+          include: KRS_FULL_INCLUDE,
+        });
+      }
+      throw error;
+    }
 
+    if (createdDraft && krs) {
       await logAudit({
         userId,
         action: 'CREATE_KRS_DRAFT',
@@ -183,6 +227,8 @@ export const krsService = {
           semester_id: semId,
           status: 'DRAFT',
         },
+        ipAddress: meta.ipAddress,
+        userAgent: meta.userAgent,
       });
     }
 
@@ -195,6 +241,7 @@ export const krsService = {
 
   async getKelastersedia(userId, semesterId) {
     const mhs = await this._getMahasiswa(userId);
+    assertMahasiswaAktif(mhs);
 
     let semId = semesterId;
     if (!semId) {
@@ -202,11 +249,8 @@ export const krsService = {
       semId = activeSem.id;
     }
 
-    // Cek periode aktif
     const periodeResult = await getActivePeriode(semId);
-    if (!periodeResult.ok) {
-      throw new AppError(periodeResult.error.pesan, 409);
-    }
+    assertPeriodeAktif(periodeResult);
 
     // Ambil katalog kelas
     const classes = await getAvailableClasses(mhs.id, semId);
@@ -246,7 +290,7 @@ export const krsService = {
     assertMahasiswaAktif(mhs);
 
     const periodeResult = await getActivePeriode(semester_id);
-    if (!periodeResult.ok) throw new AppError(periodeResult.error.pesan, 403);
+    assertPeriodeAktif(periodeResult);
 
     // Validate first so an invalid request cannot leave an unaudited empty draft.
     const eligResult = await checkEligibility(mhs.id, kelas_id, semester_id);
@@ -256,6 +300,13 @@ export const krsService = {
     try {
       mutation = await prisma.$transaction(async (tx) => {
         await lockTransaction(tx, `krs:${mhs.id}:${semester_id}`);
+        await lockTransaction(tx, `kelas:${kelas_id}`);
+
+        const livePeriode = await getActivePeriode(semester_id, tx);
+        assertPeriodeAktif(livePeriode);
+
+        const liveElig = await checkEligibility(mhs.id, kelas_id, semester_id, tx);
+        if (!liveElig.ok) throw new AppError(liveElig.error.pesan, 409);
 
         let krs = await tx.kRS.findUnique({
           where: {
@@ -272,7 +323,7 @@ export const krsService = {
             data: {
               mahasiswa_id: mhs.id,
               semester_id,
-              periode_krs_id: periodeResult.periode.id,
+              periode_krs_id: livePeriode.periode.id,
               status: 'DRAFT',
               total_sks: 0,
             },
@@ -296,14 +347,14 @@ export const krsService = {
         const duplicateCourse = await tx.kRSDetail.findFirst({
           where: {
             krs_id: krs.id,
-            kelas: { mata_kuliah_id: eligResult.kelas.mata_kuliah_id },
+            kelas: { mata_kuliah_id: liveElig.kelas.mata_kuliah_id },
           },
         });
         if (duplicateCourse) {
           throw new AppError('Mata kuliah ini sudah diambil pada kelas lain', 409);
         }
 
-        const capResult = await checkCapacity(kelas_id, eligResult.kelas.kapasitas, tx);
+        const capResult = await checkCapacity(kelas_id, liveElig.kelas.kapasitas, tx);
         if (!capResult.ok) throw new AppError(capResult.error.pesan, 409);
 
         await tx.kRSDetail.create({ data: { krs_id: krs.id, kelas_id } });
@@ -324,6 +375,9 @@ export const krsService = {
         };
       });
     } catch (error) {
+      if (isKrsIdentityConflict(error)) {
+        throw new AppError('Terjadi konflik saat membuat draft KRS, silakan coba kembali', 409);
+      }
       if (error.code === 'P2002') throw new AppError('Kelas sudah ada dalam KRS Anda', 409);
       throw error;
     }
@@ -371,10 +425,12 @@ export const krsService = {
     }
 
     const periodeResult = await getActivePeriode(initialDetail.krs.semester_id);
-    if (!periodeResult.ok) throw new AppError(periodeResult.error.pesan, 403);
+    assertPeriodeAktif(periodeResult);
 
     const mutation = await prisma.$transaction(async (tx) => {
       await lockTransaction(tx, `krs:${mhs.id}:${initialDetail.krs.semester_id}`);
+      const livePeriode = await getActivePeriode(initialDetail.krs.semester_id, tx);
+      assertPeriodeAktif(livePeriode);
       const detail = await tx.kRSDetail.findUnique({
         where: { id: detailId },
         include: {
@@ -431,12 +487,14 @@ export const krsService = {
     const semId = semester_id || (await this._getActiveSemester()).id;
 
     const periodeResult = await getActivePeriode(semId);
-    if (!periodeResult.ok) throw new AppError(periodeResult.error.pesan, 403);
+    assertPeriodeAktif(periodeResult);
 
     let transactionResult;
     try {
       transactionResult = await prisma.$transaction(async (tx) => {
         await lockTransaction(tx, `krs:${mhs.id}:${semId}`);
+        const livePeriode = await getActivePeriode(semId, tx);
+        assertPeriodeAktif(livePeriode);
         const krs = await tx.kRS.findUnique({
           where: {
             mahasiswa_id_semester_id: {
@@ -463,7 +521,7 @@ export const krsService = {
           krsId: krs.id,
           semesterId: semId,
           mahasiswaId: mhs.id,
-          sksMaks: periodeResult.periode.sks_maks,
+          sksMaks: livePeriode.periode.sks_maks,
           client: tx,
         });
         if (!validation.ok) return { submitted: false, validation };
@@ -528,13 +586,23 @@ export const krsService = {
   // Scoped: GET /api/v1/krs/:id  (pemilik / PA pemilik / admin)
   // ================================================================
 
-  async getKRSById(id) {
+  async getKRSById(userId, roles = [], id) {
     const krs = await prisma.kRS.findUnique({
       where: { id },
       include: KRS_FULL_INCLUDE,
     });
     if (!krs) throw new AppError('KRS tidak ditemukan', 404);
-    return krs;
+
+    const roleSet = new Set(roles);
+    if (roleSet.has('SUPER_ADMIN') || roleSet.has('ADMIN_AKADEMIK')) return krs;
+
+    const mhs = await prisma.mahasiswa.findUnique({ where: { user_id: userId } });
+    if (mhs && krs.mahasiswa_id === mhs.id) return krs;
+
+    const dosen = await prisma.dosen.findUnique({ where: { user_id: userId } });
+    if (dosen && krs.mahasiswa?.dosen_wali_id === dosen.id) return krs;
+
+    throw new AppError('Anda tidak memiliki akses untuk melihat KRS ini', 403);
   },
 
   // ================================================================

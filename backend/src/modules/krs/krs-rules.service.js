@@ -14,6 +14,23 @@ function periodError(kode, pesan, detail = undefined) {
 }
 
 /**
+ * Hitung nomor semester berjalan mahasiswa dari angkatan + semester operasional.
+ * GANJIL = (selisih tahun * 2) + 1, GENAP/ANTARA = (selisih tahun * 2) + 2.
+ */
+export function computeSemesterBerjalan(angkatan, semester) {
+  if (!angkatan || !semester) return null;
+  const kodeYear = parseInt(String(semester.tahun_akademik?.kode || '').slice(0, 4), 10);
+  const year = Number.isFinite(kodeYear)
+    ? kodeYear
+    : (semester.tanggal_mulai ? new Date(semester.tanggal_mulai).getFullYear() : NaN);
+  if (!Number.isFinite(year)) return null;
+  const yearIndex = year - angkatan;
+  if (yearIndex < 0) return 1;
+  const base = yearIndex * 2;
+  return semester.tipe === 'GANJIL' ? base + 1 : base + 2;
+}
+
+/**
  * Ambil periode KRS aktif pada semester operasional yang masih dalam jendela waktu.
  */
 export async function getActivePeriode(semesterId, client = prisma) {
@@ -84,7 +101,7 @@ export async function checkEligibility(mahasiswaId, kelasId, semesterId, client 
     where: { id: kelasId },
     include: {
       mata_kuliah: true,
-      semester: true,
+      semester: { include: { tahun_akademik: true } },
       dosen: true,
       ruangan: true,
       jadwal: true,
@@ -124,6 +141,18 @@ export async function checkEligibility(mahasiswaId, kelasId, semesterId, client 
     return periodError(
       KRS_ERROR_CODES.KELAS_TIDAK_TERSEDIA,
       `Mata kuliah ${kelas.mata_kuliah.nama} tidak aktif`
+    );
+  }
+
+  const semesterBerjalan = computeSemesterBerjalan(mahasiswa.angkatan, kelas.semester);
+  if (semesterBerjalan != null && kelas.mata_kuliah.semester_paket > semesterBerjalan) {
+    return periodError(
+      KRS_ERROR_CODES.SEMESTER_PAKET_TIDAK_SESUAI,
+      `Mata kuliah ${kelas.mata_kuliah.nama} (semester paket ${kelas.mata_kuliah.semester_paket}) melebihi semester berjalan mahasiswa (${semesterBerjalan})`,
+      {
+        semester_paket: kelas.mata_kuliah.semester_paket,
+        semester_berjalan: semesterBerjalan,
+      }
     );
   }
 
@@ -217,6 +246,11 @@ export async function validateSubmission({ krsId, semesterId, mahasiswaId, sksMa
     }
     mataKuliahSeen.add(detail.kelas.mata_kuliah_id);
 
+    if (mahasiswaId && semesterId) {
+      const elig = await checkEligibility(mahasiswaId, detail.kelas_id, semesterId, client);
+      if (!elig.ok) errors.push(elig.error);
+    }
+
     const capCheck = await checkCapacity(detail.kelas_id, detail.kelas.kapasitas, client);
     if (!capCheck.ok) errors.push(capCheck.error);
   }
@@ -265,6 +299,12 @@ export async function getAvailableClasses(mahasiswaId, semesterId) {
   const kurikulumIds = mahasiswa.prodi.kurikulum.map((kurikulum) => kurikulum.id);
   if (kurikulumIds.length === 0) return [];
 
+  const semester = await prisma.semester.findUnique({
+    where: { id: semesterId },
+    include: { tahun_akademik: true },
+  });
+  const semesterBerjalan = computeSemesterBerjalan(mahasiswa.angkatan, semester);
+
   const kelasList = await prisma.kelas.findMany({
     where: {
       semester_id: semesterId,
@@ -278,18 +318,24 @@ export async function getAvailableClasses(mahasiswaId, semesterId) {
     ],
   });
 
-  const kelasIds = kelasList.map((kelas) => kelas.id);
-  const enrolledCounts = await prisma.kRSDetail.groupBy({
-    by: ['kelas_id'],
-    _count: { id: true },
-    where: {
-      kelas_id: { in: kelasIds },
-      krs: { status: { in: KRS_ENROLLED_STATUSES } },
-    },
-  });
+  const eligibleKelas = semesterBerjalan == null
+    ? kelasList
+    : kelasList.filter((kelas) => kelas.mata_kuliah.semester_paket <= semesterBerjalan);
+
+  const kelasIds = eligibleKelas.map((kelas) => kelas.id);
+  const enrolledCounts = kelasIds.length === 0
+    ? []
+    : await prisma.kRSDetail.groupBy({
+        by: ['kelas_id'],
+        _count: { id: true },
+        where: {
+          kelas_id: { in: kelasIds },
+          krs: { status: { in: KRS_ENROLLED_STATUSES } },
+        },
+      });
   const countMap = new Map(enrolledCounts.map((item) => [item.kelas_id, item._count.id]));
 
-  return kelasList.map((kelas) => {
+  return eligibleKelas.map((kelas) => {
     const terisi = countMap.get(kelas.id) || 0;
     return { ...kelas, terisi, slot_tersedia: Math.max(0, kelas.kapasitas - terisi) };
   });

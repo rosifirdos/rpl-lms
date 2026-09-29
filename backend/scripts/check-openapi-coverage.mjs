@@ -6,7 +6,7 @@ const docPaths = new Set(
   [...yamlContent.matchAll(/^  (\/[a-zA-Z0-9\/\-{}]+):\s*$/gm)].map((m) => m[1])
 );
 
-const testFiles = ['phase2', 'phase3', 'phase4', 'phase5', 'phase6'].map(
+const testFiles = ['phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase8'].map(
   (f) => `./tests/${f}.test.js`
 );
 
@@ -24,6 +24,8 @@ for (const f of testFiles) {
   const c = fs.readFileSync(f, 'utf8');
   for (const m of c.matchAll(reTemplate)) allEndpoints.add(m[1]);
   for (const m of c.matchAll(reConcat)) allEndpoints.add(m[1]);
+  for (const m of c.matchAll(/request\('([^']+)'/g)) allEndpoints.add(m[1]);
+  for (const m of c.matchAll(/request\(`([^`]+)`/g)) allEndpoints.add(m[1]);
 }
 
 const normalized = new Set();
