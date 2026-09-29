@@ -13,6 +13,7 @@ import permissionsRoutes from './modules/permissions/permissions.routes.js';
 import calendarRoutes from './modules/calendar/calendar.routes.js';
 import masterRoutes from './modules/master/master.routes.js';
 import portalRoutes from './modules/portal/portal.routes.js';
+import krsRoutes from './modules/krs/krs.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
 import { generalLimiter, authLimiter } from './middlewares/rateLimit.middleware.js';
@@ -83,6 +84,7 @@ app.get('/api/v1', (req, res) => {
         permissions: '/api/v1/permissions',
         calendar: '/api/v1/calendar',
         master: '/api/v1/master',
+        krs: '/api/v1/krs',
       },
     },
   });
@@ -102,6 +104,9 @@ app.use('/api/v1/roles', rolesRoutes);
 app.use('/api/v1/permissions', permissionsRoutes);
 app.use('/api/v1/calendar', calendarRoutes);
 app.use('/api/v1/master', masterRoutes);
+
+// Modul MVP 2 - KRS & Jadwal (Fase 8-10)
+app.use('/api/v1/krs', krsRoutes);
 
 // Endpoint Konseptual Alias (SRS Bab 32 - Tabel 16)
 // Memetakan /api/login, /api/logout, /api/profile, /api/calendar, /api/dashboard, /api/portal langsung ke handler modul terkait

@@ -75,6 +75,8 @@ tags:
     description: Gedung & Ruangan (SRS Bab 10)
   - name: Audit Log
     description: Jejak audit sistem (SRS Bab 35)
+  - name: KRS
+    description: Periode KRS, katalog kelas, dan siklus draft mahasiswa (SRS FR-022 s/d FR-030, FR-102)
 
 components:
   securitySchemes:
@@ -2996,6 +2998,317 @@ paths:
                     type: boolean
                   data:
                     $ref: '#/components/schemas/AuditLog'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── KRS (Fase 8) ──
+  /api/v1/krs/periode-aktif:
+    get:
+      tags: [KRS]
+      summary: Informasi periode KRS aktif
+      operationId: getPeriodeKrsAktif
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Periode KRS aktif atau pesan jika belum dibuka
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/krs/saya:
+    get:
+      tags: [KRS]
+      summary: KRS milik mahasiswa pada semester tertentu
+      operationId: getMyKrs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Draft/KRS mahasiswa, atau null jika periode tidak aktif
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/krs/tersedia:
+    get:
+      tags: [KRS]
+      summary: Katalog kelas yang berhak diambil
+      operationId: getKelasTersedia
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Daftar kelas eligible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/krs/saya/items:
+    post:
+      tags: [KRS]
+      summary: Tambah kelas ke draft KRS
+      operationId: addKrsItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kelas_id]
+              properties:
+                kelas_id:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Kelas ditambahkan ke draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/krs/saya/items/{id}:
+    delete:
+      tags: [KRS]
+      summary: Hapus kelas dari draft KRS
+      operationId: removeKrsItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Kelas dihapus dari draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/krs/saya/submit:
+    post:
+      tags: [KRS]
+      summary: Ajukan KRS untuk persetujuan Dosen Wali
+      operationId: submitKrs
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                semester_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: KRS berhasil diajukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Pengajuan ditolak dengan alasan terstruktur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/krs/admin/periode:
+    get:
+      tags: [KRS]
+      summary: Daftar periode KRS
+      operationId: listPeriodeKrs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: is_aktif
+          in: query
+          schema:
+            type: string
+            enum: [true, false]
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Daftar periode KRS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [KRS]
+      summary: Buat periode KRS
+      operationId: createPeriodeKrs
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [semester_id, nama, tanggal_mulai, tanggal_selesai]
+              properties:
+                semester_id:
+                  type: string
+                  format: uuid
+                nama:
+                  type: string
+                tanggal_mulai:
+                  type: string
+                  format: date-time
+                tanggal_selesai:
+                  type: string
+                  format: date-time
+                sks_maks:
+                  type: integer
+                  default: 24
+                is_aktif:
+                  type: boolean
+                  default: false
+      responses:
+        '201':
+          description: Periode KRS dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/krs/admin/periode/{id}:
+    put:
+      tags: [KRS]
+      summary: Ubah rentang dan batas SKS periode KRS
+      operationId: updatePeriodeKrs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nama:
+                  type: string
+                tanggal_mulai:
+                  type: string
+                  format: date-time
+                tanggal_selesai:
+                  type: string
+                  format: date-time
+                sks_maks:
+                  type: integer
+      responses:
+        '200':
+          description: Periode KRS diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/krs/admin/periode/{id}/activate:
+    patch:
+      tags: [KRS]
+      summary: Aktifkan periode KRS pada semester operasional
+      operationId: activatePeriodeKrs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Periode KRS diaktifkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
