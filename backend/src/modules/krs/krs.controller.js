@@ -154,8 +154,7 @@ export const krsController = {
       return apiResponse.success(res, {
         message: 'Data monitoring status KRS berhasil diambil',
         data: data.items,
-        meta: data.meta,
-        summary: data.summary,
+        meta: { ...data.meta, summary: data.summary },
       });
     } catch (err) {
       next(err);

@@ -76,7 +76,7 @@ tags:
   - name: Audit Log
     description: Jejak audit sistem (SRS Bab 35)
   - name: KRS
-    description: Periode KRS, katalog kelas, dan siklus draft mahasiswa (SRS FR-022 s/d FR-030, FR-102)
+    description: Periode KRS, katalog kelas, siklus draft mahasiswa, persetujuan PA, monitoring & intervensi admin (SRS FR-022 s/d FR-035, FR-102, FR-103)
 
 components:
   securitySchemes:
@@ -3307,6 +3307,228 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── KRS Fase 9: Persetujuan PA & Monitoring Admin (SRS FR-031 s/d FR-035, FR-103) ──
+
+  /api/v1/krs/pengajuan:
+    get:
+      tags: [KRS]
+      summary: Daftar KRS mahasiswa bimbingan PA (UC-04)
+      description: >
+        Menampilkan KRS bimbingan Dosen Wali/PA yang berstatus DIAJUKAN atau status lain,
+        dengan pagination & filter. Ownership dipegang ketat: PA hanya melihat mahasiswa
+        bimiliknya. Memerlukan permission `krs:approve` (Dosen Wali); Super Admin bypass.
+      operationId: listKrsPengajuan
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [DRAFT, DIAJUKAN, DISETUJUI, DIKEMBALIKAN]
+        - name: mahasiswa_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Daftar pengajuan KRS mahasiswa bimbingan
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/krs/{id}:
+    get:
+      tags: [KRS]
+      summary: Detail KRS scoped (pemilik / PA pemilik / admin)
+      description: >
+        Akses detail KRS dengan prinsip least privilege: mahasiswa pemilik, PA pemilik
+        (dosen_wali mahasiswa), atau Admin/Super Admin. Pihak lain ditolak 403.
+      operationId: getKrsById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail KRS lengkap
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/krs/{id}/approve:
+    post:
+      tags: [KRS]
+      summary: Setujui KRS mahasiswa bimbingan (FR-033)
+      description: >
+        PA menyetujui KRS berstatus DIAJUKAN → DISETUJUI. Transisi diamankan guard
+        `updateMany({ where: { id, status: 'DIAJUKAN' } })` dalam transaksi: klik ganda
+        konkuren menghasilkan tepat satu 200 + satu 409; approve KRS yang sudah
+        DISETUJUI ditolak 400 (idempotensi state machine). Memerlukan `krs:approve`.
+      operationId: approveKrs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: KRS disetujui
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/krs/{id}/return:
+    post:
+      tags: [KRS]
+      summary: Kembalikan KRS untuk revisi (FR-035)
+      description: >
+        PA mengembalikan KRS DIAJUKAN → DIKEMBALIKAN disertai `catatan` revisi wajib
+        (10-500 karakter). Setelah dikembalikan, mahasiswa dapat resubmit (DIAJUKAN).
+        Memerlukan `krs:approve`; ownership check di service.
+      operationId: returnKrs
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [catatan]
+              properties:
+                catatan:
+                  type: string
+                  minLength: 10
+                  maxLength: 500
+                  description: Alasan revisi wajib
+      responses:
+        '200':
+          description: KRS dikembalikan untuk revisi
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/v1/krs/admin/monitor:
+    get:
+      tags: [KRS]
+      summary: Monitoring rekap status KRS (FR-103, Bab 31)
+      description: >
+        Admin Akademik memantau rekap status KRS per semester/prodi/PA dengan pagination.
+        `meta.summary` berisi hitungan { DRAFT, DIAJUKAN, DISETUJUI, DIKEMBALIKAN }.
+        Memerlukan `krs:manage`.
+      operationId: monitorKrs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [DRAFT, DIAJUKAN, DISETUJUI, DIKEMBALIKAN]
+        - name: prodi_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: dosen_wali_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Rekap monitoring KRS
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/krs/admin/{id}/reset-draft:
+    post:
+      tags: [KRS]
+      summary: Intervensi admin — reset paksa ke DRAFT (audit KRS_ADMIN_RESET)
+      description: >
+        Admin Akademik mengembalikan paksa KRS (non-DRAFT) ke status DRAFT, merekalkulasi
+        `total_sks`, dan mereset `diajukan_at`/`diproses_at`/`disetujui_oleh_id`/
+        `catatan_dosen`. Selalu ber-audit `KRS_ADMIN_RESET` dengan `old_values`/`new_values`
+        penuh (SRS Bab 35). Memerlukan `krs:manage`.
+      operationId: resetKrsToDraft
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: KRS direset ke DRAFT
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':

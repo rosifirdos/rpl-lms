@@ -21,6 +21,7 @@ import {
   validateSubmission,
   getAvailableClasses,
 } from './krs-rules.service.js';
+import { onKrsSubmitted, onKrsApproved, onKrsReturned } from '../../utils/events.js';
 
 // Include standar untuk mengembalikan KRS lengkap
 const KRS_FULL_INCLUDE = {
@@ -543,6 +544,16 @@ export const krsService = {
           where: { id: krs.id },
           include: KRS_FULL_INCLUDE,
         });
+
+        // Hook lifecycle (SRS Bab 35/36) — dalam transaksi yang sama agar konsisten.
+        await onKrsSubmitted({
+          krsId: krs.id,
+          userId,
+          mahasiswa: { id: mhs.id, nim: mhs.nim },
+          meta,
+          client: tx,
+        });
+
         return { submitted: true, updated, validation, krs };
       });
     } catch (error) {
@@ -676,14 +687,25 @@ export const krsService = {
         throw new AppError('KRS sudah tidak dalam status DIAJUKAN (konflik konkurensi)', 409);
       }
 
-      return tx.kRS.findUnique({
+      const approved = await tx.kRS.findUnique({
         where: { id: krsId },
         include: KRS_FULL_INCLUDE,
       });
-    });
 
-    // TODO MVP-3: onKrsApproved — pembentukan enrollment SPADA
-    // TODO MVP-6: notifikasi
+      // Hook lifecycle (SRS Bab 35/36, FR-033) — titik integrasi idempoten.
+      // TODO MVP-3: pembentukan Enrollment SPADA dipicu di sini.
+      await onKrsApproved({
+        krsId,
+        userId,
+        mahasiswa: { id: krs.mahasiswa.id, nim: krs.mahasiswa.nim },
+        totalSks: approved?.total_sks ?? null,
+        disetujuiOlehId: dosen.id,
+        meta,
+        client: tx,
+      });
+
+      return approved;
+    });
 
     await logAudit({
       userId,
@@ -741,13 +763,23 @@ export const krsService = {
         throw new AppError('KRS sudah tidak dalam status DIAJUKAN (konflik konkurensi)', 409);
       }
 
-      return tx.kRS.findUnique({
+      const returned = await tx.kRS.findUnique({
         where: { id: krsId },
         include: KRS_FULL_INCLUDE,
       });
-    });
 
-    // TODO MVP-6: notifikasi KRS dikembalikan
+      // Hook lifecycle (SRS Bab 35/36, FR-035) — dalam transaksi yang sama.
+      await onKrsReturned({
+        krsId,
+        userId,
+        mahasiswa: { id: krs.mahasiswa.id, nim: krs.mahasiswa.nim },
+        catatan,
+        meta,
+        client: tx,
+      });
+
+      return returned;
+    });
 
     await logAudit({
       userId,

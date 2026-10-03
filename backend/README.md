@@ -99,6 +99,39 @@ Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan P
 ### 🎉 Status MVP 1: **Selesai**
 Seluruh 6 fase backend MVP 1 telah diimplementasikan dan terverifikasi melalui **83 skenario pengujian otomatis** dengan status 100% lulus.
 
+---
+
+## Implementasi MVP 2 — KRS, Persetujuan, Penjadwalan & Kalender Operasional
+
+> **Definisi MVP 2 (SRS Bab 39 Tabel 21 & PRD Bab 5):** *"KRS, persetujuan KRS, penjadwalan kuliah, kalender akademik operasional."*
+> Rencana teknis lengkap: [`IMPLEMENTATION_PLAN_MVP2_BACKEND.md`](../IMPLEMENTATION_PLAN_MVP2_BACKEND.md)
+
+### ✅ Fase 7: Migrasi Skema & Seed Data MVP 2 (Selesai)
+- [x] **Skema Prisma** (`prisma/schema.prisma`): enum baru `StatusKRS`, `HariJadwal`, `KategoriAgenda`; model `PeriodeKRS`, `KRS`, `KRSDetail`, `JadwalKelas` mengikuti konvensi MVP 1 (`uuid`, snake_case, `@@map`).
+- [x] **Migrasi additive-only** `add_mvp2_krs_jadwal` + `enforce_single_active_periode_krs` — tidak ada kolom MVP 1 yang dihapus/diubah tipe; seluruh tes Fase 2–6 tetap hijau.
+- [x] **Seed idempoten** (`prisma/seed.js`): 1 `PeriodeKRS` aktif (`sks_maks: 24`), `JadwalKelas` contoh untuk kelas RPL/Basis Data/Web, `kategori` agenda kalender, dan 3 KRS contoh (DRAFT/DIAJUKAN/DISETUJUI).
+- [x] **5 permission + mapping role** di seed: `krs:submit` (MAHASISWA), `krs:approve` (DOSEN_WALI), `krs:manage` (ADMIN_AKADEMIK), `jadwal:manage` (ADMIN_AKADEMIK), `jadwal:view` (semua role login).
+
+### ✅ Fase 8: Periode KRS + Siklus Draft Mahasiswa (Selesai)
+- [x] **`periode.service.js`**: CRUD + `activate` atomik (pola `semester.service.js` — auto-close periode aktif lain dalam `$transaction`).
+- [x] **`krs-rules.service.js`** (murni, teruji): cek jendela periode, eligibilitas kelas (kurikulum prodi + `semester_paket` ≤ semester berjalan + kelas semester aktif), kapasitas vs `KRS_ENROLLED_STATUSES`, akumulasi SKS, bentrok jam via `konflik.service.js` (kelas belum berjadwal = *warning*, bukan blocker).
+- [x] **Endpoint mahasiswa**: `/api/v1/krs/periode-aktif`, `/saya`, `/tersedia`, `POST /saya/items`, `DELETE /saya/items/:detailId`, `POST /saya/submit` — submit mengembalikan `errors[]` terstruktur (format SRS Bab 4.7) saat ditolak.
+- [x] **State machine server-side**: `DRAFT → DIAJUKAN` dengan guard `updateMany({ where: { status: { in: [...] } } })` + advisory lock `pg_advisory_xact_lock`; transisi ilegal → 400/409.
+- [x] **Audit**: `CREATE_KRS_DRAFT`, `UPDATE_KRS_ITEM`, `SUBMIT_KRS`.
+- [x] **Test** (`tests/phase8.test.js`): 6 skenario — periode/katalog, draft+duplikat, SKS overrun→reasons, hapus+rekalkulasi, mutasi paralel, penolakan semester nonaktif/CUTI.
+
+### ✅ Fase 9: Alur Persetujuan PA & Monitoring Admin (Selesai)
+- [x] **Endpoint PA** (RBAC `krs:approve`, Super Admin bypass): `GET /api/v1/krs/pengajuan` (scoped `mahasiswa.dosen_wali_id = dosen.id` + pagination/filter), `POST /api/v1/krs/:id/approve`, `POST /api/v1/krs/:id/return` (`catatan` wajib ≥10 karakter).
+- [x] **Ownership check** di service: PA hanya memproses KRS mahasiswa bimbingannya sendiri — non-pemilik ditolak `403` (pola TC-019 / *least privilege* SRS Bab 31).
+- [x] **Guard transisi atomik**: `updateMany({ where: { id, status: 'DIAJUKAN' } })` → `count === 0` = konflik konkurensi → `409`; klik ganda approve paralel menghasilkan tepat satu `200` + satu `409`; approve KRS yang sudah `DISETUJUI` → `400` (idempotensi via state machine, Keputusan Desain #8).
+- [x] **Hook lifecycle** (`src/utils/events.js`): `onKrsSubmitted`/`onKrsApproved`/`onKrsReturned` — stub idempoten dipanggil **dalam transaksi yang sama** (`client = tx`) agar jejak event konsisten dengan transisi status; mencatat baris `KRS_*_EVENT` di `audit_logs`. Titik integrasi `onKrsApproved` disiapkan untuk enrollment SPADA (MVP 3) & notifikasi (MVP 6) — ditandai TODO.
+- [x] **Endpoint admin** (RBAC `krs:manage`): `GET /api/v1/krs/admin/monitor` (rekap status per semester/prodi/PA + pagination + `summary` di `meta`), `POST /api/v1/krs/admin/:id/reset-draft` (intervensi paksa ke `DRAFT` + rekalkulasi `total_sks` + audit `KRS_ADMIN_RESET` dengan `old_values`/`new_values` penuh).
+- [x] **Scoped detail** `GET /api/v1/krs/:id`: pemilik / PA pemilik / admin — 403 bagi pihak lain.
+- [x] **Test** (`tests/phase9.test.js`): 12 skenario — pengajuan+detail scoped, approve+event audit, return+catatan(resubmit), ownership 403 (PA bukan pemilik & dosen biasa), konkurensi ganda approve (200+409), idempotensi approve DISETUJUI (400/409), monitor admin+summary, reset-draft+audit, non-admin 403.
+
+### 🎉 Status MVP 2 (Fase 7–9): **Selesai**
+Backend MVP 2 hingga Fase 9 terverifikasi melalui **106 skenario pengujian otomatis** (83 MVP 1 + 6 Fase 8 + 12 Fase 9 + lainnya) dengan status 100% lulus, tanpa regresi pada kontrak API MVP 1.
+
 ## Panduan Menjalankan Backend
 
 ### 1. Prasyarat
@@ -118,7 +151,7 @@ npm run db:seed      # Mengisi data master awal & akun pengguna
 ```bash
 npm run dev   # Menjalankan server dalam mode development (nodemon)
 npm start     # Menjalankan server dalam mode production
-npm test      # Menjalankan seluruh skenario pengujian otomatis (83 test, 6 fase)
+npm test      # Menjalankan seluruh skenario pengujian otomatis (106 test, Fase 2-9)
 npm run docs:check  # Verifikasi cakupan dokumentasi OpenAPI vs endpoint yang diuji
 ```
 
@@ -140,4 +173,5 @@ Endpoint alias konseptual SRS Bab 32 (`/api/login`, `/api/profile`, `/api/logout
 | Dosen & PA | `198501152010121002` | `budi.santoso@kampus.ac.id` | `Password123!` |
 | Dosen Pengampu | `199003202015042001` | `siti.aminah@kampus.ac.id` | `Password123!` |
 | Mahasiswa | `2024001001` | `ahmad.fauzi@student.kampus.ac.id` | `Password123!` |
+| Mahasiswa | `2024001002` | `siti.nurhaliza@student.kampus.ac.id` | `Password123!` |
 | Calon Mahasiswa | `PMB20260001` | `rizky.pratama@gmail.com` | `Password123!` |
