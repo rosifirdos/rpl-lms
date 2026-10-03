@@ -6,7 +6,7 @@ const docPaths = new Set(
   [...yamlContent.matchAll(/^  (\/[a-zA-Z0-9\/\-{}]+):\s*$/gm)].map((m) => m[1])
 );
 
-const testFiles = ['phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase8'].map(
+const testFiles = ['phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase8', 'phase9'].map(
   (f) => `./tests/${f}.test.js`
 );
 

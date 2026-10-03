@@ -11,8 +11,12 @@ import { periodeController } from './periode.controller.js';
 import {
   createPeriodeSchema,
   hapusKrsItemParamsSchema,
+  kembalikanKrsSchema,
+  krsIdParamsSchema,
   krsRequiredSemesterQuerySchema,
   krsSemesterQuerySchema,
+  monitorQuerySchema,
+  pengajuanQuerySchema,
   periodeIdParamsSchema,
   periodeQuerySchema,
   submitKrsSchema,
@@ -63,5 +67,51 @@ router.patch(
   validate({ params: periodeIdParamsSchema }),
   periodeController.activate
 );
+
+// ==========================================
+// Fase 9: Persetujuan PA & Monitoring Admin (SRS FR-031 s/d FR-035, FR-103)
+// ==========================================
+
+// Dosen Wali/PA: daftar pengajuan mahasiswa bimbingan (UC-04).
+// Approver reguler hanya PA (Keputusan Desain #7); Super Admin bypass via middleware.
+router.get(
+  '/pengajuan',
+  requirePermission('krs:approve'),
+  validate({ query: pengajuanQuerySchema }),
+  krsController.getPengajuan
+);
+
+// Admin Akademik: monitoring rekap status KRS (FR-103, Bab 31).
+router.get(
+  '/admin/monitor',
+  requirePermission('krs:manage'),
+  validate({ query: monitorQuerySchema }),
+  krsController.monitorKRS
+);
+
+// Admin Akademik: intervensi reset ke DRAFT paksa (audit KRS_ADMIN_RESET).
+router.post(
+  '/admin/:id/reset-draft',
+  requirePermission('krs:manage'),
+  validate({ params: krsIdParamsSchema }),
+  krsController.resetToDraft
+);
+
+// PA: approve & return KRS mahasiswa bimbingan (ownership check di service).
+router.post(
+  '/:id/approve',
+  requirePermission('krs:approve'),
+  validate({ params: krsIdParamsSchema }),
+  krsController.approveKRS
+);
+router.post(
+  '/:id/return',
+  requirePermission('krs:approve'),
+  validate({ params: krsIdParamsSchema, body: kembalikanKrsSchema }),
+  krsController.returnKRS
+);
+
+// Scoped detail KRS: pemilik / PA pemilik / admin (SRS Bab 31 — least privilege).
+router.get('/:id', validate({ params: krsIdParamsSchema }), krsController.getKRSById);
 
 export default router;
