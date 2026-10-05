@@ -135,6 +135,8 @@ export async function detectConflictsBetweenClasses(kelasIds, client = prisma) {
  * @param {string} params.jam_mulai
  * @param {string} params.jam_selesai
  * @param {string|null} [params.excludeJadwalId] - id slot yang sedang diupdate (untuk skip diri sendiri)
+ * @param {import('@prisma/client').PrismaClient} [params.client] - tx agar cek bentrok
+ *        terisolasi dalam transaksi yang sama dengan penulisan slot (Fase 10).
  * @returns {Promise<{ok: boolean, conflicts: Array}>}
  */
 export async function detectConflictsForSlot({
@@ -143,9 +145,10 @@ export async function detectConflictsForSlot({
   jam_mulai,
   jam_selesai,
   excludeJadwalId = null,
+  client = prisma,
 }) {
   // Ambil kelas target untuk tahu dosen_id & ruangan_id
-  const kelas = await prisma.kelas.findUnique({
+  const kelas = await client.kelas.findUnique({
     where: { id: kelas_id },
     include: { dosen: true, ruangan: true, mata_kuliah: true },
   });
@@ -168,7 +171,7 @@ export async function detectConflictsForSlot({
     ...(excludeJadwalId ? { id: { not: excludeJadwalId } } : {}),
   };
 
-  const candidates = await prisma.jadwalKelas.findMany({
+  const candidates = await client.jadwalKelas.findMany({
     where,
     include: {
       kelas: {

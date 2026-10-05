@@ -14,6 +14,7 @@ import calendarRoutes from './modules/calendar/calendar.routes.js';
 import masterRoutes from './modules/master/master.routes.js';
 import portalRoutes from './modules/portal/portal.routes.js';
 import krsRoutes from './modules/krs/krs.routes.js';
+import jadwalRoutes from './modules/jadwal/jadwal.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
 import { generalLimiter, authLimiter } from './middlewares/rateLimit.middleware.js';
@@ -85,6 +86,7 @@ app.get('/api/v1', (req, res) => {
         calendar: '/api/v1/calendar',
         master: '/api/v1/master',
         krs: '/api/v1/krs',
+        jadwal: '/api/v1/jadwal',
       },
     },
   });
@@ -107,6 +109,7 @@ app.use('/api/v1/master', masterRoutes);
 
 // Modul MVP 2 - KRS & Jadwal (Fase 8-10)
 app.use('/api/v1/krs', krsRoutes);
+app.use('/api/v1/jadwal', jadwalRoutes);
 
 // Endpoint Konseptual Alias (SRS Bab 32 - Tabel 16)
 // Memetakan /api/login, /api/logout, /api/profile, /api/calendar, /api/dashboard, /api/portal langsung ke handler modul terkait
@@ -128,6 +131,11 @@ app.use('/api', (req, res, next) => {
   if (req.path === '/calendar') {
     req.url = '/';
     return calendarRoutes(req, res, next);
+  }
+  // Alias konseptual SRS Bab 32: /api/jadwal → jadwal mahasiswa (/saya)
+  if (req.path === '/jadwal' || req.path === '/jadwal/saya') {
+    req.url = '/saya';
+    return jadwalRoutes(req, res, next);
   }
   if (req.path === '/dashboard') {
     req.url = '/dashboard';

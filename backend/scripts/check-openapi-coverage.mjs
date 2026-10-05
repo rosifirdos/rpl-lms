@@ -6,7 +6,7 @@ const docPaths = new Set(
   [...yamlContent.matchAll(/^  (\/[a-zA-Z0-9\/\-{}]+):\s*$/gm)].map((m) => m[1])
 );
 
-const testFiles = ['phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase8', 'phase9'].map(
+const testFiles = ['phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase8', 'phase9', 'phase10'].map(
   (f) => `./tests/${f}.test.js`
 );
 
@@ -54,6 +54,9 @@ const SRS_ALIASES = new Set([
   '/api/calendar',
   '/api/dashboard',
   '/api/portal/modules',
+  // Alias konseptual SRS Bab 32 (Fase 10): /api/jadwal → /api/v1/jadwal/saya
+  '/api/jadwal',
+  '/api/jadwal/saya',
   // route fixture untuk menguji penanganan 404
   '/api/v1/nonexistent',
 ]);
