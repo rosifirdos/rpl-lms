@@ -15,6 +15,22 @@ export const calendarController = {
     }
   },
 
+  /**
+   * GET /api/v1/calendar/aktif
+   * Agenda berjalan untuk semester aktif (SRS Bab 22) — dipakai portal & frontend.
+   */
+  async active(req, res, next) {
+    try {
+      const data = await calendarService.getActiveAgenda(req.query);
+      return apiResponse.success(res, {
+        message: 'Agenda kalender akademik berjalan berhasil diambil',
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async detail(req, res, next) {
     try {
       const event = await calendarService.getCalendarById(req.params.id);

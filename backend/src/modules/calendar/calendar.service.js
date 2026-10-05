@@ -26,6 +26,11 @@ export const calendarService = {
       where.status = query.status;
     }
 
+    // Filter kategori agenda (SRS Bab 22 — kategori kalender operasional)
+    if (query.kategori) {
+      where.kategori = query.kategori;
+    }
+
     if (query.search) {
       where.agenda = {
         contains: query.search,
@@ -96,6 +101,7 @@ export const calendarService = {
         mulai: new Date(data.mulai),
         selesai: new Date(data.selesai),
         status: data.status || 'DIJADWALKAN',
+        kategori: data.kategori || 'LAINNYA',
       },
       include: {
         semester: {
@@ -116,6 +122,7 @@ export const calendarService = {
         mulai: created.mulai,
         selesai: created.selesai,
         status: created.status,
+        kategori: created.kategori,
         semester_id: created.semester_id,
       },
       ipAddress: meta.ipAddress,
@@ -149,6 +156,7 @@ export const calendarService = {
     if (data.mulai !== undefined) updatePayload.mulai = new Date(data.mulai);
     if (data.selesai !== undefined) updatePayload.selesai = new Date(data.selesai);
     if (data.status !== undefined) updatePayload.status = data.status;
+    if (data.kategori !== undefined) updatePayload.kategori = data.kategori;
 
     const updated = await prisma.kalenderAkademik.update({
       where: { id },
@@ -172,6 +180,7 @@ export const calendarService = {
         mulai: existing.mulai,
         selesai: existing.selesai,
         status: existing.status,
+        kategori: existing.kategori,
         semester_id: existing.semester_id,
       },
       newValues: updatePayload,
@@ -203,6 +212,7 @@ export const calendarService = {
       oldValues: {
         agenda: existing.agenda,
         status: existing.status,
+        kategori: existing.kategori,
         semester_id: existing.semester_id,
       },
       ipAddress: meta.ipAddress,
@@ -210,5 +220,82 @@ export const calendarService = {
     });
 
     return true;
+  },
+
+  /**
+   * Agenda berjalan untuk semester aktif (atau semester_id dari query).
+   * Endpoint /api/v1/calendar/aktif (SRS Bab 22) — dipakai portal & frontend.
+   *
+   * Mencakup: agenda dengan status BERJALAN, atau agenda yang rentang waktu
+   * mencakup saat ini, untuk semester operasional aktif.
+   */
+  async getActiveAgenda(query = {}) {
+    let semesterId = query.semester_id;
+    let semester = null;
+
+    if (!semesterId) {
+      semester = await prisma.semester.findFirst({
+        where: { is_active: true },
+        include: { tahun_akademik: true },
+      });
+      if (!semester) {
+        return {
+          semester: null,
+          agenda_berjalan: null,
+          agenda_mendatang: [],
+          pesan: 'Tidak ada semester aktif saat ini',
+        };
+      }
+      semesterId = semester.id;
+    } else {
+      semester = await prisma.semester.findUnique({
+        where: { id: semesterId },
+        include: { tahun_akademik: true },
+      });
+      if (!semester) throw new AppError('Semester tidak ditemukan', 404);
+    }
+
+    const now = new Date();
+    const allAgendas = await prisma.kalenderAkademik.findMany({
+      where: { semester_id: semesterId },
+      orderBy: { mulai: 'asc' },
+      include: {
+        semester: {
+          include: {
+            tahun_akademik: true,
+          },
+        },
+      },
+    });
+
+    const isOngoing = (item) => {
+      if (item.status === 'BERJALAN') return true;
+      const mulai = new Date(item.mulai);
+      const selesai = new Date(item.selesai);
+      return now >= mulai && now <= selesai;
+    };
+
+    const berjalan = allAgendas.find(isOngoing) || null;
+    const mendatang = allAgendas
+      .filter((item) => new Date(item.mulai) > now && !isOngoing(item))
+      .slice(0, 5);
+
+    return {
+      semester: {
+        id: semester.id,
+        tipe: semester.tipe,
+        tahun_akademik: semester.tahun_akademik
+          ? {
+              id: semester.tahun_akademik.id,
+              kode: semester.tahun_akademik.kode,
+              nama: semester.tahun_akademik.nama,
+            }
+          : null,
+        tanggal_mulai: semester.tanggal_mulai,
+        tanggal_selesai: semester.tanggal_selesai,
+      },
+      agenda_berjalan: berjalan,
+      agenda_mendatang: mendatang,
+    };
   },
 };

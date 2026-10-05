@@ -138,8 +138,16 @@ Seluruh 6 fase backend MVP 1 telah diimplementasikan dan terverifikasi melalui *
 - [x] **Alias konseptual SRS Bab 32**: `/api/jadwal` & `/api/jadwal/saya` → `GET /api/v1/jadwal/saya` (jadwal mahasiswa).
 - [x] **Test** (`tests/phase10.test.js`): 21 skenario — CRUD+audit, validasi Zod (jam/hari/urutan) 400, duplikat 409, matriks bentrok DOSEN/RUANGAN 409+`bentrok_dengan[]`, tidak bentrok di hari beda 201, slot berdekatan non-overlap 201, update+audit, update ke bentrok 409, hapus+audit+404, RBAC 403 mhs/dosen, 401 tanpa token, `/saya` list+calendar, jadwal kosong (KRS belum disetujui), calon 403, `/mengajar` dosen, mhs 403 di `/mengajar`, list filter+pagination, getById scoped, konkurensi ganda create (201+409).
 
-### 🎉 Status MVP 2 (Fase 7–10): **Selesai**
-Backend MVP 2 hingga Fase 10 terverifikasi melalui **127 skenario pengujian otomatis** (83 MVP 1 + 6 Fase 8 + 12 Fase 9 + 21 Fase 10 + lainnya) dengan status 100% lulus, tanpa regresi pada kontrak API MVP 1.
+### ✅ Fase 11: Kalender Operasional + Integrasi Portal (Hari 9) (Selesai)
+- [x] **Ekstensi modul Calendar** (`src/modules/calendar/`): filter `kategori` (SRS Bab 22 — `KRS`, `PERKULIAHAN`, `UTS`, `UAS`, `LAINNYA`) pada `GET /api/v1/calendar`; field `kategori` pada create/update (default `LAINNYA`) + tercatat di `audit_logs` (`old_values`/`new_values`). Endpoint baru `GET /api/v1/calendar/aktif` menyajikan agenda berjalan untuk semester aktif (atau `semester_id` via query) — dipakai portal & frontend; `404` bila semester tidak ditemukan, `400` untuk `semester_id` invalid.
+- [x] **Portal service sebagai sumber kebenaran tunggal** (`src/modules/portal/portal.service.js`): `PeriodeKRS` nyata menggantikan heuristik pencocokan string `'krs'` pada `portal.service.js` lama. `system_context.periode_krs` kini menyajikan `{ id, nama, tanggal_mulai, tanggal_selesai, sks_maks, is_aktif, sisa_hari, sedang_dibuka }`; bila periode ditutup/dihapus, `sedang_dibuka=false` & `sisa_hari=null`.
+- [x] **Dashboard Mahasiswa kontekstual** (SRS Bab 9): `status_krs` kini memuat `periode_krs` (sumber nyata), `krs_personal` (`status`, `total_sks`, `diajukan_at`, `catatan_dosen`), `catatan_revisi` (FR-035 — terisi bila KRS `DIKEMBALIKAN`), serta `sisa_hari` periode. Tetap backwards-compatible: field lama (`periode_krs_buka`, `keterangan`, `modul_terkait`) tidak dihapus.
+- [x] **Dashboard PA antrian persetujuan** (SRS Bab 9): `statistik.jumlah_krs_menunggu_persetujuan` — query nyata `COUNT KRS WHERE status='DIAJUKAN' AND mahasiswa.dosen_wali_id = dosen.id` pada semester aktif; menggantikan heuristic string lama secara internal.
+- [x] **Backwards compatibility**: shape `role_dashboards` lama tidak berubah — hanya *additive fields*; suite `phase5` (portal dashboard MVP 1) tetap hijau tanpa sentuhan.
+- [x] **Test** (`tests/phase11.test.js`): 22 skenario — filter `kategori` (KRS/PERKULIAHAN/invalid 400), `GET /calendar/aktif` (semester aktif, 401 tanpa token, 400 UUID invalid, 404 semester tidak ada), create dengan kategori+audit, default `LAINNYA`, update kategori+audit old/new, RBAC mhs baca-tapi-tidak-create 403, dashboard mhs pakai `PeriodeKRS` nyata, status KRS personal+total SKS, catatan revisi (DIKEMBALIKAN), antrian PA, backwards-compat field lama, admin metrik, periode tertutup→portal tertutup (Bab 33), tanpa PeriodeKRS→`periode_krs=null`, alias `/api/calendar`, 401 portal, calon mhs tidak crash.
+
+### 🎉 Status MVP 2 (Fase 7–11): **Selesai**
+Backend MVP 2 hingga Fase 11 terverifikasi melalui **149 skenario pengujian otomatis** (83 MVP 1 + 6 Fase 8 + 12 Fase 9 + 21 Fase 10 + 22 Fase 11 + lainnya) dengan status 100% lulus, tanpa regresi pada kontrak API MVP 1. `docs:check` melaporkan **0 undocumented endpoints** (62 path terdokumentasi).
 
 ## Panduan Menjalankan Backend
 
@@ -160,7 +168,7 @@ npm run db:seed      # Mengisi data master awal & akun pengguna
 ```bash
 npm run dev   # Menjalankan server dalam mode development (nodemon)
 npm start     # Menjalankan server dalam mode production
-npm test      # Menjalankan seluruh skenario pengujian otomatis (127 test, Fase 2-10)
+npm test      # Menjalankan seluruh skenario pengujian otomatis (149 test, Fase 2-11)
 npm run docs:check  # Verifikasi cakupan dokumentasi OpenAPI vs endpoint yang diuji
 ```
 

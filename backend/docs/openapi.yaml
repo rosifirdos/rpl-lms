@@ -373,6 +373,11 @@ components:
         status:
           type: string
           enum: [DIJADWALKAN, BERJALAN, SELESAI]
+        kategori:
+          type: string
+          enum: [KRS, PERKULIAHAN, UTS, UAS, LAINNYA]
+          description: Kategori agenda kalender operasional (SRS Bab 22, MVP 2).
+          default: LAINNYA
         created_at:
           type: string
           format: date-time
@@ -411,6 +416,11 @@ components:
           type: string
           enum: [DIJADWALKAN, BERJALAN, SELESAI]
           default: DIJADWALKAN
+        kategori:
+          type: string
+          enum: [KRS, PERKULIAHAN, UTS, UAS, LAINNYA]
+          default: LAINNYA
+          description: Kategori agenda kalender operasional (SRS Bab 22).
 
     UpdateCalendarRequest:
       type: object
@@ -426,6 +436,9 @@ components:
         status:
           type: string
           enum: [DIJADWALKAN, BERJALAN, SELESAI]
+        kategori:
+          type: string
+          enum: [KRS, PERKULIAHAN, UTS, UAS, LAINNYA]
 
     # ── Master Kelembagaan ──
     Fakultas:
@@ -1574,6 +1587,12 @@ paths:
           schema:
             type: string
             enum: [DIJADWALKAN, BERJALAN, SELESAI]
+        - name: kategori
+          in: query
+          description: Filter kategori agenda kalender operasional (SRS Bab 22, MVP 2).
+          schema:
+            type: string
+            enum: [KRS, PERKULIAHAN, UTS, UAS, LAINNYA]
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
         - $ref: '#/components/parameters/SearchParam'
@@ -1623,6 +1642,52 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  /api/v1/calendar/aktif:
+    get:
+      tags: [Calendar]
+      summary: Agenda kalender berjalan untuk semester aktif
+      description: |
+        Mengembalikan agenda yang sedang berjalan (status BERJALAN atau rentang
+        waktu mencakup saat ini) beserta agenda mendatang untuk semester aktif
+        (default) atau semester tertentu. Dipakai portal & frontend (SRS Bab 22, MVP 2).
+      operationId: getActiveCalendar
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Agenda berjalan & mendatang
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      semester:
+                        type: object
+                        nullable: true
+                      agenda_berjalan:
+                        allOf:
+                          - $ref: '#/components/schemas/KalenderAkademik'
+                        nullable: true
+                      agenda_mendatang:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/KalenderAkademik'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/v1/calendar/{id}:
     get:
