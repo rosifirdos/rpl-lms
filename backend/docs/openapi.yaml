@@ -77,6 +77,8 @@ tags:
     description: Jejak audit sistem (SRS Bab 35)
   - name: KRS
     description: Periode KRS, katalog kelas, siklus draft mahasiswa, persetujuan PA, monitoring & intervensi admin (SRS FR-022 s/d FR-035, FR-102, FR-103)
+  - name: Jadwal
+    description: Jadwal kuliah — CRUD slot, deteksi bentrok ruangan/dosen, view mahasiswa (dari KRS DISETUJUI) & dosen (SRS FR-036 s/d FR-038, FR-100 s/d FR-101)
 
 components:
   securitySchemes:
@@ -3537,3 +3539,247 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  # ================================================================
+  # MVP 2 — FASE 10: JADWAL KULIAH (SRS FR-036 s/d FR-038, FR-100 s/d FR-101)
+  # ================================================================
+
+  /api/v1/jadwal:
+    get:
+      tags: [Jadwal]
+      summary: Daftar slot jadwal kuliah (filter semester/prodi/kelas/dosen/hari)
+      description: >
+        Endpoint scoped untuk seluruh pengguna login (`jadwal:view`). Mendukung filter
+        `semester_id`, `prodi_id`, `kelas_id`, `dosen_id`, `hari` serta pagination.
+      operationId: listJadwal
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: prodi_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: kelas_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: dosen_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: hari
+          in: query
+          schema: { type: string, enum: [SENIN, SELASA, RABU, KAMIS, JUMAT, SABTU] }
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        '200':
+          description: Daftar slot jadwal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Jadwal]
+      summary: Buat slot jadwal baru untuk kelas (deteksi bentrok run)
+      description: >
+        Admin Akademik (`jadwal:manage`) membuat slot jadwal untuk sebuah kelas.
+        Deteksi bentrok (FR-101) berjalan dalam `$transaction`: (a) ruangan sama + hari sama
+        + waktu overlap; (b) dosen sama + hari sama + waktu overlap. Bila bentrok →
+        `409` dengan payload `errors.bentrok_dengan[]`. Unique constraint
+        `[kelas_id, hari, jam_mulai]` sebagai final guard. Audit `CREATE_JADWAL`.
+      operationId: createJadwal
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kelas_id, hari, jam_mulai, jam_selesai]
+              properties:
+                kelas_id: { type: string, format: uuid }
+                hari: { type: string, enum: [SENIN, SELASA, RABU, KAMIS, JUMAT, SABTU] }
+                jam_mulai: { type: string, description: '"HH:mm" 24-jam, rentang operasional 06:00–22:00', example: '07:30' }
+                jam_selesai: { type: string, description: '"HH:mm" 24-jam, rentang operasional 06:00–22:00', example: '09:10' }
+      responses:
+        '201':
+          description: Slot jadwal berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Bentrok dengan slot lain atau duplikat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/jadwal/{id}:
+    get:
+      tags: [Jadwal]
+      summary: Detail slot jadwal (scoped login)
+      operationId: getJadwalById
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Detail slot jadwal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Jadwal]
+      summary: Ubah slot jadwal (deteksi bentrok run, skip diri sendiri)
+      description: >
+        Admin Akademik (`jadwal:manage`) mengubah slot jadwal. Deteksi bentrok FR-101
+        berjalan ulang dengan mengecualikan slot itu sendiri (`excludeJadwalId`).
+        Audit `UPDATE_JADWAL` dengan `old_values`/`new_values`.
+      operationId: updateJadwal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                kelas_id: { type: string, format: uuid }
+                hari: { type: string, enum: [SENIN, SELASA, RABU, KAMIS, JUMAT, SABTU] }
+                jam_mulai: { type: string }
+                jam_selesai: { type: string }
+      responses:
+        '200':
+          description: Slot jadwal berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Bentrok dengan slot lain atau duplikat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [Jadwal]
+      summary: Hapus slot jadwal
+      description: Admin Akademik (`jadwal:manage`) menghapus slot. Audit `DELETE_JADWAL`.
+      operationId: deleteJadwal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Slot jadwal berhasil dihapus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/jadwal/saya:
+    get:
+      tags: [Jadwal]
+      summary: Jadwal kuliah mahasiswa dari KRS DISETUJUI
+      description: >
+        Mahasiswa melihat jadwal kelas yang diambil dari KRS berstatus `DISETUJUI`
+        pada semester tertentu (default: semester aktif). `view=list` mengelompokkan
+        slot per hari; `view=calendar` memproyeksikan jadwal mingguan ke tanggal konkret
+        dalam rentang `tanggal_mulai`/`selesai` semester (atau `mulai`/`selesai` dari query).
+        Bila tidak ada KRS disetujui → jadwal kosong.
+      operationId: getJadwalSaya
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: view
+          in: query
+          schema: { type: string, enum: [list, calendar], default: list }
+        - name: semester_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: mulai
+          in: query
+          schema: { type: string, format: date-time }
+        - name: selesai
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Jadwal mingguan mahasiswa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/jadwal/mengajar:
+    get:
+      tags: [Jadwal]
+      summary: Jadwal kelas yang diampu dosen
+      description: >
+        Dosen melihat jadwal kelas yang diampu pada semester tertentu (default: aktif),
+        dikelompokkan per hari (FR-038).
+      operationId: getJadwalMengajar
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: semester_id
+          in: query
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Jadwal mengajar dosen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'

@@ -129,8 +129,17 @@ Seluruh 6 fase backend MVP 1 telah diimplementasikan dan terverifikasi melalui *
 - [x] **Scoped detail** `GET /api/v1/krs/:id`: pemilik / PA pemilik / admin — 403 bagi pihak lain.
 - [x] **Test** (`tests/phase9.test.js`): 12 skenario — pengajuan+detail scoped, approve+event audit, return+catatan(resubmit), ownership 403 (PA bukan pemilik & dosen biasa), konkurensi ganda approve (200+409), idempotensi approve DISETUJUI (400/409), monitor admin+summary, reset-draft+audit, non-admin 403.
 
-### 🎉 Status MVP 2 (Fase 7–9): **Selesai**
-Backend MVP 2 hingga Fase 9 terverifikasi melalui **106 skenario pengujian otomatis** (83 MVP 1 + 6 Fase 8 + 12 Fase 9 + lainnya) dengan status 100% lulus, tanpa regresi pada kontrak API MVP 1.
+### ✅ Fase 10: Penjadwalan Kuliah (Hari 7-8) (Selesai)
+- [x] **Modul Jadwal** (`src/modules/jadwal/`): CRUD `/api/v1/jadwal` untuk Admin Akademik (`jadwal:manage`) dengan deteksi bentrok otomatis (FR-101) — ruangan sama dan/atau dosen sama pada hari sama + rentang waktu overlap. Waktu disimpan sebagai string `"HH:mm"` zero-padded 24-jam (Keputusan Desain #4); perbandingan leksikografis aman; rentang operasional kampus 06:00–22:00 divalidasi via Zod.
+- [x] **Deteksi bentrok transaksional** (`konflik.service.js` → `detectConflictsForSlot`): kriteria (a) ruangan sama + overlap + (b) dosen sama + overlap; cek awal di luar transaksi (pesan 409 informatif) + re-cek di dalam transaksi. Dua lapis advisory lock Postgres (`pg_advisory_xact_lock`) — per-`(kelas,hari)` mencegah klik ganda, per-`hari` global menserialisasi seluruh tulis slot pada hari yang sama untuk menutup race condition deteksi bentrok lintas-kelas yang tidak ter-cover READ COMMITTED. `P2002` unique `[kelas_id, hari, jam_mulai]` dipetakan ke 409 duplikat slot.
+- [x] **View mahasiswa** `GET /api/v1/jadwal/saya` (FR-036/037): jadwal mingguan diekstrak dari KRS berstatus `DISETUJUI` pada semester aktif/terpilih; `view=list` mengelompokkan per hari (SENIN–SABTU), `view=calendar` memproyeksikan jadwal mingguan ke tanggal konkret dalam rentang semester (atau `mulai`/`selesai` ISO 8601 via query). Non-mahasiswa (mis. calon) → 403.
+- [x] **View dosen** `GET /api/v1/jadwal/mengajar` (FR-038): jadwal kelas yang diampu dosen pada semester aktif/terpilih, dikelompokkan per hari. Non-dosen → 403.
+- [x] **RBAC**: `POST/PUT/DELETE /api/v1/jadwal` & `/api/v1/jadwal/:id` mutasi → `jadwal:manage` (ADMIN_AKADEMIK, SUPER_ADMIN bypass); `GET /` list → `jadwal:view` (seluruh role login); `/saya` & `/mengajar` memeriksa peran di service. Audit `CREATE_JADWAL`/`UPDATE_JADWAL`/`DELETE_JADWAL` dengan `old_values`/`new_values`.
+- [x] **Alias konseptual SRS Bab 32**: `/api/jadwal` & `/api/jadwal/saya` → `GET /api/v1/jadwal/saya` (jadwal mahasiswa).
+- [x] **Test** (`tests/phase10.test.js`): 21 skenario — CRUD+audit, validasi Zod (jam/hari/urutan) 400, duplikat 409, matriks bentrok DOSEN/RUANGAN 409+`bentrok_dengan[]`, tidak bentrok di hari beda 201, slot berdekatan non-overlap 201, update+audit, update ke bentrok 409, hapus+audit+404, RBAC 403 mhs/dosen, 401 tanpa token, `/saya` list+calendar, jadwal kosong (KRS belum disetujui), calon 403, `/mengajar` dosen, mhs 403 di `/mengajar`, list filter+pagination, getById scoped, konkurensi ganda create (201+409).
+
+### 🎉 Status MVP 2 (Fase 7–10): **Selesai**
+Backend MVP 2 hingga Fase 10 terverifikasi melalui **127 skenario pengujian otomatis** (83 MVP 1 + 6 Fase 8 + 12 Fase 9 + 21 Fase 10 + lainnya) dengan status 100% lulus, tanpa regresi pada kontrak API MVP 1.
 
 ## Panduan Menjalankan Backend
 
@@ -151,7 +160,7 @@ npm run db:seed      # Mengisi data master awal & akun pengguna
 ```bash
 npm run dev   # Menjalankan server dalam mode development (nodemon)
 npm start     # Menjalankan server dalam mode production
-npm test      # Menjalankan seluruh skenario pengujian otomatis (106 test, Fase 2-9)
+npm test      # Menjalankan seluruh skenario pengujian otomatis (127 test, Fase 2-10)
 npm run docs:check  # Verifikasi cakupan dokumentasi OpenAPI vs endpoint yang diuji
 ```
 
