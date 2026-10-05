@@ -6,7 +6,7 @@
 
 ## 📌 Ringkasan Dokumen
 - **Target Deliverable:** Rancangan Desain UI/UX High-Fidelity & Interactive Prototype (Figma) untuk MVP 1
-- **Acuan Utama:** [PRD.md](PRD.md) (*Bab 2, 3, 4, 5*), [SRS.md](SRS.md) (*Bab 3, 9, 10, 16, 19, 22, 28, 29, 30, 31, 32, 35, 39, 40*), dan [IMPLEMENTATION_PLAN_MVP1_BACKEND.md](IMPLEMENTATION_PLAN_MVP1_BACKEND.md)
+- **Acuan Utama:** [PRD.md](PRD.md) (*Bab 2, 3, 4, 5*), [SRS.md](SRS.md) (*Bab 3, 9, 10, 16, 19, 22, 28, 29, 30, 31, 32, 35, 39, 40*), [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) (spesifikasi Portal Login & Landing — Dark-Mode Navy), dan [IMPLEMENTATION_PLAN_MVP1_BACKEND.md](IMPLEMENTATION_PLAN_MVP1_BACKEND.md)
 - **Fokus Rilis MVP 1:** Autentikasi terpadu multi-kredensial, navigasi portal & role switcher, dasbor kontekstual 8 aktor, manajemen profil mandiri, manajemen master data akademik dasar, kalender akademik, manajemen pengguna & RBAC, serta penampil jejak audit (*audit trail*).
 
 ---
@@ -64,6 +64,25 @@ Desain wajib menggunakan prinsip **Design Tokens** yang terstruktur agar mudah d
 
 ### 3.1 Palet Warna (Color Palette)
 
+Sistem menggunakan dua palet: **Portal Login & Landing** (Dark-Mode Professional Navy, acuan: `DESIGN_SYSTEM.md`) untuk gerbang autentikasi, dan **Operasional Aplikasi** (light surface) untuk dasbor, master data, RBAC, dan audit.
+
+#### 3.1.A Palet Portal Login & Landing (Dark-Mode Professional Navy)
+
+Antarmuka gerbang portal mengusung tema Dark-Mode Professional dengan sentuhan Electric Accent untuk menciptakan kesan tepercaya, modern, dan bernuansa teknologi tinggi.
+
+```text
+[Kategori Warna Portal]
+Primary Background      #0D1B2A – #1B2A4A   Gradient Biru Gelap / Navy. Latar belakang utama halaman.
+Primary Accent          #3B82F6 / #4F46E5    Royal / Electric Blue. Tombol aksi utama, checkbox, tombol SSO.
+Secondary Accent        #38BDF8 / #06B6D4    Cyan / Aqua Blue. Teks highlight & garis aktif.
+Status & Security       #10B981              Emerald Green. Badge "Portal Resmi", indikator "SSL Terenkripsi", tombol Help Center.
+Card Background         #FFFFFF              Solid White. Kontainer utama form login agar kontras dengan latar gelap.
+Text Primary            #1F2937              Dark Slate / Neutral Gray. Teks utama pada form login (heading & label).
+Text Muted              #6B7280 / #9CA3AF    Neutral Muted Gray. Placeholder, deskripsi sekunder, teks footer.
+```
+
+#### 3.1.B Palet Operasional Aplikasi (Light Surface — Dasbor, Master Data, RBAC, Audit)
+
 ```text
 [Brand Primary - Navy/Royal Blue]
 Primary 900: #0F172A (Deep Slate Dark)
@@ -90,8 +109,22 @@ Info (Notice/Calendar):     #0284C7 (Text/Icon) | #E0F2FE (Badge Fill)
 Suspended Account:          #7C3AED (Text/Icon) | #EDE9FE (Badge Fill)
 ```
 
+> Catatan: Palet operasional (3.1.B) adalah token utama untuk seluruh layar aplikasi terotentikasi. Palet portal (3.1.A) eksklusif dipakai pada `/login`, `/forgot-password`, dan landing portal publik.
+
 ### 3.2 Tipografi (Typography Hierarchy)
 Font utama: **Inter** atau **Plus Jakarta Sans** (bersih, keterbacaan tinggi di berbagai resolusi layar).
+
+#### 3.2.A Hierarki Tipografi Portal Login & Landing
+
+Keluarga huruf Sans-Serif Modern (Plus Jakarta Sans, Inter, atau Poppins) untuk memastikan keterbacaan tinggi pada berbagai ukuran layar.
+
+- **Hero Title (H1):** 32pt – 36pt, Weight Bold (700), Warna Pure White (#FFFFFF) & Cyan Highlight (#38BDF8). Penggunaan: Judul utama ("Membangun Negeri Melalui Merdeka Belajar").
+- **Card Title (H2):** 20pt – 24pt, Weight Bold/Semi-Bold (600–700), Warna Dark Slate (#1F2937). Penggunaan: Judul formulir SSO ("Single Sign On").
+- **Section Header / Sub-title:** 13pt – 15pt, Weight Semi-Bold (600), Warna Light Blue/Cyan (#38BDF8). Penggunaan: Badge kategori ("TRANSFORMASI PENDIDIKAN INDONESIA").
+- **Form Labels & Captions:** 10pt – 11pt, Weight Semi-Bold (600), Uppercase, Warna Gray (#4B5563). Penggunaan: Label field ("NIM / ID PENGGUNA", "KATA SANDI").
+- **Body Text / Paragraph:** 12pt – 14pt, Weight Regular (400), Warna Off-White/Muted Gray. Penggunaan: Teks deskripsi di sisi kiri landing.
+
+#### 3.2.B Hierarki Tipografi Operasional Aplikasi
 
 - **Display 1 (H1 Dashboard / Welcome):** 28px (Bold, line-height 36px)
 - **Title (H2 Section Headings):** 20px (SemiBold, line-height 28px)
@@ -106,7 +139,7 @@ Gunakan kelipatan 4px / 8px secara ketat:
 - **Spacing Scale:** `4px (0.5)`, `8px (1)`, `12px (1.5)`, `16px (2)`, `20px (2.5)`, `24px (3)`, `32px (4)`, `48px (6)`, `64px (8)`.
 - **Desktop Grid:** 12 Kolom, Max Width `1440px`, Gutter `24px`, Margin Kiri/Kanan `32px`.
 - **Tablet Grid:** 8 Kolom, Gutter `16px`, Margin Kiri/Kanan `24px`.
-- **Mobile Grid:** 4 Kolom, Gutter `12px`, Margin Kiri/Kanan `16px`.
+- **Mobile Grid:** 4 Kolom, Gutter `12px`, Margin Kiri/Kanan `16px` (berlaku pula untuk Portal Login & Landing pada 375px).
 
 ### 3.4 Sudut & Bayangan (Radius & Elevations)
 - **Border Radius:**
@@ -134,12 +167,15 @@ Gunakan kelipatan 4px / 8px secara ketat:
 ### 4.1 Atoms
 1. **Buttons:**
    - *Primary:* Solid Royal Blue (#2563EB), teks putih, hover #1E3A8A.
+   - *Primary (Portal Login & Landing):* Full-width, Blue Accent (#3B82F6) dengan gradient halus ke #4F46E5, teks putih, Radius 8px, ikon Right Arrow (→). Penggunaan: tombol "Masuk Sekarang".
    - *Secondary / Outline:* Border #CBD5E1, teks #0F172A, hover #F8FAFC.
    - *Destructive:* Solid Crimson (#DC2626), teks putih.
    - *Ghost / Icon Button:* Tanpa border, hover #F1F5F9.
    - *States:* Default, Hover, Focused, Active/Pressed, Disabled, Loading (dengan spinner 16px).
 2. **Form Inputs:**
    - *Text Input:* Label atas, placeholder abu-abu, helper text / inline error text merah, support left-icon (misal ikon Search/Mail) dan right-icon (tombol eye show/hide password).
+   - *Text Input (Portal Login):* Prefix Icon (User/Profile Icon), Border Rounded Light Gray (#D1D5DB), placeholder contoh "24670097". Berada di dalam Login Form Card berlatar putih.
+   - *Password Input (Portal Login):* Type Password Input, Prefix Icon (Lock Icon), Suffix Icon (Eye Icon — Show/Hide Password Toggle), placeholder ••••••••.
    - *Select Dropdown:* Custom dropdown dengan chevron icon, menu dengan batas scroll jika > 6 item.
    - *Switch / Toggle:* Digunakan untuk aksi status on/off instan (misal status aktif akun).
 3. **Badges / Status Pills:**
@@ -147,6 +183,7 @@ Gunakan kelipatan 4px / 8px secara ketat:
    - `INACTIVE` / `SELESAI`: Latar abu-abu (#F1F5F9), teks abu-abu (#475569).
    - `SUSPENDED`: Latar ungu muda (#EDE9FE), teks ungu tua (#7C3AED).
    - `DIJADWALKAN`: Latar kuning muda (#FEF3C7), teks oranye tua (#D97706).
+   - `Portal Resmi` (Portal Login & Landing): Latar Emerald Green (#10B981) teks putih. Penggunaan: badge kepercayaan portal.
 4. **Avatars:**
    - User profile image dengan inisial nama fallback (*Contoh: "AF" untuk Ahmad Fauzi*), dilengkapi status indicator dot hijau di pojok kanan bawah.
 
@@ -155,9 +192,13 @@ Gunakan kelipatan 4px / 8px secara ketat:
    - Kombinasi kolom pencarian kata kunci (*search input*) + 1-3 dropdown filter cepat (misal filter Fakultas, filter Role, filter Status) + Tombol Reset.
 2. **Stat Metric Card:**
    - Kartu metrik dasbor berisi: Ikon tema dalam lingkaran berwarna lembut, judul label metrik, angka statistik utama berukuran 24px-30px, dan keterangan tambahan / status tren.
-3. **Pagination Bar:**
+3. **Statistik Card Module (Portal Login & Landing):**
+   - Tiga blok statistik ringkas di bawah teks utama hero: **40+** Mitra Industri Aktif, **100%** Konversi SKS Diakui, **24/7** Akses Portal Terpadu. Angka besar bertanda bold, keterangan ringkas di bawahnya.
+4. **Integrasi Sistem Badges Container (Portal Login & Landing):**
+   - Modul khusus di bagian bawah yang memuat daftar sistem terintegrasi (SIA, SPADA, SIP, SIKAP, SI-KEMAS, GC) sebagai badge/kartu kecil sejajar.
+5. **Pagination Bar:**
    - Informasi rentang data aktif (*"Menampilkan 1-10 dari 45 data"*), selector jumlah baris per halaman (*10, 25, 50*), dan tombol navigasi halaman (*Previous, 1, 2, 3, Next*).
-4. **Toast Notification:**
+6. **Toast Notification:**
    - Banner mengambang di pojok kanan atas layar (*Top-Right*), auto-dismiss 4 detik, mendukung 4 ragam: Success (hijau), Error (merah), Warning (kuning), Info (biru).
 
 ### 4.3 Organisms
@@ -167,18 +208,32 @@ Gunakan kelipatan 4px / 8px secara ketat:
    - Role Switcher Dropdown (jika user memiliki >1 role, misal Dosen & Dosen Wali).
    - Tombol Notifikasi (Ikon lonceng dengan unread dot).
    - Menu Profil User (Avatar, Nama lengkap, Role aktif, opsi "Profil Saya", "Ganti Password", dan "Keluar/Logout").
-2. **Responsive Sidebar:**
+2. **Portal Navbar (Login & Landing Publik):**
+   - *Brand Logo & Label:* Terletak di pojok kiri atas, terdiri dari ikon portal, nama sistem "Membangun Negeri", dan sub-teks "Portal Kampus Merdeka & Inovasi Belajar".
+   - *Search Input Field:* Kolom pencarian di tengah navbar dengan ikon *magnifying glass* ("Cari program Merdeka Belajar...").
+   - *Navigation Links:* Menu navigasi horizontal yang mencakup: *Beranda* (aktif/terpilih), *Program*, *Kegiatan*, *Berita*, *Kontak*, dan *FAQ*.
+   - *Navbar Action Button:* Tombol berbentuk kapsul (*pill*) bertuliskan **"MASUK SSO"** di bagian kanan atas.
+3. **Login Form Card (Portal Login & Landing):**
+   - Background Solid White (#FFFFFF), Border Radius 16px (Rounded Large).
+   - *Soft Elevation Drop Shadow* untuk memberikan efek mengapung dari background gelap (navy).
+   - Berisi: Logo/judul SSO, Field NIM/ID Pengguna, Field Kata Sandi, Checkbox "Ingat sesi saya", dan tombol Primary Button "Masuk Sekarang".
+4. **Responsive Sidebar:**
    - Mode Desktop: Lebar `260px`, fixed di sebelah kiri, collapsible menjadi `72px` (icon-only mode).
    - Mode Mobile/Tablet: Drawer mengambang dari kiri dengan overlay latar belakang gelap.
    - Pengelompokan menu rapi berdasarkan hak akses peran (*Role-based navigation*).
-3. **Responsive Data Table:**
+5. **Responsive Data Table:**
    - Header tabel dengan indikator pengurutan (*sortable indicator*).
    - Baris zebra halus atau pemisah garis halus.
    - Kolom aksi terstandar (*View detail, Edit, Delete / Activate*).
    - Empty state bawaan dengan ilustrasi dan tombol aksi tambah data jika tabel kosong.
-4. **Modal Dialog System:**
+6. **Modal Dialog System:**
    - Ukuran: *Sm (400px)* untuk konfirmasi bahaya, *Md (560px)* untuk form standar, *Lg (800px)* untuk form kompleks bertab.
    - Header jelas, tombol close (X) di pojok kanan atas, body area terpisah, dan footer aksi dengan tombol Batal & Simpan.
+7. **Floating Action Button (FAB) (Portal Login & Landing):**
+   - Tombol melayang di pojok kanan bawah halaman.
+   - Color: Emerald Green (#10B981).
+   - Icon: WhatsApp / Support Icon.
+   - Text: **"PUSAT LAYANAN / HELP CENTER"**.
 
 ---
 
@@ -222,31 +277,49 @@ Gunakan kelipatan 4px / 8px secara ketat:
 
 ### 6.1 Modul Autentikasi
 
+> **Catatan tema:** Layar autentikasi portal (`/login`, `/forgot-password`) wajib menggunakan tema **Dark-Mode Professional Navy** (palet §3.1.A & tipografi §3.2.A) sesuai `DESIGN_SYSTEM.md`. Palet operasional terang (§3.1.B) hanya berlaku di area terotentikasi.
+
 #### Layar 1: Halaman Login Portal (`/login`)
-- **Tujuan:** Gerbang masuk utama seluruh sivitas akademika kampus.
-- **Tata Letak (Split Screen):**
-  - *Sisi Kiri (Desktop 45%):* Form Login bersih berlatar putih.
-  - *Sisi Kanan (Desktop 55%):* Visual branding kampus, grafis modern, ucapan selamat datang, dan info pengumuman akademik singkat.
-- **Komponen Form:**
-  - Logo resmi kampus & judul: *"Sistem Akademik Kampus Terintegrasi"*.
-  - Input Multi-kredensial: Label *"Username / NIM / NIDN / NIP / Email"*. Placeholder: *"Masukkan identitas akun Anda"*.
-  - Input Password: Label *"Kata Sandi"*, placeholder, dan tombol ikon mata (*Show/Hide Password*).
-  - Tautan *"Lupa kata sandi?"* di samping kanan label password.
-  - Tombol Submit *"Masuk ke Portal"* (Full-width, primary blue).
-  - Footer: Teks hak cipta & informasi bantuan kontak IT kampus.
+- **Tujuan:** Gerbang masuk utama seluruh sivitas akademika kampus, dengan tampilan portal publik informatif bertema Dark-Mode Professional Navy.
+- **Latar & Tata Letak:**
+  - Latar belakang utama: *Gradient Navy* (#0D1B2A → #1B2A4A) memberikan kesan tepercaya, modern, dan bernuansa teknologi tinggi.
+  - Tata letak dua kolom pada Desktop: *Sisi Kiri* berisi konten branding/hero, *Sisi Kanan* berisi Login Form Card (kartu putih mengambang dengan *Soft Elevation Drop Shadow*, Border Radius 16px).
+- **Navbar Portal (pojok atas):**
+  - *Brand Logo & Label:* Ikon portal, nama sistem "Membangun Negeri", sub-teks "Portal Kampus Merdeka & Inovasi Belajar" di pojok kiri atas.
+  - *Search Input Field:* Kolom pencarian di tengah navbar dengan ikon *magnifying glass* (placeholder: *"Cari program Merdeka Belajar..."*).
+  - *Navigation Links:* *Beranda* (aktif/terpilih), *Program*, *Kegiatan*, *Berita*, *Kontak*, *FAQ*.
+  - *Navbar Action Button:* Tombol kapsul (*pill*) **"MASUK SSO"** di kanan atas.
+- **Sisi Kiri (Hero / Branding):**
+  - *Hero Title (H1):* **"Membangun Negeri Melalui Merdeka Belajar"** (Pure White #FFFFFF & Cyan Highlight #38BDF8, 32–36pt Bold).
+  - *Section Header / Sub-title:* Badge kategori cyan (mis. *"TRANSFORMASI PENDIDIKAN INDONESIA"*).
+  - *Body Text:* Deskripsi deskriptif portal (Off-White/Muted Gray, 12–14pt Regular).
+  - *Statistik Card Module:* Tiga blok statistik ringkas — **40+** Mitra Industri Aktif, **100%** Konversi SKS Diakui, **24/7** Akses Portal Terpadu.
+  - *Integrasi Sistem Badges Container:* Daftar sistem terintegrasi (SIA, SPADA, SIP, SIKAP, SI-KEMAS, GC) di bagian bawah.
+- **Sisi Kanan — Login Form Card (Solid White #FFFFFF):**
+  - *Card Title (H2):* Judul formulir SSO — *"Single Sign On"* (Dark Slate #1F2937, 20–24pt Bold/Semi-Bold).
+  - *Badge Kepercayaan:* Badge "Portal Resmi" dan indikator "SSL Terenkripsi" (Emerald Green #10B981).
+  - *Field NIM / ID Pengguna:* Text Input, Prefix Icon (User/Profile Icon), Border Rounded Light Gray (#D1D5DB), placeholder *"24670097"*. Label Form: *"NIM / ID PENGGUNA"* (Uppercase, Semi-Bold, Gray #4B5563, 10–11pt).
+  - *Field Kata Sandi:* Password Input, Prefix Icon (Lock Icon), Suffix Icon (Eye Icon — Show/Hide Password Toggle), placeholder ••••••••. Label Form: *"KATA SANDI"*.
+  - *Checkbox:* Interaktif untuk fitur "Ingat sesi saya", berdampingan dengan indikator status keamanan "SSL Terenkripsi".
+  - Tautan *"Lupa kata sandi?"* di samping kanan area password.
+  - *Primary Button:* **"Masuk Sekarang"** — Full-width, Blue Accent (#3B82F6) dengan gradient halus ke #4F46E5, teks putih, Radius 8px, ikon Right Arrow (→).
+  - Footer card: Teks hak cipta & informasi bantuan kontak IT kampus.
+- **Floating Action Button (FAB):**
+  - Tombol melayang di pojok kanan bawah halaman, Emerald Green (#10B981), ikon WhatsApp/Support, teks **"PUSAT LAYANAN / HELP CENTER"**.
 - **Status & Validasi UX:**
   - Jika kredensial salah: Alert merah di atas form: *"Username atau kata sandi tidak sesuai"*.
   - Jika akun `INACTIVE` atau `SUSPENDED`: Alert amber/ungu: *"Akun Anda sedang dinonaktifkan. Silakan hubungi Administrator Akademik."*
   - Saat request berlangsung: Tombol menampilkan animasi spinner dan ter-disable.
 
 #### Layar 2: Halaman Lupa Password (`/forgot-password`)
-- **Tujuan:** Pengajuan pemulihan akun bagi pengguna yang kehilangan akses.
+- **Tujuan:** Pengajuan pemulihan akun bagi pengguna yang kehilangkan akses.
+- **Tema:** Dark-Mode Navy (§3.1.A) — konsisten dengan Landing Portal.
 - **Komponen:**
-  - Card terpusat (*Centered Card layout*).
-  - Ikon kunci gembok (*Key Icon*) dalam lingkaran biru lembut.
-  - Judul: *"Pemulihan Kata Sandi"*. Subtitle instruktif.
-  - Input *"Email Terdaftar"*.
-  - Tombol *"Kirim Tautan Pemulihan"*.
+  - Latar gradient navy (#0D1B2A → #1B2A4A) dengan Login Form Card putih terpusat (*Centered Card layout*, Border Radius 16px, *Soft Elevation Drop Shadow*).
+  - Ikon kunci gembok (*Key Icon*) dalam lingkaran biru lembut (#3B82F6/#4F46E5).
+  - Judul: *"Pemulihan Kata Sandi"* (Dark Slate #1F2937). Subtitle instruktif (Text Muted).
+  - Input *"Email Terdaftar"* dengan Prefix Icon (Mail Icon), Border Rounded Light Gray (#D1D5DB).
+  - Tombol *"Kirim Tautan Pemulihan"* (Primary Button: Blue Accent gradient, teks putih, Radius 8px).
   - Tautan kembali ke halaman login.
   - State Berhasil: Menampilkan kartu konfirmasi pengiriman instruksi ke email dengan tombol kembali.
 
@@ -522,14 +595,14 @@ Fase 6: Prototyping Interaktif, States/Edge Cases, Review & Developer Handoff
 ### 🎨 Fase 2: Design System Foundations & UI Kit Primitives (Figma Library)
 **Fokus:** Membangun fondasi visual, token desain, dan pustaka komponen atomik yang terstandarisasi sebelum mendesain layar penuh.
 - **Aktivitas Utama:**
-  - Setup **Figma Color Styles & Variables**: Brand Primary (Navy/Royal Blue), Neutrals (Surface 0-900), Semantic Status (Active/Success, Warning, Destructive, Info, Suspended).
-  - Setup **Typography Scale**: Inter / Plus Jakarta Sans (Display, Title, Subtitle, Body, Caption, Monospace) dengan line-height dan letter-spacing presisi.
+  - Setup **Figma Color Styles & Variables** dua palet: (1) Portal Login & Landing — Dark-Mode Navy (Primary Background gradient #0D1B2A→#1B2A4A, Primary Accent #3B82F6/#4F46E5, Secondary Accent #38BDF8/#06B6D4, Status & Security #10B981, Card Background #FFFFFF, Text Primary #1F2937, Text Muted #6B7280/#9CA3AF) sesuai `DESIGN_SYSTEM.md`; (2) Operasional — Brand Primary Navy/Royal Blue, Neutrals (Surface 0-900), Semantic Status (Active/Success, Warning, Destructive, Info, Suspended).
+  - Setup **Typography Scale** ganda: Inter / Plus Jakarta Sans — hierarki Portal (Hero Title H1, Card Title H2, Section Header/Sub-title, Form Labels & Captions, Body Text) dan Operasional (Display, Title, Subtitle, Body, Caption, Monospace) dengan line-height dan letter-spacing presisi.
   - Setup **Spatial Tokens**: Grid 8pt (kelipatan 4px/8px), batas padding, gutter, margin breakpoint (Desktop 1440px, Tablet 768px, Mobile 375px).
-  - Setup **Elevation & Border Radius Tokens**: Radius `sm`, `md`, `lg`, `xl`, `2xl`, `full` dan bayangan 4 level.
+  - Setup **Elevation & Border Radius Tokens**: Radius `sm`, `md`, `lg`, `xl`, `2xl`, `full` dan bayangan 4 level; tambahan *Soft Elevation Drop Shadow* khusus Login Form Card portal.
   - Pembuatan komponen **Atomic Design** dengan varian lengkap dan *Auto Layout*:
-    - *Atoms:* Button (Primary, Outline, Destructive, Ghost, Icon, Loading), Input Field, Password Input (Show/Hide), Dropdown/Select, Checkbox, Radio, Switch Toggle, Badges, Avatar, Tooltip.
-    - *Molecules:* Search & Filter Bar, Stat Metric Card, Pagination Controls, Toast Alert Banner.
-    - *Organisms:* Data Table container (Header sortable, row hover, action icons), Modal Dialog primitives (Confirm Danger & Form Modal).
+    - *Atoms:* Button (Primary [termasuk Primary Portal gradient], Outline, Destructive, Ghost, Icon, Loading), Input Field, Password Input (Show/Hide), Dropdown/Select, Checkbox, Switch Toggle, Badges (termasuk "Portal Resmi" Emerald), Avatar, Tooltip.
+    - *Molecules:* Search & Filter Bar, Stat Metric Card, Statistik Card Module (Portal: 40+/100%/24/7), Integrasi Sistem Badges Container, Pagination Controls, Toast Alert Banner.
+    - *Organisms:* Portal Navbar (Brand Logo/Search/Nav Links/Pill "MASUK SSO"), Login Form Card, Data Table container (Header sortable, row hover, action icons), Modal Dialog primitives (Confirm Danger & Form Modal), Floating Action Button (FAB Help Center).
 - **Deliverables / Output:**
   - Halaman `02. Foundations` dan `03. Component Library` lengkap di file Figma.
   - Komponen mendukung penuh Figma *Variants*, *Component Properties*, dan *Auto Layout 5.0*.
@@ -540,9 +613,9 @@ Fase 6: Prototyping Interaktif, States/Edge Cases, Review & Developer Handoff
 **Fokus:** Merancang titik masuk utama sistem, kerangka antarmuka global, dan halaman manajemen identitas pengguna.
 - **Aktivitas Utama:**
   - **Modul Autentikasi:**
-    - Desain Layar Login Desktop (Split-screen 45:55 dengan ilustrasi kampus, form input multi-kredensial, show/hide password, error banner).
-    - Desain Layar Login Mobile (Single column card bersih, responsif).
-    - Desain Layar Lupa Password & Konfirmasi Pengiriman Instruksi Email.
+    - Desain Layar Login Desktop (Dark-Mode Navy gradient #0D1B2A→#1B2A4A; dua kolom: hero/branding di kiri, Login Form Card putih mengambang di kanan dengan *Soft Elevation Drop Shadow*, Border Radius 16px; Portal Navbar, Statistik Card Module, Integrasi Sistem Badges Container, dan FAB Help Center).
+    - Desain Layar Login Mobile (Single column: navbar, hero, lalu Login Form Card putih bersih responsif pada latar navy).
+    - Desain Layar Lupa Password (Dark-Mode Navy, Login Form Card putih terpusat) & Konfirmasi Pengiriman Instruksi Email.
   - **App Shell & Global Navigation:**
     - Global Topbar: Logo resmi, nama portal, badge semester aktif terpasang (*"🟢 Semester Ganjil 2026/2027"*), Role Switcher dropdown dinamis, unread notification bell, menu user dropdown.
     - Responsive Sidebar: Mode expanded (260px) dan mode icon-only collapsed (72px) pada desktop; mode slide-over drawer pada mobile/tablet.
