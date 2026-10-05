@@ -8,6 +8,7 @@ import {
   createCalendarSchema,
   updateCalendarSchema,
   getCalendarQuerySchema,
+  getActiveCalendarQuerySchema,
 } from './calendar.validation.js';
 
 const router = Router();
@@ -17,6 +18,10 @@ router.use(authenticateToken);
 
 // GET /api/v1/calendar - Melihat kalender akademik (semua pengguna yang login)
 router.get('/', validate({ query: getCalendarQuerySchema }), calendarController.list);
+
+// GET /api/v1/calendar/aktif - Agenda berjalan untuk semester aktif (SRS Bab 22)
+// Harus didefinisikan sebelum /:id agar "aktif" tidak tertangkap sebagai params id.
+router.get('/aktif', validate({ query: getActiveCalendarQuerySchema }), calendarController.active);
 
 // GET /api/v1/calendar/:id - Melihat detail agenda tertentu
 router.get('/:id', calendarController.detail);

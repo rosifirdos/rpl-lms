@@ -146,6 +146,24 @@ export class PortalService {
 
     const upcomingAgendas = activeSemester?.kalender_akademik?.slice(0, 5) || [];
 
+    // 2.1 Sumber kebenaran tunggal status KRS: PeriodeKRS nyata (MVP 2 Fase 11).
+    // Menggantikan heuristik pencocokan string 'krs' pada agenda kalender lama.
+    let periodeKrs = null;
+    let sisaHariKrs = null;
+    if (activeSemester) {
+      periodeKrs = await prisma.periodeKRS.findUnique({
+        where: { semester_id: activeSemester.id },
+      });
+      if (periodeKrs?.is_aktif) {
+        const mulai = new Date(periodeKrs.tanggal_mulai);
+        const selesai = new Date(periodeKrs.tanggal_selesai);
+        if (now >= mulai && now <= selesai) {
+          sisaHariKrs = Math.ceil((selesai - now) / (1000 * 60 * 60 * 24));
+        }
+      }
+    }
+    const isKrsOpen = Boolean(periodeKrs?.is_aktif && sisaHariKrs !== null);
+
     // Konteks umum semester dan agenda
     const systemContext = {
       tahun_akademik: activeSemester?.tahun_akademik ? {
@@ -161,6 +179,17 @@ export class PortalService {
       } : null,
       agenda_aktif: currentAgenda,
       agenda_mendatang: upcomingAgendas,
+      // Sumber status KRS kini berbasis PeriodeKRS (single source of truth, MVP 2).
+      periode_krs: periodeKrs ? {
+        id: periodeKrs.id,
+        nama: periodeKrs.nama,
+        tanggal_mulai: periodeKrs.tanggal_mulai,
+        tanggal_selesai: periodeKrs.tanggal_selesai,
+        sks_maks: periodeKrs.sks_maks,
+        is_aktif: periodeKrs.is_aktif,
+        sisa_hari: sisaHariKrs,
+        sedang_dibuka: isKrsOpen,
+      } : null,
     };
 
     const dashboardData = {
@@ -195,9 +224,28 @@ export class PortalService {
       });
 
       if (mhsProfile || userRoles.includes(ROLES.MAHASISWA)) {
-        const isKrsOpen = currentAgenda
-          ? currentAgenda.agenda.toLowerCase().includes('krs')
-          : false;
+        // Ambil KRS mahasiswa pada semester aktif untuk status personal (MVP 2 Fase 11).
+        let krsPersonal = null;
+        if (activeSemester && mhsProfile) {
+          krsPersonal = await prisma.kRS.findUnique({
+            where: {
+              mahasiswa_id_semester_id: {
+                mahasiswa_id: mhsProfile.id,
+                semester_id: activeSemester.id,
+              },
+            },
+            select: {
+              id: true,
+              status: true,
+              total_sks: true,
+              catatan_dosen: true,
+              diajukan_at: true,
+              diproses_at: true,
+              disetujui_oleh_id: true,
+              periode_krs_id: true,
+            },
+          });
+        }
 
         dashboardData.role_dashboards.mahasiswa = {
           title: 'Dasbor Akademik Mahasiswa',
@@ -221,8 +269,19 @@ export class PortalService {
             email: mhsProfile.dosen_wali.user?.email || null,
           } : null,
           status_krs: {
+            // Sumber kebenaran: PeriodeKRS nyata (bukan heuristic string lagi).
             periode_krs_buka: isKrsOpen,
-            agenda_krs: isKrsOpen ? currentAgenda : null,
+            periode_krs: periodeKrs ? {
+              id: periodeKrs.id,
+              nama: periodeKrs.nama,
+              tanggal_mulai: periodeKrs.tanggal_mulai,
+              tanggal_selesai: periodeKrs.tanggal_selesai,
+              sks_maks: periodeKrs.sks_maks,
+              sisa_hari: sisaHariKrs,
+            } : null,
+            krs_personal: krsPersonal,
+            // Catatan revisi bila KRS dikembalikan oleh PA (FR-035).
+            catatan_revisi: krsPersonal?.catatan_dosen || null,
             keterangan: isKrsOpen
               ? 'Periode pengisian dan revisi KRS sedang dibuka'
               : 'Periode pengisian KRS belum dibuka atau telah berakhir',
@@ -277,6 +336,19 @@ export class PortalService {
       });
 
       if (dosenProfile || userRoles.includes(ROLES.DOSEN) || userRoles.includes(ROLES.DOSEN_WALI)) {
+        // Hitung KRS menunggu persetujuan dari mahasiswa bimbingan (MVP 2 Fase 11).
+        // Menggantikan heuristic string lama dengan query nyata terhadap status DIAJUKAN.
+        let jumlahKrsMenunggu = 0;
+        if (dosenProfile && activeSemester) {
+          jumlahKrsMenunggu = await prisma.kRS.count({
+            where: {
+              status: 'DIAJUKAN',
+              semester_id: activeSemester.id,
+              mahasiswa: { dosen_wali_id: dosenProfile.id },
+            },
+          });
+        }
+
         dashboardData.role_dashboards.dosen = {
           title: 'Dasbor Akademik & Pengajaran Dosen',
           biodata: dosenProfile ? {
@@ -289,6 +361,8 @@ export class PortalService {
           statistik: {
             total_kelas_diampu: dosenProfile?.kelas_diampu?.length || 0,
             total_mahasiswa_wali: dosenProfile?.mahasiswa_bimbingan?.length || 0,
+            // Antrian KRS menunggu persetujuan PA (SRS Bab 9 dashboard PA).
+            jumlah_krs_menunggu_persetujuan: jumlahKrsMenunggu,
           },
           kelas_semester_aktif: (dosenProfile?.kelas_diampu || []).map((k) => ({
             id: k.id,
