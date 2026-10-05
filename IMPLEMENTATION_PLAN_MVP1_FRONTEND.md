@@ -6,7 +6,7 @@
 
 ## 📌 Ringkasan Eksekutif
 - **Target Rilis:** Frontend Web Client MVP 1
-- **Acuan Utama:** [PRD.md](PRD.md) (*Bab 2, 3, 4, 5*), [SRS.md](SRS.md) (*Bab 3, 9, 10, 16, 19, 22, 28, 29, 30, 31, 32, 35, 39, 40*), [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md), dan [backend/docs/openapi.yaml](backend/docs/openapi.yaml)
+- **Acuan Utama:** [PRD.md](PRD.md) (*Bab 2, 3, 4, 5*), [SRS.md](SRS.md) (*Bab 3, 9, 10, 16, 19, 22, 28, 29, 30, 31, 32, 35, 39, 40*), [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md), [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) (spesifikasi Portal Login & Landing — Dark-Mode Navy), dan [backend/docs/openapi.yaml](backend/docs/openapi.yaml)
 - **Fokus Utama:** Membangun antarmuka web modern, *responsive*, aman (*type-safe*), dan terintegrasi penuh dengan 37+ endpoint REST API backend MVP 1 yang telah teruji 100%.
 
 ---
@@ -62,6 +62,7 @@ Membangun aplikasi web Single Page Application (SPA) yang cepat, intuitif, berin
 | **Build Tool & Framework** | [Vite](https://vitejs.dev/) + [React](https://react.dev/) | React 18+ LTS / Vite 5+ | Kecepatan kompilasi instan, Hot Module Replacement (HMR) sub-detik, ringan, dan standar industri modern SPA. |
 | **Bahasa Pemrograman** | [TypeScript](https://www.typescriptlang.org/) | `v5.0+` | Menjamin *type-safety*, mencegah *runtime error*, dan menyediakan *auto-complete* akurat yang selaras dengan DTO backend. |
 | **CSS Framework** | [Tailwind CSS](https://tailwindcss.com/) | `v3.4+` | Efisiensi styling tinggi, kemudahan integrasi dengan *design tokens* (warna, spasi 8pt), serta hasil build CSS sangat ramping. |
+| **Animasi & Transisi** | [tailwindcss-animate](https://github.com/emad/tailwindcss-animate) | Latest | Utilitas animasi (fade/slide/shimmer) selaras Tailwind; dipakai untuk *Soft Elevation* Login Form Card portal, skeleton loading, dan toast. |
 | **UI Primitives / Kit** | [Radix UI](https://www.radix-ui.com/) / [shadcn/ui](https://ui.shadcn.com/) | Latest | Komponen *headless* berbasis standar aksesibilitas WAI-ARIA, fleksibel, mudah dikustomisasi, tanpa *lock-in*. |
 | **Ikonografi** | [Lucide React](https://lucide.dev/) | Latest | Koleksi ikon SVG modern, konsisten, berukuran ringan, dan mendukung *tree-shaking*. |
 | **Routing & Navigation** | [React Router DOM](https://reactrouter.com/) | `v6.22+` | Dukungan *Data Router*, *nested routes*, *layout outlets*, dan proteksi rute berbasis otorisasi peran (*ProtectedRoute*). |
@@ -112,14 +113,14 @@ frontend/
     │   └── common/                  # Pagination, SearchFilterBar, ConfirmDialog
     │
     ├── layouts/                     # Layout Wrapper
-    │   ├── AuthLayout.tsx           # Layout halaman Login & Lupa Password
+    │   ├── AuthLayout.tsx           # Layout halaman Login & Lupa Password (Dark-Mode Navy, gradient #0D1B2A→#1B2A4A)
     │   ├── AppLayout.tsx            # Shell utama (Topbar, Sidebar, Breadcrumb, Outlet)
     │   ├── Topbar.tsx               # Header global + Role Switcher + User Menu
     │   └── Sidebar.tsx              # Sidebar modular sesuai hak akses peran
     │
     ├── features/                    # Modul Fitur Bisnis (Feature-driven)
     │   ├── auth/                    # Modul Autentikasi
-    │   │   ├── components/          # LoginForm, ForgotPasswordForm
+    │   │   ├── components/          # LoginForm, ForgotPasswordForm, PortalNavbar, LoginFormCard, StatistikCardModule, SystemBadgesContainer, FabHelpCenter
     │   │   ├── hooks/               # useAuth, useLogin, useLogout
     │   │   ├── services/            # authService.ts
     │   │   └── types/               # auth.types.ts
@@ -255,8 +256,8 @@ Setiap layar frontend telah dipetakan secara presisi ke endpoint OpenAPI backend
 
 | Halaman Frontend | Rute Frontend | Metode | Endpoint Backend | Fungsi & Data yang Digunakan |
 |---|---|---|---|---|
-| **Login** | `/login` | `POST` | `/api/v1/auth/login` | Mengirim username/email + password, menerima token dan profil |
-| **Lupa Password** | `/forgot-password` | `POST` | `/api/v1/auth/forgot-password` | Mengirim email untuk permintaan pemulihan kata sandi |
+| **Login** | `/login` | `POST` | `/api/v1/auth/login` | Mengirim username/email + password, menerima token dan profil. Tema Dark-Mode Navy (gradient #0D1B2A→#1B2A4A), Login Form Card putih mengambang, Portal Navbar, Statistik Card, Badge Container, FAB Help Center. |
+| **Lupa Password** | `/forgot-password` | `POST` | `/api/v1/auth/forgot-password` | Mengirim email untuk permintaan pemulihan kata sandi. Tema Dark-Mode Navy, Login Form Card putih terpusat. |
 | **Profil & Biodata** | `/profile` | `GET` | `/api/v1/profile` | Mengambil data akun dan profil entitas aktif |
 | **Perbarui Profil** | `/profile` | `PUT` | `/api/v1/profile` | Memperbarui atribut mandiri profil pengguna |
 | **Ganti Password** | `/profile` (Tab 2) | `PUT` | `/api/v1/auth/change-password` | Memvalidasi kata sandi lama dan menyimpan kata sandi baru |
@@ -312,14 +313,15 @@ Fase 6: Pengujian Kualitas, Error Boundary, Responsivitas & Handoff
 ### 🚀 Fase 1: Setup Proyek, Tooling & Design System Primitives
 **Target:** Lingkungan proyek terkonfigurasi rapi dan pustaka komponen dasar (*UI Kit*) siap pakai.
 - [ ] Inisialisasi proyek menggunakan Vite + React + TypeScript di direktori `frontend/`.
-- [ ] Konfigurasi `tailwind.config.js` dengan menyematkan seluruh *design tokens* dari dokumen [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md) (warna brand, neutral, semantic, spacing 8pt, font Inter/Plus Jakarta Sans).
+- [ ] Konfigurasi `tailwind.config.js` dengan menyematkan seluruh *design tokens* dari [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md) & [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md): (1) token operasional (warna brand, neutral, semantic, spacing 8pt, font Inter/Plus Jakarta Sans); (2) token Portal Login & Landing — Dark-Mode Navy (bg gradient `#0D1B2A→#1B2A4A`, accent `#3B82F6/#4F46E5`, secondary `#38BDF8/#06B6D4`, status/security `#10B981`, card `#FFFFFF`, text primary `#1F2937`, text muted `#6B7280/#9CA3AF`).
+- [ ] Daftarkan utilitas gradient & animasi: `tailwindcss-animate` untuk *soft elevation*, skeleton shimmer, dan toast (sesuai token elevasi Portal Login Form Card).
 - [ ] Konfigurasi path aliases `@/*` pada `tsconfig.json` dan `vite.config.ts`.
-- [ ] Instalasi dependensi inti: `axios`, `@tanstack/react-query`, `zustand`, `react-router-dom`, `lucide-react`, `react-hook-form`, `zod`, `@hookform/resolvers`, `date-fns`, `clsx`, `tailwind-merge`.
+- [ ] Instalasi dependensi inti: `axios`, `@tanstack/react-query`, `zustand`, `react-router-dom`, `lucide-react`, `react-hook-form`, `zod`, `@hookform/resolvers`, `date-fns`, `clsx`, `tailwind-merge`, `tailwindcss-animate`.
 - [ ] Membangun komponen UI Primitives terstandar di `src/components/ui/`:
-  - `Button` (Primary, Secondary, Destructive, Ghost, Icon, Loading state).
-  - `Input` & `PasswordInput` (dengan toggle show/hide).
+  - `Button` (Primary, Secondary, Destructive, Ghost, Icon, Loading state). Sertakan varian *Primary Portal* (full-width, gradient `#3B82F6→#4F46E5`, Radius 8px, ikon right arrow) untuk tombol "Masuk Sekarang".
+  - `Input` & `PasswordInput` (dengan toggle show/hide, prefix icon User/Lock, suffix icon Eye, border `#D1D5DB`).
   - `Select` & `DropdownMenu`.
-  - `Badge` (Status pill untuk Active, Inactive, Suspended, Dijadwalkan, dll.).
+  - `Badge` (Status pill untuk Active, Inactive, Suspended, Dijadwalkan, dll. Sertakan badge "Portal Resmi" Emerald `#10B981`).
   - `Modal` (Dialog konfirmasi & Form dialog).
   - `Table` (Header sortable, strip, hover rows).
   - `Skeleton` (Shimmer loading effect).
@@ -333,11 +335,16 @@ Fase 6: Pengujian Kualitas, Error Boundary, Responsivitas & Handoff
 - [ ] Implementasi response interceptor untuk penanganan HTTP `401 Unauthorized` dengan *silent refresh token queuing*.
 - [ ] Pembuatan `useAuthStore` (Zustand) untuk menyimpan data `user`, `accessToken`, `roles`, dan `activeRole`.
 - [ ] Pembuatan `ProtectedRoute` dan `RoleGuard` untuk pengamanan rute aplikasi.
-- [ ] Halaman Login (`/login`) dengan form validasi Zod DTO:
+- [ ] Halaman Login (`/login`) dengan form validasi Zod DTO, bertema Dark-Mode Navy (gradient `#0D1B2A→#1B2A4A`) sesuai [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md):
+  - `PortalNavbar` (Brand Logo "Membangun Negeri" + sub-teks, Search Input, Navigation Links Beranda/Program/Kegiatan/Berita/Kontak/FAQ, Pill Button "MASUK SSO").
+  - Sisi kiri hero: `StatistikCardModule` (40+ Mitra / 100% SKS / 24/7 Akses) & `SystemBadgesContainer` (SIA, SPADA, SIP, SIKAP, SI-KEMAS, GC).
+  - `LoginFormCard` (Solid White, Border Radius 16px, *Soft Elevation Drop Shadow*): Card Title "Single Sign On", badge "Portal Resmi" + "SSL Terenkripsi" (Emerald `#10B981`), Field NIM/ID Pengguna (prefix User icon, placeholder "24670097"), Field Kata Sandi (prefix Lock icon, suffix Eye toggle), Checkbox "Ingat sesi saya".
   - Input multi-kredensial (Username / NIM / NIDN / NIP / Email).
   - Input Password dengan tombol lihat sandi.
+  - Primary Button "Masuk Sekarang" (full-width gradient `#3B82F6→#4F46E5`, ikon right arrow).
+  - `FabHelpCenter` (Emerald `#10B981`, pojok kanan bawah, teks "PUSAT LAYANAN / HELP CENTER").
   - Penanganan pesan kesalahan login kredensial tidak cocok dan akun non-aktif (*SRS BR/UC-01*).
-- [ ] Halaman Lupa Password (`/forgot-password`).
+- [ ] Halaman Lupa Password (`/forgot-password`) — Dark-Mode Navy, `LoginFormCard` putih terpusat dengan ikon Key, input Email (prefix Mail icon), dan Primary Button "Kirim Tautan Pemulihan".
 - [ ] Membangun kerangka navigasi aplikasi (`AppLayout`):
   - **Topbar:** Logo UPGRIS, badge semester operasional, dropdown Role Switcher, lonceng notifikasi, dan avatar user menu.
   - **Sidebar:** Menu dinamis responsif (bisa diciutkan/expand) yang otomatis menyesuaikan isi menu berdasarkan `activeRole`.
@@ -468,7 +475,7 @@ export interface ApiError {
 Fitur Frontend MVP 1 dinyatakan selesai (*Done*) apabila memenuhi seluruh kriteria berikut:
 - [ ] **Kepatuhan Fungsional:** Seluruh 8 skenario aktor dapat login, mengakses dasbor yang sesuai, dan menjalankan fitur sesuai matriks wewenang.
 - [ ] **Integrasi API 100%:** Seluruh interaksi data terhubung dengan 37+ endpoint backend tanpa data *mock/dummy* statis.
-- [ ] **Kesesuaian Desain:** Tampilan visual presisi sesuai panduan desain di [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md).
+- [ ] **Kesesuaian Desain:** Tampilan visual presisi sesuai panduan desain di [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md) dan spesifikasi Portal Login & Landing (Dark-Mode Navy) di [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
 - [ ] **Bebas Error Konsol:** Tidak ada unhandled runtime exception atau error merah pada inspect console browser.
 - [ ] **Type-Safe:** Lolos pengecekan kompilasi TypeScript (`tsc --noEmit`) tanpa penggunaan `any` sembarangan.
 - [ ] **Responsif:** Tampilan berfungsi optimal di layar smartphone (375px+), tablet, dan desktop.
