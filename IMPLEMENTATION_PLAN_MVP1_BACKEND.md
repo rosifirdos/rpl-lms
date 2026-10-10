@@ -1,93 +1,104 @@
 # Implementation Plan: Backend MVP 1
-**Sistem Akademik Kampus Terintegrasi (Portal, SIA, SPADA/LMS, PMB)**
+# SPADA (Learning Management System) Universitas PGRI Semarang (UPGRIS)
+**Team Membangun Negeri — Rencana Eksekusi Teknis Backend: Fondasi, Akun, Master Data & Direct Enrollment**
 
-Dokumen ini memuat rencana implementasi teknis sisi **Backend** untuk mencapai target **MVP 1** secara presisi, yang diselaraskan dengan spesifikasi pada [SRS.md](SRS.md) (*Bab 3, 5, 9, 10, 11, 14, 15, 19, 28, 31, 32, 34, 35, dan 39*):
-> **Definisi MVP 1 (SRS Bab 39 - Tabel 21):**
-> *"Login, role, dashboard, profil, master data dasar."*
+---
+
+Dokumen ini memuat rencana implementasi teknis sisi **Backend** untuk mencapai target **MVP 1** secara presisi, yang diselaraskan dengan spesifikasi pada [SRS.md](SRS.md) (*Bab 3, 4, 10, 13, 21, 27, 28, 29*) dan [PRD.md](PRD.md) (*Bab 2, 3, 5, 7*):
+> **Definisi MVP 1 (SRS Bab 27 & PRD Bab 7):**
+> *"Fondasi arsitektur, autentikasi multi-kredensial & manajemen sesi, profil mandiri, master akun pengguna & RBAC 3 peran, master mata kuliah, pembukaan kelas perkuliahan, modul direct enrollment mahasiswa oleh Admin, dan peninjau jejak audit (audit trail)."*
 
 ---
 
 ## 1. Tujuan & Ruang Lingkup MVP 1 (Sisi Backend)
 
-1. **Autentikasi Terpadu & Manajemen Sesi (SRS FR-013 s/d FR-016, UC-01)**
+1. **Autentikasi Terpadu & Manajemen Sesi (SRS Bab 4 & Bab 21)**
    - Autentikasi multi-kredensial (`username` / NIM / NIDN / NIP atau `email` + `password`).
-   - Penolakan akun dengan status tidak aktif (*BR/UC-01*).
-   - Pengelolaan sesi aman dengan JWT (Access Token dan Refresh Token bertanda tangan kriptografis).
-   - Fitur logout, perubahan kata sandi mandiri, dan dukungan pemulihan akun (*forgot password*).
-2. **Otorisasi Berbasis Peran & Matriks Akses (SRS Bab 3 & Bab 31 - Tabel 15)**
-   - Mendukung 8 aktor/role: `USER_UMUM` (Publik), `CALON_MAHASISWA`, `MAHASISWA`, `DOSEN`, `DOSEN_WALI`, `ADMIN_AKADEMIK`, `ADMIN_LMS`, dan `SUPER_ADMIN`.
-   - Dukungan kepemilikan multi-role (misal seorang Dosen sekaligus menjabat Dosen Wali/PA).
-   - Middleware otorisasi berbasis Role & Permission Guard sesuai prinsip *least privilege*.
-3. **Manajemen Profil Mandiri (SRS FR-021, Bab 31 Tabel 15, Bab 32 Tabel 16)**
-   - Hak baca-tulis profil (*RW*) bagi semua role pengguna (`GET /api/v1/profile` dan `PUT /api/v1/profile`).
-   - Pengambilan profil dinamis yang menggabungkan data akun inti dengan profil entitas spesifik (biodata Mahasiswa, Dosen, Admin, Calon Mahasiswa).
-4. **Layanan Dasbor Portal Berbasis Peran (SRS Bab 9 & Bab 19)**
-   - Portal Gateway yang menyajikan daftar modul kampus yang berhak diakses (`GET /api/v1/portal/modules`).
-   - Endpoint ringkasan metrik dasbor (`GET /api/v1/portal/dashboard`) dengan data kontekstual:
-     - **Mahasiswa:** semester aktif, status akademik, info dosen PA, modul SIA & SPADA (Bab 9).
-     - **Dosen / Dosen Wali:** kelas yang diampu, jumlah mahasiswa perwalian aktif.
-     - **Admin Akademik:** total mahasiswa aktif, total dosen, total prodi, status semester & kalender (Bab 19.1).
-     - **Admin LMS:** total kelas SPADA aktif, ringkasan monitoring sistem pembelajaran (Bab 19.2).
-     - **Super Admin:** total user & status akun, rekap role/permission, status audit log (Bab 19.3).
-5. **Modul Master Data Dasar & Kalender (SRS Bab 10, Bab 22, Bab 28.2 - Tabel 13)**
-   - Kelembagaan: Fakultas dan Program Studi.
-   - Waktu & Kalender: Tahun Akademik, Semester (penguncian semester operasional), dan Agenda Kalender Akademik.
-   - Akademik: Kurikulum, Master Mata Kuliah (SKS, semester paket), dan Penawaran Kelas Dasar.
-   - Fasilitas: Gedung dan Ruangan Kelas.
-   - File & Dokumen: Tabel metadata berkas dengan perlindungan akses terotorisasi (*SRS Bab 35*).
-6. **Keamanan & Jejak Audit (SRS Bab 15 & Bab 35)**
-   - Hashing password dengan *Argon2id* atau *Bcrypt*.
-   - Tabel `AuditLog` untuk mencatat setiap aksi krusial: pergantian role, aktivasi akun, dan mutasi master data.
-   - Validasi input ketat di sisi server (Zod DTO) dan penanganan eror yang konsisten (*SRS Bab 32.1*).
+   - Penolakan akses secara otomatis untuk akun berstatus `INACTIVE` atau `SUSPENDED` (HTTP 403 Forbidden).
+   - Pengelolaan sesi aman dengan JWT (Access Token umur pendek bertanda tangan kriptografis dan Refresh Token di database).
+   - Fitur logout aman, pencabutan token, dan alur permohonan reset kata sandi (*forgot password*).
+2. **Otorisasi Berbasis Peran & Matriks Akses (3 Peran Resmi SPADA):**
+   - Mendukung 3 peran resmi terstandar: `mahasiswa`, `dosen`, dan `admin` (*Role Tunggal*).
+   - Middleware otorisasi berbasis Role Guard (`authenticateToken`, `requireRole('admin')`, `requireRole(['dosen', 'admin'])`).
+   - Penegakan prinsip hak akses minimum (*least privilege*).
+3. **Manajemen Profil Mandiri (Mahasiswa, Dosen, Admin):**
+   - Hak akses baca dan ubah data profil mandiri (`GET /api/profile` dan `PUT /api/profile`).
+   - Unggah dan pembaharuan foto profil/avatar pengguna (`POST /api/profile/avatar`) dengan validasi format gambar (.jpg/.jpeg/.png) dan batasan ukuran maksimal 2MB.
+   - Penggantian kata sandi mandiri (`PUT /api/profile/password`) dengan validasi kata sandi lama.
+4. **Layanan Dasbor Kontekstual SPADA LMS (`GET /api/dashboard`):**
+   - Endpoint agregasi ringkasan data dasbor yang disesuaikan secara presisi untuk 3 aktor:
+     - **Mahasiswa:** semester aktif, status akademik, dan daftar kelas yang dienroll oleh Admin (id, nama mata kuliah, kode kelas, SKS, nama dosen pengampu).
+     - **Dosen:** data profil dosen bergelar (NIDN), daftar kelas yang diampu pada semester aktif, dan jumlah mahasiswa terdaftar di tiap kelas.
+     - **Admin:** ringkasan metrik statistik sistem (Total Mahasiswa, Total Dosen, Total Mata Kuliah, Total Kelas Pembelajaran, Total Enrollment Aktif).
+5. **Modul Master Data Akademik SPADA (Khusus Admin):**
+   - **Manajemen Akun Pengguna:** Endpoint CRUD akun (Mahasiswa, Dosen, Admin), pencarian multi-kolom, filter 3 role, filter status akun (`ACTIVE`, `INACTIVE`, `SUSPENDED`), dan endpoint ganti status/reset password.
+   - **Master Mata Kuliah:** Endpoint CRUD mata kuliah (Kode MK unik, Nama Mata Kuliah, Beban SKS 1–6, Deskripsi Kompetensi).
+   - **Pembukaan Kelas Perkuliahan:** Endpoint pembukaan kelas semester aktif (relasi ke Mata Kuliah, Dosen Pengampu, Kode/Nama Kelas, Tahun Akademik, Semester Ganjil/Genap, Kapasitas Kuota).
+6. **Modul Direct Enrollment Mahasiswa (Khusus Admin — Aturan Bisnis BR-002):**
+   - Pendaftaran kepesertaan kelas mahasiswa langsung oleh Admin tanpa alur KRS atau persetujuan Dosen PA.
+   - Endpoint melihat daftar mahasiswa terdaftar pada suatu kelas (`GET /api/admin/classes/:classId/enrollments`).
+   - Endpoint melihat daftar mahasiswa yang belum terdaftar di kelas (`GET /api/admin/classes/:classId/available-students`).
+   - Endpoint pendaftaran mahasiswa ke kelas (`POST /api/admin/enrollments`) dengan dukungan penambahan individual maupun *batch enrollment* (array `student_ids`), divalidasi terhadap kapasitas daya tampung kelas.
+   - Endpoint pencabutan kepesertaan (*unenroll*) mahasiswa dari kelas (`DELETE /api/admin/enrollments/:id`).
+7. **Keamanan & Jejak Audit (Audit Trail Engine - SRS Bab 10 & Bab 21):**
+   - Penyimpanan hash password menggunakan *Argon2id* atau *Bcrypt* dengan salt aman.
+   - Perekaman mutasi data penting ke tabel `audit_logs` (login, perubahan akun, mutasi master mata kuliah & kelas, aksi enrollment mahasiswa).
+   - Endpoint peninjau audit log (`GET /api/admin/audit-logs`) dan inspeksi detail perbandingan JSON (`GET /api/admin/audit-logs/:id`).
+   - Validasi data input ketat di sisi server menggunakan *Zod DTO*.
 
 ---
 
 ## 2. Arsitektur & Rekomendasi Tech Stack
 
-- **Runtime & Bahasa:** Node.js (v20+ LTS) dengan ES Modules atau TypeScript.
-- **Web Framework:** Express.js (arsitektur modular, middleware terpisah, responsif).
-- **Database Relasional:** PostgreSQL (relasi data kuat, integritas referensial ACID, performa andal).
-- **ORM & Migrasi:** Prisma ORM (tipe data aman, manajemen skema `schema.prisma`, migrasi otomatis, dan seeder terintegrasi).
-- **Keamanan & Otorisasi:**
+- **Runtime & Bahasa:** Node.js (v20+ LTS) dengan TypeScript atau ES Modules modern.
+- **Web Framework:** Express.js (arsitektur modular berlapis: Routes → Middlewares → Controllers → Services → Prisma Repository).
+- **Database Relasional:** PostgreSQL (integritas referensial ACID, performa tinggi, indeks unik).
+- **ORM & Migrasi:** Prisma ORM (manajemen skema `schema.prisma`, migrasi otomatis, dan seeder data awal).
+- **Keamanan & Validasi:**
   - Password Hash: `argon2` / `bcryptjs`
-  - Token Management: `jsonwebtoken` (Access Token umur pendek + Refresh Token di database)
-  - HTTP Headers & Hardening: `helmet`, `cors`, `express-rate-limit`
-  - Validasi Input: `zod`
+  - Token Management: `jsonwebtoken` (Access Token umur pendek + Refresh Token bertanda tangan di DB)
+  - HTTP Hardening: `helmet`, `cors`, `express-rate-limit`
+  - Validasi Schema DTO: `zod`
+- **File Storage (Avatar Pengguna MVP 1):**
+  - Penyimpanan file lokal terproteksi (*private storage*) dengan sanitasi nama berkas unik (UUID) dan inspeksi MIME-type.
 - **Audit & Logging:**
   - Structured Logging: `winston` / `morgan`
-  - Audit Trail Engine: Interceptor/Service pencatat mutasi ke tabel database `audit_logs`.
+  - Audit Trail Engine: Service pencatat mutasi data ke tabel `audit_logs`.
 
 ---
 
-## 3. Desain Skema Database (Mengacu pada Data Dictionary SRS Bab 28.2)
+## 3. Desain Skema Database (Mengacu pada SRS Bab 13 & Bab 28)
 
 ```prisma
 // ==========================================
-// 1. AUTENTIKASI, AKUN, & RBAC (SRS Bab 28.2)
+// 1. PENGGUNA, PROFIL & RBAC SPADA LMS
 // ==========================================
 
 model User {
-  id            String          @id @default(uuid())
-  username      String          @unique // NIM, NIDN, NIP, no_pendaftaran, atau username unik
-  email         String          @unique
+  id            String      @id @default(uuid())
+  username      String      @unique // NIM, NIDN, NIP, atau username unik
+  email         String      @unique
   password_hash String
-  status        UserStatus      @default(ACTIVE) // ACTIVE, INACTIVE, SUSPENDED
+  role          UserRole    @default(mahasiswa) // mahasiswa, dosen, admin
+  status        UserStatus  @default(ACTIVE)    // ACTIVE, INACTIVE, SUSPENDED
   last_login_at DateTime?
-  created_at    DateTime        @default(now())
-  updated_at    DateTime        @updated_at
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updated_at
 
-  user_roles    UserRole[]
+  profile        Profile?
+  mahasiswa      Mahasiswa?
+  dosen          Dosen?
   refresh_tokens RefreshToken[]
-  audit_logs    AuditLog[]
+  audit_logs     AuditLog[]
   uploaded_files File[]
 
-  // Profil relasional sesuai role (SRS Bab 28.1)
-  mahasiswa_profile Mahasiswa?
-  dosen_profile     Dosen?
-  admin_profile     AdminProfile?
-  calon_mhs_profile CalonMahasiswa?
-
   @@map("users")
+}
+
+enum UserRole {
+  mahasiswa
+  dosen
+  admin
 }
 
 enum UserStatus {
@@ -96,53 +107,51 @@ enum UserStatus {
   SUSPENDED
 }
 
-model Role {
-  id          String           @id @default(uuid())
-  name        String           @unique // SUPER_ADMIN, ADMIN_AKADEMIK, ADMIN_LMS, DOSEN, DOSEN_WALI, MAHASISWA, CALON_MAHASISWA
-  description String?
-  created_at  DateTime         @default(now())
+model Profile {
+  id             String   @id @default(uuid())
+  user_id        String   @unique
+  full_name      String
+  phone          String?
+  bio            String?
+  avatar_file_id String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updated_at
 
-  user_roles       UserRole[]
-  role_permissions RolePermission[]
+  user        User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  avatar_file File? @relation("ProfileAvatar", fields: [avatar_file_id], references: [id], onDelete: SetNull)
 
-  @@map("roles")
+  @@map("profiles")
 }
 
-model Permission {
-  id          String           @id @default(uuid())
-  code        String           @unique // e.g. "user:read", "master:crud", "calendar:manage"
-  name        String
-  description String?
-  created_at  DateTime         @default(now())
-
-  role_permissions RolePermission[]
-
-  @@map("permissions")
-}
-
-model UserRole {
+model Mahasiswa {
   id         String   @id @default(uuid())
-  user_id    String
-  role_id    String
+  user_id    String   @unique
+  nim        String   @unique
+  prodi      String   // Program Studi (misal: "Teknik Informatika")
+  angkatan   Int      // Tahun Angkatan (misal: 2024)
   created_at DateTime @default(now())
+  updated_at DateTime @updated_at
 
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  role Role @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
 
-  @@unique([user_id, role_id])
-  @@map("user_roles")
+  @@map("mahasiswa")
 }
 
-model RolePermission {
-  id            String   @id @default(uuid())
-  role_id       String
-  permission_id String
+model Dosen {
+  id             String   @id @default(uuid())
+  user_id        String   @unique
+  nidn           String?  @unique
+  nip            String?  @unique
+  gelar_depan    String?
+  gelar_belakang String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updated_at
 
-  role       Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
-  permission Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  classes Class[] // Kelas-kelas yang diampu dosen
 
-  @@unique([role_id, permission_id])
-  @@map("role_permissions")
+  @@map("dosen")
 }
 
 model RefreshToken {
@@ -159,289 +168,78 @@ model RefreshToken {
 }
 
 // ==========================================
-// 2. PROFIL PENGGUNA (SRS Bab 28.2)
+// 2. MASTER MATA KULIAH, KELAS & ENROLLMENT
 // ==========================================
 
-model Mahasiswa {
-  id              String   @id @default(uuid())
-  user_id         String   @unique
-  nim             String   @unique
-  nama            String
-  prodi_id        String
-  angkatan        Int
-  status_akademik StatusAkademik @default(AKTIF) // AKTIF, CUTI, LULUS, DROP_OUT
-  dosen_wali_id   String?
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updated_at
+model Course {
+  id          String   @id @default(uuid())
+  code        String   @unique // Kode MK unik (misal: "TIF101")
+  name        String   // Nama Mata Kuliah
+  credits     Int      // Beban SKS (1 s.d. 6)
+  description String?  // Deskripsi Kompetensi
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updated_at
 
-  user       User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  prodi      ProgramStudi @relation(fields: [prodi_id], references: [id])
-  dosen_wali Dosen?       @relation("DosenWaliMahasiswa", fields: [dosen_wali_id], references: [id])
+  classes Class[]
 
-  @@map("mahasiswa")
+  @@map("courses")
 }
 
-enum StatusAkademik {
-  AKTIF
-  CUTI
-  LULUS
-  DROP_OUT
-}
-
-model Dosen {
-  id             String   @id @default(uuid())
-  user_id        String   @unique
-  nidn           String?  @unique
-  nip            String?  @unique
-  nama           String
-  gelar_depan    String?
-  gelar_belakang String?
-  prodi_id       String?
-  is_active      Boolean  @default(true)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updated_at
-
-  user  User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  prodi ProgramStudi? @relation(fields: [prodi_id], references: [id])
-
-  mahasiswa_bimbingan Mahasiswa[] @relation("DosenWaliMahasiswa")
-  kelas_diampu        Kelas[]
-
-  @@map("dosen")
-}
-
-model AdminProfile {
-  id         String   @id @default(uuid())
-  user_id    String   @unique
-  nip        String?
-  nama       String
-  unit_kerja String   // "Akademik", "LMS/TI", "Pusat"
-  created_at DateTime @default(now())
-  updated_at DateTime @updated_at
-
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@map("admin_profiles")
-}
-
-model CalonMahasiswa {
-  id                 String   @id @default(uuid())
-  user_id            String   @unique
-  no_pendaftaran     String   @unique
-  nama               String
-  status_seleksi     StatusSeleksi @default(MENUNGGU)
-  prodi_pilihan_id   String?
-  jalur_pendaftaran  String?
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updated_at
-
-  user  User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  prodi ProgramStudi? @relation(fields: [prodi_id], references: [id])
-
-  @@map("calon_mahasiswa")
-}
-
-enum StatusSeleksi {
-  MENUNGGU
-  TERVERIFIKASI
-  LULUS
-  TIDAK_LULUS
-  TERDAFTAR_ULANG
-}
-
-// ==========================================
-// 3. MASTER DATA KELEMBAGAAN & KALENDER
-// ==========================================
-
-model Fakultas {
+model Class {
   id            String   @id @default(uuid())
-  kode          String   @unique
-  nama          String
-  is_active     Boolean  @default(true)
+  course_id     String
+  lecturer_id   String
+  academic_year String   // misal: "2026/2027"
+  semester      Semester // ganjil, genap
+  name          String   // Kode/Nama Kelas (misal: "TI-A")
+  capacity      Int      @default(40)
   created_at    DateTime @default(now())
   updated_at    DateTime @updated_at
 
-  program_studi ProgramStudi[]
+  course      Course       @relation(fields: [course_id], references: [id])
+  lecturer    Dosen        @relation(fields: [lecturer_id], references: [id])
+  enrollments Enrollment[]
 
-  @@map("fakultas")
+  @@unique([course_id, academic_year, semester, name])
+  @@map("classes")
 }
 
-model ProgramStudi {
+enum Semester {
+  ganjil
+  genap
+}
+
+model Enrollment {
   id          String   @id @default(uuid())
-  fakultas_id String
-  kode        String   @unique
-  nama        String
-  jenjang     String   // "D3", "S1", "S2"
-  is_active   Boolean  @default(true)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updated_at
+  class_id    String
+  student_id  String
+  enrolled_by String   // ID Admin yang melakukan direct enrollment
+  enrolled_at DateTime @default(now())
 
-  fakultas         Fakultas         @relation(fields: [fakultas_id], references: [id])
-  kurikulum        Kurikulum[]
-  mahasiswa        Mahasiswa[]
-  dosen            Dosen[]
-  calon_mahasiswa  CalonMahasiswa[]
+  class   Class     @relation(fields: [class_id], references: [id], onDelete: Cascade)
+  student Mahasiswa @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
-  @@map("program_studi")
-}
-
-model TahunAkademik {
-  id         String     @id @default(uuid())
-  kode       String     @unique // "2026/2027"
-  nama       String     // "Tahun Ajaran 2026/2027"
-  is_active  Boolean    @default(true)
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updated_at
-
-  semester   Semester[]
-
-  @@map("tahun_akademik")
-}
-
-model Semester {
-  id                String       @id @default(uuid())
-  tahun_akademik_id String
-  tipe              SemesterTipe // GANJIL, GENAP, ANTARA
-  tanggal_mulai     DateTime
-  tanggal_selesai   DateTime
-  is_active         Boolean      @default(false) // Hanya 1 semester operasional aktif
-  created_at        DateTime     @default(now())
-  updated_at        DateTime     @updated_at
-
-  tahun_akademik    TahunAkademik      @relation(fields: [tahun_akademik_id], references: [id])
-  kalender_akademik KalenderAkademik[]
-  kelas             Kelas[]
-
-  @@unique([tahun_akademik_id, tipe])
-  @@map("semester")
-}
-
-enum SemesterTipe {
-  GANJIL
-  GENAP
-  ANTARA
-}
-
-model KalenderAkademik {
-  id          String         @id @default(uuid())
-  semester_id String
-  agenda      String         // Misal: "Periode KRS", "Perkuliahan", "UTS", "UAS"
-  mulai       DateTime
-  selesai     DateTime
-  status      KalenderStatus @default(DIJADWALKAN) // DIJADWALKAN, BERJALAN, SELESAI
-  created_at  DateTime       @default(now())
-  updated_at  DateTime       @updated_at
-
-  semester Semester @relation(fields: [semester_id], references: [id], onDelete: Cascade)
-
-  @@map("kalender_akademik")
-}
-
-enum KalenderStatus {
-  DIJADWALKAN
-  BERJALAN
-  SELESAI
+  @@unique([class_id, student_id])
+  @@map("enrollments")
 }
 
 // ==========================================
-// 4. MASTER KURIKULUM, MATA KULIAH & KELAS
-// ==========================================
-
-model Kurikulum {
-  id          String   @id @default(uuid())
-  prodi_id    String
-  nama        String   // "Kurikulum 2024"
-  tahun_mulai Int
-  is_active   Boolean  @default(true)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updated_at
-
-  prodi       ProgramStudi  @relation(fields: [prodi_id], references: [id])
-  mata_kuliah MataKuliah[]
-
-  @@map("kurikulum")
-}
-
-model MataKuliah {
-  id             String   @id @default(uuid())
-  kurikulum_id   String
-  kode           String   @unique
-  nama           String
-  sks            Int      // Bobot SKS total
-  sks_teori      Int      @default(0)
-  sks_praktik    Int      @default(0)
-  semester_paket Int      @default(1)
-  is_wajib       Boolean  @default(true)
-  is_active      Boolean  @default(true)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updated_at
-
-  kurikulum Kurikulum @relation(fields: [kurikulum_id], references: [id])
-  kelas     Kelas[]
-
-  @@map("mata_kuliah")
-}
-
-model Gedung {
-  id         String    @id @default(uuid())
-  kode       String    @unique
-  nama       String
-  created_at DateTime  @default(now())
-
-  ruangan    Ruangan[]
-
-  @@map("gedung")
-}
-
-model Ruangan {
-  id         String   @id @default(uuid())
-  gedung_id  String
-  kode       String   @unique
-  nama       String
-  kapasitas  Int
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now())
-
-  gedung     Gedung   @relation(fields: [gedung_id], references: [id])
-  kelas      Kelas[]
-
-  @@map("ruangan")
-}
-
-model Kelas {
-  id             String   @id @default(uuid())
-  mata_kuliah_id String
-  semester_id    String
-  dosen_id       String
-  ruangan_id     String?
-  kode_kelas     String   // "TI-A", "TI-B"
-  kapasitas      Int      @default(40)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updated_at
-
-  mata_kuliah MataKuliah @relation(fields: [mata_kuliah_id], references: [id])
-  semester    Semester   @relation(fields: [semester_id], references: [id])
-  dosen       Dosen      @relation(fields: [dosen_id], references: [id])
-  ruangan     Ruangan?   @relation(fields: [ruangan_id], references: [id])
-
-  @@unique([mata_kuliah_id, semester_id, kode_kelas])
-  @@map("kelas")
-}
-
-// ==========================================
-// 5. FILE & AUDIT TRAIL (SRS Bab 28.2 & Bab 35)
+// 3. STORAGE BERKAS & AUDIT TRAIL
 // ==========================================
 
 model File {
-  id         String   @id @default(uuid())
-  nama       String
-  path       String   // Lokasi internal storage yang terproteksi
-  mime       String
-  size       Int
-  owner_id   String
-  created_at DateTime @default(now())
+  id            String   @id @default(uuid())
+  original_name String
+  storage_name  String   @unique
+  file_path     String   // Lokasi internal storage yang terproteksi
+  mime_type     String
+  size_bytes    Int
+  uploaded_by   String
+  created_at    DateTime @default(now())
 
-  owner User @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+  uploader User      @relation(fields: [uploaded_by], references: [id], onDelete: Cascade)
+  profiles Profile[] @relation("ProfileAvatar")
 
   @@map("files")
 }
@@ -449,14 +247,14 @@ model File {
 model AuditLog {
   id         String   @id @default(uuid())
   user_id    String?
-  action     String   // "LOGIN", "LOGOUT", "CREATE", "UPDATE", "DELETE", "ROLE_CHANGE"
-  entity     String   // Nama tabel / entitas target
+  action     String   // "LOGIN", "LOGOUT", "CREATE", "UPDATE", "DELETE", "ENROLL", "UNENROLL"
+  entity     String   // "User", "Course", "Class", "Enrollment", "Profile"
   entity_id  String?
   old_values Json?
   new_values Json?
   ip_address String?
   user_agent String?
-  waktu      DateTime @default(now())
+  created_at DateTime @default(now())
 
   user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
@@ -468,73 +266,73 @@ model AuditLog {
 
 ## 4. Desain Spesifikasi API Endpoints MVP 1
 
-### 4.1. Autentikasi & Akun (`/api/v1/auth` & Konseptual SRS Bab 32)
-| Method | Endpoint Standar | Alias Konseptual SRS | Fungsi & Deskripsi | Akses |
-|---|---|---|---|---|
-| `POST` | `/api/v1/auth/login` | `/api/login` | Autentikasi username/email & password, mengembalikan access token & profile | Publik |
-| `POST` | `/api/v1/auth/logout` | `/api/logout` | Mencabut refresh token dan mengakhiri sesi pengguna | Login |
-| `POST` | `/api/v1/auth/refresh` | - | Mendapatkan access token baru menggunakan refresh token yang valid | Publik / Valid Refresh |
-| `POST` | `/api/v1/auth/forgot-password` | - | Mengajukan permintaan reset kata sandi (*FR-015*) | Publik |
-| `PUT` | `/api/v1/auth/change-password` | - | Mengganti kata sandi akun yang sedang aktif (*FR-016*) | Login |
-
-### 4.2. Profil Pengguna (`/api/v1/profile` - SRS Bab 31 & Bab 32)
-| Method | Endpoint | Fungsi & Deskripsi | Akses (Tabel 15) |
+### 4.1. Autentikasi & Manajemen Sesi (`/api/auth`)
+| Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
 |---|---|---|---|
-| `GET` | `/api/v1/profile` | Mengambil data akun, profil entitas (Mahasiswa/Dosen/Admin), role, dan permission | Semua Role (R) |
-| `PUT` | `/api/v1/profile` | Memperbarui profil mandiri (telepon, kontak darurat, alamat) | Semua Role (W) |
+| `POST` | `/api/auth/login` | Login dengan username/email & password, validasi status akun, kembalikan JWT tokens & info user | Publik |
+| `POST` | `/api/auth/logout` | Cabut refresh token dan akhiri sesi login | Login |
+| `POST` | `/api/auth/refresh` | Perbarui access token menggunakan refresh token valid | Publik / Refresh |
+| `POST` | `/api/auth/forgot-password` | Ajukan permohonan pemulihan kata sandi via email terdaftar | Publik |
 
-### 4.3. Dasbor Portal (`/api/v1/portal` - SRS Bab 9 & Bab 19)
-| Method | Endpoint | Fungsi & Deskripsi | Akses |
+### 4.2. Profil Pengguna Mandiri (`/api/profile`)
+| Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
 |---|---|---|---|
-| `GET` | `/api/v1/portal/modules` | Menampilkan modul yang berhak diakses user (PMB, SIA, SPADA) | Login |
-| `GET` | `/api/v1/portal/dashboard` | Menyajikan data agregasi ringkas spesifik berdasarkan role: | Login |
-| | | - **Mahasiswa:** Status semester aktif, prodi, dosen wali, launcher SIA/SPADA | |
-| | | - **Dosen/PA:** Daftar kelas aktif yang diampu, jumlah mahasiswa bimbingan PA | |
-| | | - **Admin Akademik:** Total mahasiswa aktif, total dosen, total prodi, status kalender/KRS | |
-| | | - **Admin LMS:** Total kelas aktif di SPADA, metrik aktivitas pembelajaran | |
-| | | - **Super Admin:** Ringkasan user & status akun, rekap role, log aktivitas terkini | |
+| `GET` | `/api/profile` | Ambil data akun login, biodata profil, identitas mahasiswa/dosen | Login (Semua Role) |
+| `PUT` | `/api/profile` | Perbarui nama lengkap, nomor telepon, bio profil mandiri | Login (Semua Role) |
+| `POST` | `/api/profile/avatar` | Unggah/ganti foto profil (validasi format .jpg/.jpeg/.png, maks 2MB) | Login (Semua Role) |
+| `PUT` | `/api/profile/password` | Ganti kata sandi mandiri dengan validasi kata sandi lama | Login (Semua Role) |
 
-### 4.4. Master Kalender Akademik (`/api/v1/calendar` - SRS Bab 22 & Bab 32)
-| Method | Endpoint | Alias Konseptual | Fungsi & Deskripsi | Akses (Tabel 15) |
-|---|---|---|---|---|
-| `GET` | `/api/v1/calendar` | `/api/calendar` | Mengambil daftar agenda kalender akademik semester aktif | Login (View) |
-| `POST` | `/api/v1/calendar` | - | Membuat agenda kalender akademik baru | Admin Akademik, Super Admin |
-| `PUT` | `/api/v1/calendar/:id` | - | Mengubah rincian agenda dan tanggal periode | Admin Akademik, Super Admin |
-| `DELETE`| `/api/v1/calendar/:id` | - | Menghapus atau menonaktifkan agenda | Admin Akademik, Super Admin |
-
-### 4.5. Master Kelembagaan, Kurikulum, Mata Kuliah & Kelas (`/api/v1/master/*`)
-| Method | Endpoint | Fungsi & Deskripsi | Akses |
+### 4.3. Dasbor Kontekstual SPADA (`/api/dashboard`)
+| Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
 |---|---|---|---|
-| `GET/POST` | `/api/v1/master/fakultas` | List & Tambah Fakultas | Admin Akademik, Super Admin |
-| `GET/PUT/DEL` | `/api/v1/master/fakultas/:id` | Detail, Update, Hapus Fakultas | Admin Akademik, Super Admin |
-| `GET/POST` | `/api/v1/master/prodi` | List & Tambah Program Studi | Admin Akademik, Super Admin |
-| `GET/PUT/DEL` | `/api/v1/master/prodi/:id` | Detail, Update, Hapus Program Studi | Admin Akademik, Super Admin |
-| `GET/POST` | `/api/v1/master/tahun-akademik`| List & Tambah Tahun Akademik | Admin Akademik, Super Admin |
-| `GET/POST` | `/api/v1/master/semester` | List & Tambah Semester | Admin Akademik, Super Admin |
-| `PATCH` | `/api/v1/master/semester/:id/activate` | Mengaktifkan semester operasional utama kampus | Admin Akademik, Super Admin |
-| `GET/POST` | `/api/v1/master/kurikulum` | List & Tambah Kurikulum | Admin Akademik |
-| `GET/POST` | `/api/v1/master/mata-kuliah`| List & Tambah Mata Kuliah (*SRS Data Dictionary*) | Admin Akademik |
-| `GET/PUT/DEL` | `/api/v1/master/mata-kuliah/:id` | Detail, Update, Hapus Mata Kuliah | Admin Akademik |
-| `GET/POST` | `/api/v1/master/gedung` | List & Tambah Gedung | Admin Akademik, Admin LMS |
-| `GET/POST` | `/api/v1/master/ruangan` | List & Tambah Ruangan Kelas | Admin Akademik, Admin LMS |
-| `GET/POST` | `/api/v1/master/kelas` | List & Buka Penawaran Kelas untuk semester aktif | Admin Akademik |
+| `GET` | `/api/dashboard` | Ambil data agregasi dasbor spesifik peran: | Login (Semua Role) |
+| | | - **Mahasiswa:** info profil, daftar kelas enrolled (id, nama MK, SKS, dosen) | |
+| | | - **Dosen:** info dosen bergelar (NIDN), kelas diampu, jumlah mahasiswa terdaftar | |
+| | | - **Admin:** 4 metrik sistem (Total Mhs, Dosen, Mata Kuliah, Kelas & Enrollment Aktif) | |
 
-### 4.6. Manajemen Pengguna & Hak Akses (`/api/v1/users` & `/api/v1/roles`)
-| Method | Endpoint | Fungsi & Deskripsi | Akses (Tabel 15) |
+### 4.4. Kelas Pembelajaran Mahasiswa & Dosen (`/api/classes`)
+| Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
 |---|---|---|---|
-| `GET` | `/api/v1/users` | List akun pengguna dengan pagination, filter role, & search | Super Admin, Admin |
-| `POST` | `/api/v1/users` | Pembuatan akun baru manual beserta profilnya | Super Admin |
-| `GET` | `/api/v1/users/:id` | Detail data akun, profil mahasiswa/dosen, dan hak akses | Super Admin, Admin |
-| `PUT` | `/api/v1/users/:id/roles` | Penugasan atau pencabutan role pengguna (*Dicatat di Audit*) | Super Admin |
-| `PATCH` | `/api/v1/users/:id/status`| Mengubah status akun (`ACTIVE`, `INACTIVE`, `SUSPENDED`) | Super Admin |
-| `GET/POST` | `/api/v1/roles` | List dan kelola role sistem | Super Admin |
-| `GET/POST` | `/api/v1/permissions` | List dan kelola permission/hak akses fungsi | Super Admin |
+| `GET` | `/api/classes` | Mahasiswa: list kelas yang dienroll; Dosen: list kelas yang diampu | Mahasiswa, Dosen |
+| `GET` | `/api/classes/:id` | Detail informasi kelas perkuliahan beserta dosen pengampu | Mahasiswa, Dosen, Admin |
 
-### 4.7. Audit Log (`/api/v1/audit-logs` - SRS Bab 35)
-| Method | Endpoint | Fungsi & Deskripsi | Akses (Tabel 15) |
+### 4.5. Manajemen Pengguna SPADA (`/api/admin/users`)
+| Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
 |---|---|---|---|
-| `GET` | `/api/v1/audit-logs` | Memantau seluruh rekaman jejak audit sistem | Super Admin, Admin (sesuai kewenangan) |
-| `GET` | `/api/v1/audit-logs/:id` | Detail riwayat perubahan (`old_values` vs `new_values`) | Super Admin |
+| `GET` | `/api/admin/users` | List akun pengguna (pagination, search, filter role 3 peran, filter status) | Admin |
+| `POST` | `/api/admin/users` | Tambah pengguna baru (Mahasiswa, Dosen, Admin) beserta profil identitas | Admin |
+| `GET` | `/api/admin/users/:id` | Detail lengkap akun pengguna dan profil terkait | Admin |
+| `PUT` | `/api/admin/users/:id` | Perbarui informasi akun dan profil pengguna | Admin |
+| `PATCH`| `/api/admin/users/:id/status`| Ubah status akun (`ACTIVE`, `INACTIVE`, `SUSPENDED`) *(Dicatat di Audit)* | Admin |
+| `PUT` | `/api/admin/users/:id/reset-password` | Reset kata sandi akun pengguna oleh Admin *(Dicatat di Audit)* | Admin |
+
+### 4.6. Master Mata Kuliah & Pembukaan Kelas (`/api/admin/courses` & `/api/admin/classes`)
+| Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
+|---|---|---|---|
+| `GET` | `/api/admin/courses` | List master mata kuliah dengan pencarian dan paginasi | Admin |
+| `POST` | `/api/admin/courses` | Tambah mata kuliah baru (Kode unik, Nama, SKS 1–6, Deskripsi) | Admin |
+| `GET` | `/api/admin/courses/:id` | Detail mata kuliah | Admin |
+| `PUT` | `/api/admin/courses/:id` | Perbarui data mata kuliah | Admin |
+| `DELETE`| `/api/admin/courses/:id`| Hapus/Nonaktifkan mata kuliah | Admin |
+| `GET` | `/api/admin/classes` | List pembukaan kelas perkuliahan (filter semester & MK) | Admin |
+| `POST` | `/api/admin/classes` | Buka kelas perkuliahan semester aktif (pilih MK, Dosen, Kuota) | Admin |
+| `GET` | `/api/admin/classes/:id` | Detail kelas perkuliahan dan kuota daya tampung | Admin |
+| `PUT` | `/api/admin/classes/:id` | Perbarui informasi kelas perkuliahan | Admin |
+| `DELETE`| `/api/admin/classes/:id`| Hapus/Tutup kelas perkuliahan | Admin |
+
+### 4.7. Modul Direct Enrollment Mahasiswa (`/api/admin/enrollments`)
+| Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
+|---|---|---|---|
+| `GET` | `/api/admin/classes/:classId/enrollments` | Ambil daftar mahasiswa yang telah terdaftar di kelas | Admin |
+| `GET` | `/api/admin/classes/:classId/available-students` | Ambil daftar mahasiswa yang belum terdaftar di kelas (bisa dienroll) | Admin |
+| `POST` | `/api/admin/enrollments` | Daftarkan mahasiswa ke kelas (dukungan *batch array* `student_ids`), validasi kuota | Admin |
+| `DELETE`| `/api/admin/enrollments/:id` | Cabut kepesertaan (*unenroll*) mahasiswa dari kelas | Admin |
+
+### 4.8. Peninjau Jejak Audit (`/api/admin/audit-logs`)
+| Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
+|---|---|---|---|
+| `GET` | `/api/admin/audit-logs` | Pantau seluruh rekaman audit sistem (filter tanggal, aksi, entitas, user) | Admin |
+| `GET` | `/api/admin/audit-logs/:id` | Detail rekaman audit dengan perbandingan JSON (`old_values` vs `new_values`) | Admin |
 
 ---
 
@@ -543,33 +341,34 @@ model AuditLog {
 ```text
 backend/
 ├── prisma/
-│   ├── schema.prisma              # Definisi model lengkap sesuai SRS Bab 28.2
+│   ├── schema.prisma              # Definisi model database SPADA LMS MVP 1
 │   ├── migrations/                # Riwayat migrasi database PostgreSQL
-│   └── seed.js                    # Seeder 8 Role, Super Admin, dan Master Data Awal
+│   └── seed.js                    # Seeder Admin awal, Dosen contoh, Mahasiswa contoh & MK awal
 ├── src/
-│   ├── config/                    # Environment variables, database, JWT config
-│   ├── constants/                 # Role enums, permissions code, error codes
+│   ├── config/                    # Konfigurasi env, database prisma, jwt, upload directory
+│   ├── constants/                 # Role enums ('mahasiswa', 'dosen', 'admin'), HTTP status codes
 │   ├── middlewares/
-│   │   ├── auth.middleware.js     # Validasi JWT Access Token
-│   │   ├── rbac.middleware.js     # Proteksi Role & Permission Guard (SRS Bab 31)
-│   │   ├── audit.middleware.js    # Interceptor otomatis perekam jejak mutasi
+│   │   ├── auth.middleware.js     # Validasi JWT Access Token & verifikasi status user aktif
+│   │   ├── rbac.middleware.js     # Role Guard (requireRole)
+│   │   ├── audit.middleware.js    # Interceptor otomatis pencatat jejak mutasi
+│   │   ├── upload.middleware.js   # Handler unggah berkas (multer) dengan validasi MIME & batas 2MB
 │   │   ├── validate.middleware.js # Validasi Zod DTO
 │   │   └── error.middleware.js    # Global error handler (standarisasi respons API)
 │   ├── modules/
-│   │   ├── auth/                  # Login, Logout, Refresh, Password
-│   │   ├── profile/               # Manajemen Profil mandiri (GET/PUT)
-│   │   ├── portal/                # Launcher modul & agregator Dashboard (Bab 9 & 19)
-│   │   ├── calendar/              # Agenda Kalender Akademik (Bab 22)
-│   │   ├── users/                 # Manajemen User, Profil, Roles & Permissions
-│   │   ├── master/
-│   │   │   ├── kelembagaan/       # Fakultas, Program Studi
-│   │   │   ├── kalender-dasar/    # Tahun Akademik, Semester Aktif
-│   │   │   ├── akademik/          # Kurikulum, Mata Kuliah, Kelas Dasar
-│   │   │   └── fasilitas/         # Gedung, Ruangan
-│   │   └── audit-log/             # Pemantauan Audit Trail
+│   │   ├── auth/                  # Controller, Service, DTO: Login, Logout, Refresh, Forgot Password
+│   │   ├── profile/               # Controller, Service: Profil mandiri, upload avatar, ganti password
+│   │   ├── dashboard/             # Controller, Service: Agregasi metrik kontekstual 3 peran
+│   │   ├── classes/               # Controller, Service: Akses kelas untuk Mahasiswa & Dosen
+│   │   ├── admin/
+│   │   │   ├── users/             # CRUD akun pengguna (3 peran), filter status, reset password
+│   │   │   ├── courses/           # CRUD master mata kuliah
+│   │   │   ├── classes/           # CRUD pembukaan kelas perkuliahan
+│   │   │   ├── enrollments/       # Modul Direct Enrollment mahasiswa (individual & batch)
+│   │   │   └── audit-log/         # Pemantauan jejak audit & inspeksi JSON diff
+│   │   └── storage/               # File service: Penyimpanan aman & streaming berkas avatar
 │   ├── utils/                     # Password hasher (argon2/bcrypt), token generator, api-response
 │   └── app.js                     # Inisialisasi Express, routing, middleware
-├── server.js                      # Entry point listener
+├── server.js                      # Entry point listener server HTTP
 ├── .env.example
 ├── package.json
 └── README.md
@@ -577,56 +376,62 @@ backend/
 
 ---
 
-## 6. Tahapan Eksekusi Pengerjaan (Step-by-Step Backend Roadmap)
+## 6. Tahapan Eksekusi Pengerjaan (Step-by-Step Roadmap)
 
-### Fase 1: Setup Lingkungan & Skema Database (Hari 1-2)
-- Inisialisasi proyek Node.js backend (`package.json`, `.gitignore`, `.env.example`).
-- Konfigurasi Prisma ORM dengan PostgreSQL.
-- Implementasi skema `schema.prisma` yang merefleksikan seluruh kamus data SRS Bab 28.2.
-- Eksekusi migrasi awal (`npx prisma migrate dev --name init_mvp1`).
-- Pembuatan seeder komprehensif (`seed.js`):
-  - 8 Role resmi sistem.
-  - Akun `Super Admin` awal.
-  - Master data rintisan: Fakultas, Program Studi, Tahun Akademik (misal 2026/2027), Semester Ganjil aktif, Mata Kuliah contoh, Gedung & Ruangan.
+### Fase 1: Setup Lingkungan & Skema Database (Hari 1–2)
+- Inisialisasi proyek Node.js backend (`package.json`, `.env.example`).
+- Konfigurasi Prisma ORM dengan database PostgreSQL.
+- Implementasi skema `schema.prisma` yang merefleksikan model User, Profile, Mahasiswa, Dosen, Course, Class, Enrollment, File, dan AuditLog.
+- Eksekusi migrasi awal database (`npx prisma migrate dev --name init_spada_mvp1`).
+- Pembuatan seeder awal (`seed.js`): Akun Admin utama, 3 akun Dosen contoh, 10 akun Mahasiswa contoh, 5 Master Mata Kuliah rintisan, dan 2 Pembukaan Kelas contoh.
 
-### Fase 2: Autentikasi, Profil & RBAC Engine (Hari 3-4)
-- Helper enkripsi kata sandi menggunakan Argon2 atau Bcrypt dengan penanganan salt aman.
-- Generator JWT (Access Token 15 menit, Refresh Token 7 hari tersimpan aman di database).
-- Implementasi modul autentikasi: `POST /api/v1/auth/login`, `/refresh`, `/logout`, `/change-password`.
-- Middleware proteksi: `authenticateToken` dan `requireRole(...)`.
-- Implementasi modul profil pengguna mandiri: `GET /api/v1/profile` dan `PUT /api/v1/profile` dengan hak akses RW untuk semua role.
+### Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard (Hari 3–4)
+- Implementasi helper enkripsi password (Argon2 / Bcrypt) dan generator JWT token.
+- Implementasi endpoint autentikasi: `POST /api/auth/login`, `/refresh`, `/logout`, `/forgot-password`.
+- Penegakan aturan bisnis: Akun `INACTIVE` atau `SUSPENDED` ditolak saat login dengan pesan informatif.
+- Pembuatan middleware `authenticateToken` dan `requireRole`.
+- Implementasi modul profil mandiri: `GET /api/profile`, `PUT /api/profile`, `POST /api/profile/avatar`, `PUT /api/profile/password`.
 
-### Fase 3: Layanan Audit Trail & Keamanan Server (Hari 5)
-- Pembuatan `AuditLogService` asinkron untuk mencatat mutasi data krusial tanpa memperlambat respons API.
-- Integrasi audit pada perubahan role pengguna, aktivasi/penonaktifan user, dan mutasi master data.
-- Implementasi endpoint `GET /api/v1/audit-logs`.
-- Konfigurasi keamanan HTTP: Helmet, CORS terproteksi, dan pembatasan frekuensi request (*rate limiting*).
+### Fase 3: Layanan Audit Trail Engine (Hari 5)
+- Pembuatan `AuditLogService` untuk mencatat mutasi data krusial secara terstruktur.
+- Integrasi audit pada pembuatan akun, ganti status user, reset password, pembukaan kelas, dan aksi enrollment.
+- Implementasi endpoint peninjau audit: `GET /api/admin/audit-logs` dan `GET /api/admin/audit-logs/:id`.
+- Konfigurasi hardening HTTP: Helmet, CORS terproteksi, dan *express-rate-limit*.
 
-### Fase 4: Modul Master Data Dasar & Kalender Akademik (Hari 6-8)
-- Validasi skema Zod untuk setiap entitas master data.
-- Implementasi endpoint CRUD Fakultas & Program Studi.
-- Implementasi endpoint CRUD Tahun Akademik & Semester (dengan validasi bisnis: hanya 1 semester berstatus aktif serentak).
-- Implementasi endpoint CRUD Kurikulum, Mata Kuliah, dan Ruangan Kelas.
-- Implementasi endpoint Kalender Akademik (`GET /api/v1/calendar`, `POST /api/v1/calendar`).
-- Standardisasi respons JSON: `{ success: true, data: ..., message: "...", meta: { page, limit, total } }`.
+### Fase 4: Master Data Akademik SPADA (Hari 6–7)
+- Validasi Zod schema untuk entitas User, Course, dan Class.
+- Implementasi endpoint Manajemen Pengguna (`/api/admin/users`): list, search, filter role/status, create user, update status akun, reset password.
+- Implementasi endpoint Master Mata Kuliah (`/api/admin/courses`): list, create, update, delete.
+- Implementasi endpoint Pembukaan Kelas Perkuliahan (`/api/admin/classes`): list, create, update, delete, validasi kapasitas kuota.
 
-### Fase 5: Dasbor Portal & Integrator Modul (Hari 9)
-- Layanan deteksi hak akses modul kampus (`/api/v1/portal/modules`) sesuai aktor login.
-- Implementasi agregator dasbor (`/api/v1/portal/dashboard`) sesuai spesifikasi SRS Bab 9 & Bab 19:
-  - Return data spesifik untuk Mahasiswa, Dosen, Admin Akademik, Admin LMS, dan Super Admin.
+### Fase 5: Modul Direct Enrollment & Dasbor Kontekstual (Hari 8–9)
+- Implementasi endpoint Direct Enrollment Mahasiswa (`/api/admin/enrollments`):
+  - Ambil daftar mahasiswa terdaftar per kelas.
+  - Ambil daftar mahasiswa tersedia untuk dienroll.
+  - Pendaftaran individual & batch enrollment dengan validasi batas kuota kelas.
+  - Pencabutan (*unenroll*) mahasiswa dari kelas.
+- Implementasi endpoint Dasbor Kontekstual (`GET /api/dashboard`):
+  - Mahasiswa: profil & daftar kartu kelas yang dienroll.
+  - Dosen: profil bergelar & kelas yang diampu beserta jumlah mahasiswa.
+  - Admin: 4 metrik sistem utama dan pintasan cepat.
+- Endpoint daftar kelas pengguna: `GET /api/classes` dan `GET /api/classes/:id`.
 
 ### Fase 6: Pengujian, Validasi Kepatuhan SRS & Handoff (Hari 10)
-- Pengujian otomatis (Unit/Integration Test) alur Login, proteksi role, dan update profil.
-- Pengujian pencatatan mutasi pada tabel `audit_logs`.
-- Validasi kesesuaian endpoint konseptual SRS Bab 32 (`/api/login`, `/api/profile`, `/api/calendar`).
-- Dokumentasi API (OpenAPI 3.0 / Swagger atau Postman Collection).
+- Pengujian otomatis (Unit & Integration Test):
+  - Alur login multi-kredensial & penolakan akun suspended.
+  - Alur CRUD pengguna, mata kuliah, dan pembukaan kelas.
+  - Alur direct enrollment (individual & batch) dan pencegahan over-capacity.
+  - Pencatatan mutasi pada tabel `audit_logs`.
+- Dokumentasi API (Postman Collection / Swagger OpenAPI 3.0) untuk tim frontend.
 
 ---
 
 ## 7. Kriteria Keberhasilan (Definition of Done MVP 1 Backend)
 
-1. **Kepatuhan Autentikasi & RBAC:** Seluruh 8 role aktor dapat terautentikasi dan menerima respons modul serta izin akses yang sesuai (*SRS Bab 3 & Bab 31*). Akun tidak aktif ditolak otomatis.
-2. **Kesesuaian Kamus Data:** Seluruh tabel inti MVP 1 (`User`, `Role`, `Permission`, `Mahasiswa`, `Dosen`, `ProgramStudi`, `MataKuliah`, `Kelas`, `Semester`, `KalenderAkademik`, `File`, `AuditLog`) terimplementasi sesuai SRS Bab 28.2.
-3. **Manajemen Profil Mandiri Berfungsi:** Endpoint `GET /api/v1/profile` dan `PUT /api/v1/profile` berjalan untuk semua role pengguna (*SRS Bab 31 Tabel 15*).
-4. **Dasbor Portal Menghasilkan Metrik Relevan:** Endpoint portal mengembalikan navigasi modul yang valid dan ringkasan metrik statistik sesuai spesifikasi masing-masing admin (*SRS Bab 19*).
-5. **Jejak Audit Terverifikasi:** Setiap perubahan role pengguna dan mutasi master data sensitif terekam akurat di tabel `audit_logs` (*SRS Bab 35*).
+1. **Autentikasi & RBAC 3 Peran Berfungsi Sempurna:** Seluruh 3 peran (`mahasiswa`, `dosen`, `admin`) dapat login, menerima token JWT yang valid, dan rute terlindungi sesuai wewenang. Akun non-aktif/suspended ditolak otomatis.
+2. **Kesesuaian Kamus Data Database:** Seluruh tabel inti MVP 1 (`users`, `profiles`, `mahasiswa`, `dosen`, `courses`, `classes`, `enrollments`, `files`, `audit_logs`) terimplementasi di PostgreSQL via Prisma.
+3. **Manajemen Profil Mandiri Berjalan:** Pengguna dapat memperbarui biodata, mengunggah foto profil (maks 2MB), dan mengganti kata sandi dengan verifikasi kata sandi lama.
+4. **Master Data & Pembukaan Kelas Siap Digunakan:** Admin dapat mengelola akun pengguna, master mata kuliah, dan membuka kelas perkuliahan baru.
+5. **Direct Enrollment Mahasiswa Berhasil (Tanpa KRS):** Admin dapat mendaftarkan mahasiswa ke kelas secara langsung (individual maupun batch) dan kuota kelas terpantau akurat.
+6. **Dasbor Kontekstual Menyajikan Data Akurat:** Endpoint `/api/dashboard` mengembalikan data spesifik yang relevan bagi Mahasiswa, Dosen, dan Admin.
+7. **Jejak Audit Terverifikasi:** Setiap mutasi akun, data master, dan enrollment terekam di tabel `audit_logs` dengan data JSON lama dan baru yang lengkap.
