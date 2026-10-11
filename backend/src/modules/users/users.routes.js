@@ -1,15 +1,12 @@
 import { Router } from 'express';
 import { UsersController } from './users.controller.js';
 import { authenticateToken } from '../../middlewares/auth.middleware.js';
-import { requireRole, requirePermission } from '../../middlewares/rbac.middleware.js';
+import { requireRole } from '../../middlewares/rbac.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { ROLES } from '../../constants/roles.js';
-
-import { PERMISSIONS } from '../../constants/permissions.js';
-
 import {
   createUserSchema,
-  updateUserRolesSchema,
+  updateUserSchema,
   updateUserStatusSchema,
   userListQuerySchema,
   userIdParamSchema,
@@ -17,64 +14,56 @@ import {
 
 const router = Router();
 
-
-// Seluruh endpoint pengguna memerlukan login berbasis JWT
+// Seluruh endpoint admin/users memerlukan login + role ADMIN
 router.use(authenticateToken);
+router.use(requireRole(ROLES.ADMIN));
 
 /**
- * POST /api/v1/users
- * Pembuatan akun pengguna baru manual beserta profilnya
- * Akses: Super Admin
+ * GET /api/admin/users
+ * List akun pengguna (Admin only)
  */
-router.post(
-  '/',
-  requireRole(ROLES.SUPER_ADMIN),
-  validate(createUserSchema),
-  UsersController.createUser
-);
-
-/**
-* GET /api/v1/users
-* List akun pengguna (hanya Admin & Super Admin)
-*/
 router.get(
   '/',
-  requirePermission(PERMISSIONS.USER_MANAGE),
   validate(userListQuerySchema),
   UsersController.getUsers
 );
 
 /**
- * GET /api/v1/users/:id
+ * POST /api/admin/users
+ * Pembuatan akun pengguna baru (Admin only — FR-044)
+ */
+router.post(
+  '/',
+  validate(createUserSchema),
+  UsersController.createUser
+);
+
+/**
+ * GET /api/admin/users/:id
  * Detail akun pengguna
  */
 router.get(
   '/:id',
-  requirePermission(PERMISSIONS.USER_MANAGE),
   validate(userIdParamSchema),
   UsersController.getUserById
 );
 
 /**
- * PUT /api/v1/users:/id/roles
- * Penugasan atau pencabutan role pengguna (mencatat ke audit_logs)
- * Akses: Super Admin
+ * PUT /api/admin/users/:id
+ * Update data pengguna (termasuk role) — FR-044
  */
 router.put(
-  '/:id/roles',
-  requireRole(ROLES.SUPER_ADMIN),
-  validate(updateUserRolesSchema),
-  UsersController.updateRoles
+  '/:id',
+  validate(updateUserSchema),
+  UsersController.updateUser
 );
 
 /**
-* PATCH /api/v1/users:/id/status
-* Mengubah status akun (ACTIVE, INACTIVE, SUSPENDED) (mencatat ke audit_logs)
- * Akses: Super Admin
-*/
+ * PATCH /api/admin/users/:id/status
+ * Mengubah status akun (ACTIVE, INACTIVE, SUSPENDED)
+ */
 router.patch(
   '/:id/status',
-  requireRole(ROLES.SUPER_ADMIN),
   validate(updateUserStatusSchema),
   UsersController.updateStatus
 );

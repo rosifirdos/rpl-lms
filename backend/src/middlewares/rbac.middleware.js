@@ -1,9 +1,12 @@
-﻿import { apiResponse } from '../utils/apiResponse.js';
+import { apiResponse } from '../utils/apiResponse.js';
 
 /**
  * Middleware untuk membatasi endpoint berdasarkan satu atau lebih Role.
- * Pengguna diizinkan jika memiliki setidaknya salah satu role yang ditentukan.
- * @param  {...string|string[]} allowedRoles
+ *
+ * Revised SPADA LMS: role adalah enum tunggal pada `req.user.role` (bukan array).
+ * Tidak ada SUPER_ADMIN bypass — hanya 3 role: ADMIN, DOSEN, MAHASISWA.
+ *
+ * @param  {...string} allowedRoles  Daftar role yang diizinkan
  */
 export function requireRole(...allowedRoles) {
   const flattenedRoles = allowedRoles.flat();
@@ -16,91 +19,12 @@ export function requireRole(...allowedRoles) {
       });
     }
 
-    const userRoles = req.user.roles || [];
+    const userRole = req.user.role;
 
-    // Super Admin selalu memiliki izin bypass jika diinginkan
-    if (userRoles.includes('SUPER_ADMIN')) {
-      return next();
-    }
-
-    const hasAllowedRole = flattenedRoles.some((role) => userRoles.includes(role));
-    if (!hasAllowedRole) {
+    if (!flattenedRoles.includes(userRole)) {
       return apiResponse.error(res, {
         statusCode: 403,
         message: `Akses ditolak: Dibutuhkan salah satu role: [${flattenedRoles.join(', ')}]`,
-      });
-    }
-
-    return next();
-  };
-}
-
-/**
- * Middleware untuk membatasi endpoint berdasarkan Permission.
- * Pengguna diizinkan jika memiliki SEMUA permission yang dibutuhkan (atau Super Admin).
- * @param  {...string|string[]} requiredPermissions
- */
-export function requirePermission(...requiredPermissions) {
-  const flattenedPermissions = requiredPermissions.flat();
-
-  return (req, res, next) => {
-    if (!req.user) {
-      return apiResponse.error(res, {
-        statusCode: 401,
-        message: 'Akses ditolak: Otentikasi diperlukan',
-      });
-    }
-
-    const userRoles = req.user.roles || [];
-    if (userRoles.includes('SUPER_ADMIN')) {
-      return next();
-    }
-
-    const userPermissions = req.user.permissions || [];
-    const hasAllPermissions = flattenedPermissions.every((perm) =>
-      userPermissions.includes(perm)
-    );
-
-    if (!hasAllPermissions) {
-      return apiResponse.error(res, {
-        statusCode: 403,
-        message: `Akses ditolak: Anda tidak memiliki permission yang diperlukan: [${flattenedPermissions.join(', ')}]`,
-      });
-    }
-
-    return next();
-  };
-}
-
-/**
- * Middleware untuk membatasi endpoint berdasarkan ANY Permission.
- * @param  {...string|string[]} permissions
- */
-export function requireAnyPermission(...permissions) {
-  const flattenedPermissions = permissions.flat();
-
-  return (req, res, next) => {
-    if (!req.user) {
-      return apiResponse.error(res, {
-        statusCode: 401,
-        message: 'Akses ditolak: Otentikasi diperlukan',
-      });
-    }
-
-    const userRoles = req.user.roles || [];
-    if (userRoles.includes('SUPER_ADMIN')) {
-      return next();
-    }
-
-    const userPermissions = req.user.permissions || [];
-    const hasAnyPermission = flattenedPermissions.some((perm) =>
-      userPermissions.includes(perm)
-    );
-
-    if (!hasAnyPermission) {
-      return apiResponse.error(res, {
-        statusCode: 403,
-        message: `Akses ditolak: Dibutuhkan salah satu permission: [${flattenedPermissions.join(', ')}]`,
       });
     }
 

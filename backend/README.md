@@ -1,155 +1,99 @@
-﻿# Backend API: Sistem Akademik Kampus Terintegrasi
-*(Portal, SIA, SPADA/LMS, PMB)*
+# Backend API: SPADA (Learning Management System)
 
-Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan PostgreSQL, dirancang mengacu pada dokumen spesifikasi [PRD.md](../PRD.md) dan [SRS.md](../SRS.md).
+Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan PostgreSQL untuk **SPADA LMS — Universitas PGRI Semarang**.
 
-## Fitur & Status Implementasi
+Mengacu pada dokumen [SRS.md](../SRS.md) hasil revisi (fokus eksklusif modul SPADA/LMS).
 
-### ✅ Fase 1: Setup Lingkungan & Skema Database (Selesai)
-- [x] Inisialisasi proyek Node.js backend (`package.json`, `.gitignore`, `.env.example`).
-- [x] Konfigurasi Prisma ORM dan koneksi ke PostgreSQL `rpl_lms`.
-- [x] Migrasi skema database `init_mvp1` mencakup seluruh entitas kamus data SRS Bab 28.2.
-- [x] Database seeder komprehensif (`prisma/seed.js`):
-  - 8 Role resmi sistem: `SUPER_ADMIN`, `ADMIN_AKADEMIK`, `ADMIN_LMS`, `DOSEN`, `DOSEN_WALI`, `MAHASISWA`, `CALON_MAHASISWA`, `USER_UMUM`.
-  - 11 Permission dasar dan relasi role-permission.
-  - Akun awal untuk setiap peran (Super Admin, Admin Akademik, Admin LMS, Dosen Wali, Dosen, Mahasiswa, Calon Mahasiswa).
-  - Master data rintisan: Fakultas (FILKOM, FT), Prodi (TIF, SI), Tahun Akademik 2026/2027, Semester Ganjil aktif, Kalender Akademik, Kurikulum 2024, Mata Kuliah, Gedung, Ruangan, dan Penawaran Kelas.
-  - Pencatatan log audit inisialisasi di tabel `audit_logs`.
+> **Catatan revisi (BR-001 & BR-002):** Seluruh modul di luar kegiatan pembelajaran digital (SIA, PMB, KRS manual, KHS, transkrip, sidang) **telah dihapus dari ruang lingkup**. Peran disederhanakan menjadi **3 role tunggal**; Dosen Wali/PA dan varian Admin multirangkap ditiadakan. Enrollment mahasiswa ke kelas dilakukan langsung oleh Admin.
 
-### ✅ Fase 2: Autentikasi, Profil & RBAC Engine (Selesai)
-- [x] Helper hashing & verifikasi password bcrypt (`src/utils/password.js`).
-- [x] Token management JWT (`src/utils/token.js`) dengan Access Token (15m), Refresh Token bertanda tangan kriptografis (7d) disimpan aman dalam bentuk hash SHA-256 di tabel database `refresh_tokens`.
-- [x] Middleware proteksi:
-  - `authenticateToken`: Verifikasi JWT, deteksi status akun aktif (*SRS UC-01/BR*), injeksi user, roles, dan permissions ke request context.
-  - `requireRole`: Pembatasan endpoint berdasarkan role tertentu (mendukung multi-role dan bypass Super Admin).
-  - `requirePermission` & `requireAnyPermission`: Otorisasi granular berbasis permission (*SRS Bab 31*).
-  - `validate`: Middleware validasi request body/params/query berbasis skema Zod DTO.
-  - `errorHandler`: Penanganan terpusat untuk `AppError`, validasi Zod, token JWT, Prisma conflict error (`P2002`), foreign key constraint (`P2003`), dan not found (`P2025`).
-- [x] Modul Autentikasi (`/api/v1/auth`):
-  - `POST /api/v1/auth/login`: Autentikasi multi-kredensial (username/NIM/NIDN/NIP atau email), pencatatan audit log `LOGIN`, pengembalian token dan ringkasan profil entitas aktif.
-  - `POST /api/v1/auth/refresh`: Penerbitan access token baru dari refresh token valid.
-  - `POST /api/v1/auth/logout`: Pencabutan status refresh token dan pencatatan audit `LOGOUT`.
-  - `PUT /api/v1/auth/change-password`: Penggantian kata sandi mandiri (*FR-016*), verifikasi kata sandi lama, hashing kata sandi baru, pencabutan token aktif, dan pencatatan audit.
-  - `POST /api/v1/auth/forgot-password`: Permintaan pemulihan akun (*FR-015*).
-- [x] Modul Profil Mandiri (`/api/v1/profile`):
-  - `GET /api/v1/profile`: Hak akses baca profil untuk seluruh role (*SRS Bab 31 Table 15: RW*), menyajikan data akun, roles, permissions, profil spesifik (Mahasiswa, Dosen, Admin, Calon Mahasiswa).
-  - `PUT /api/v1/profile`: Pembaruan mandiri atribut profil (nama, gelar dosen, email, jalur PMB) disertai jejak audit `UPDATE_PROFILE`.
-- [x] Endpoint Konseptual Alias (SRS Bab 32):
-  - `POST /api/login` -> alias ke modul auth login.
-  - `POST /api/logout` -> alias ke modul auth logout.
-  - `GET /api/profile` dan `PUT /api/profile` -> alias ke modul profil.
-- [x] Automated Integration Test Suite (`tests/phase2.test.js`) mencakup 13 skenario pengujian dengan status 100% lulus.
+## Stack Teknologi
 
-### ✅ Fase 3: Layanan Audit Trail & Keamanan Server (Selesai)
-- [x] Modul Audit Log Query (`/api/v1/audit-logs`) dengan filter pagination, entitas, aksi, dan rentang tanggal.
-- [x] Middleware Keamanan HTTP: Helmet yang disesuaikan, CORS terproteksi (*SRS Bab 35*).
-- [x] Rate Limiter: General limiter untuk seluruh endpoint dan auth limiter untuk proteksi brute-force login.
-- [x] Interceptor Audit Helper (`attachAuditHelper`) untuk otomatisasi pencatatan IP dan user-agent klien.
+| Lapisan | Teknologi |
+| --- | --- |
+| Runtime | Node.js (v20+ LTS) + ESM (`"type": "module"`) |
+| Web Framework | Express |
+| ORM & Migrasi | Prisma |
+| Database | PostgreSQL (v16+) database `rpl_lms` |
+| Validasi | Zod |
+| Autentikasi | JWT (Access + Refresh Token) + bcryptjs |
+| Keamanan HTTP | Helmet, CORS terproteksi, express-rate-limit |
 
-### ✅ Fase 4: Modul Master Data Dasar & Kalender Akademik (Selesai)
-- [x] Skema validasi Zod DTO komprehensif untuk seluruh entitas master data (`src/modules/master/master.validation.js` & `src/modules/calendar/calendar.validation.js`).
-- [x] Master Kelembagaan:
-  - CRUD Fakultas (`/api/v1/master/fakultas`): Validasi kode unik uppercase, proteksi penghapusan jika masih memuat program studi.
-  - CRUD Program Studi (`/api/v1/master/prodi`): Relasi berjenjang ke Fakultas, proteksi integritas data mahasiswa/kurikulum.
-- [x] Master Kalender Dasar & Validasi Bisnis Semester:
-  - CRUD Tahun Akademik (`/api/v1/master/tahun-akademik`).
-  - CRUD Semester (`/api/v1/master/semester`): Tipe GANJIL/GENAP/ANTARA, validasi rentang tanggal (`tanggal_mulai < tanggal_selesai`).
-  - Aturan Bisnis Semester Aktif (`PATCH /api/v1/master/semester/:id/activate`): Transaksi atomik Prisma memastikan tepat satu semester yang berstatus aktif operasional di seluruh sistem kampus.
-- [x] Master Fasilitas, Kurikulum, Mata Kuliah & Penawaran Kelas:
-  - Fasilitas Gedung (`/api/v1/master/gedung`) & Ruangan Kelas (`/api/v1/master/ruangan`).
-  - Kurikulum Berbasis Prodi (`/api/v1/master/kurikulum`).
-  - Mata Kuliah (`/api/v1/master/mata-kuliah`): Bobot SKS total, SKS teori, SKS praktik, semester paket, dan status wajib/pilihan.
-  - Buka Penawaran Kelas Semester Aktif (`/api/v1/master/kelas`): Validasi relasi multi-entitas (Mata Kuliah, Semester, Dosen Pengampu, dan Ruangan) serta proteksi duplikasi kelas per semester.
-- [x] Modul Kalender Akademik (*SRS Bab 22 & Bab 32*):
-  - `GET /api/v1/calendar` & Alias Konseptual `GET /api/calendar`: Akses baca seluruh pengguna terautentikasi (*FR-130 & FR-131*).
-  - `POST /api/v1/calendar`, `PUT /api/v1/calendar/:id`, `DELETE /api/v1/calendar/:id`: Pengelolaan agenda, tanggal periode, dan status (`DIJADWALKAN`, `BERJALAN`, `SELESAI`) oleh Admin Akademik & Super Admin (*FR-126 - FR-129*).
+## Hak Akses (3 Role — SRS Bab 3)
 
-### ✅ Fase 5: Dasbor Portal & Integrator Modul (Selesai)
-- [x] Modul Portal Gateway (`src/modules/portal/`):
-  - `GET /api/v1/portal/modules`: Layanan evaluasi hak akses modul kampus (PORTAL, SIA, SPADA, PMB, ADMIN_PORTAL) berbasis 8 peran pengguna dan prinsip *least privilege*.
-  - `GET /api/v1/portal/dashboard`: Agregator data metrik kontekstual ringkas sesuai spesifikasi SRS Bab 9 & Bab 19:
-    - **Mahasiswa:** Biodata akademik (NIM, prodi, status), info Dosen Wali/PA lengkap, status pembukaan periode KRS & kalender, tautan launcher SIA dan SPADA (*FR-018 s/d FR-022*).
-    - **Dosen & Dosen Wali:** Rekap biodata bergelar, statistik & daftar kelas diampu semester berjalan (matakuliah, SKS, ruangan, kapasitas), serta ringkasan mahasiswa bimbingan PA aktif.
-    - **Admin Akademik:** Metrik menyeluruh (total mahasiswa aktif, total dosen, total prodi, total fakultas, total matakuliah, kelas aktif), serta status kalender operasional (*SRS Bab 19.1*).
-    - **Admin LMS:** Metrik platform pembelajaran SPADA (total kelas daring aktif, total dosen pengampu, daftar modul 16 pertemuan, tugas, kuis, presensi) (*SRS Bab 19.2*).
-    - **Super Admin:** Metrik pengguna & sebaran status akun, distribusi peran civitas, status audit log, serta kesehatan sistem (*SRS Bab 19.3*).
-    - **Calon Mahasiswa:** Status seleksi PMB, prodi pilihan, nomor pendaftaran, dan pemantauan 5 tahapan pendaftaran.
-- [x] Endpoint Alias Konseptual:
-  - `GET /api/dashboard` -> memetakan langsung ke agregator dasbor portal.
-  - `GET /api/portal/modules` -> memetakan langsung ke launcher modul.
-- [x] Automated Integration Test Suite (`tests/phase5.test.js`) mencakup 9 skenario pengujian dengan status 100% lulus.
+| Role | Keterangan |
+| --- | --- |
+| `admin` | Pengelola teknis & operasional sistem (peran tunggal — menyatukan Super Admin, Admin Akademik, Admin LMS). |
+| `dosen` | Tenaga pendidik pengampu kelas perkuliahan. |
+| `mahasiswa` | Peserta didik yang terdaftar pada kelas SPADA (via enrollment Admin). |
 
-### ✅ Fase 6: Pengujian, Validasi Kepatuhan SRS & Handoff (Selesai)
-- [x] **Test Suite Integrasi End-to-End** (`tests/phase6.test.js`): 35 skenario yang memvalidasi keseluruhan alur MVP 1:
-  - Alur lengkap siklus autentikasi (login → akses → refresh → *change password* → logout → penolakan token).
-  - Multi-kredensial login (username, NIM, NIDN, No. Pendaftaran) untuk seluruh tipe aktor.
-  - Penolakan akun `INACTIVE`/`SUSPENDED` dan kredensial tidak valid.
-  - Profil mandiri (`GET`/`PUT /api/v1/profile`) untuk seluruh role.
-  - Proteksi keamanan lintas modul (401 tanpa token, 403 untuk role tidak berwenang, *Super Admin bypass*).
-  - Manajemen pengguna: list dengan pagination/filter/search, detail, penugasan role & perubahan status + verifikasi jejak audit.
-  - Kesesuaian 6 endpoint alias konseptual SRS Bab 32 (`/api/login`, `/api/profile`, `/api/logout`, `/api/calendar`, `/api/dashboard`, `/api/portal/modules`).
-  - Konsistensi data antara modul `/profile` dan `/portal/dashboard` untuk Mahasiswa & Dosen.
-  - Pencatatan mutasi pada tabel `audit_logs` (autentikasi & master data).
-  - Standarisasi respons JSON `{ success, data, message, meta }` di seluruh endpoint.
-- [x] **Perbaikan bug kritis** yang ditemukan selama pengujian E2E:
-  - `UsersService.updateStatus`: pencabutan refresh token keliru menggunakan field `revoked` (tidak ada di skema); diperbaiki ke `revoked_at` sesuai `schema.prisma`.
-- [x] **Dokumentasi API OpenAPI 3.0** (`docs/openapi.yaml`): 37 path & 68 operasi terdokumentasi, mencakup seluruh modul MVP 1 (Auth, Profile, Portal, Users, Calendar, Master Data, Audit Log), skema request/response, kode error terstandar (401/403/404/409/400), dan skema keamanan Bearer JWT.
-- [x] **Skrip Verifikasi Cakupan Dokumentasi** (`scripts/check-openapi-coverage.mjs`): memastikan tidak ada endpoint yang diuji di test suite tapi tidak terdokumentasi di OpenAPI (cakupan 100%).
+## Struktur Modul
 
-### 🎉 Status MVP 1: **Selesai**
-Seluruh 6 fase backend MVP 1 telah diimplementasikan dan terverifikasi melalui **83 skenario pengujian otomatis** dengan status 100% lulus.
+Modul usang telah dibersihkan (`krs`, `jadwal`, `calendar`, `master`, `portal`, `roles`, `permissions`). Berikut yang tersisa dan masih relevan dengan SRS baru:
 
----
+```
+backend/
+├── prisma/
+│   ├── schema.prisma          # 10 model: User, Profile, Mahasiswa, Dosen, RefreshToken,
+│   │                          #            Course, Class, Enrollment, File, AuditLog
+│   ├── migrations/            # Artefak migrasi Prisma
+│   └── seed.js                # 1 Admin, 3 Dosen, 10 Mahasiswa, 5 Mata Kuliah, 2 Kelas
+├── src/
+│   ├── app.js                 # Express app + pendaftaran rute
+│   ├── server.js
+│   ├── config/                # env.js (STORAGE), prisma.js
+│   ├── constants/             # roles.js (3 role lowercase), permissions.js
+│   ├── middlewares/           # auth, rbac, audit, validate, error, rateLimit
+│   ├── utils/                 # apiResponse, errors, password, token, storage
+│   └── modules/
+│       ├── auth/              # login, refresh, logout, forgot-password, change-password
+│       ├── profile/           # getProfile, updateProfile
+│       ├── users/             # CRUD manajemen akun (Admin only)
+│       └── audit-log/         # query jejak audit (Admin only)
+└── storage/private/           # Penyimpanan berkas terproteksi (BR-009)
+    ├── avatars/               #   avatar (FR-007: .jpg/.png, maks 2MB)
+    ├── materials/             #   materi (BR-007: .pdf/.docx/.xlsx/.zip, maks 10MB)
+    └── submissions/           #   tugas mahasiswa
+```
 
-## Implementasi MVP 2 — KRS, Persetujuan, Penjadwalan & Kalender Operasional
+## Endpoint API (flat `/api` per SRS Bab 21)
 
-> **Definisi MVP 2 (SRS Bab 39 Tabel 21 & PRD Bab 5):** *"KRS, persetujuan KRS, penjadwalan kuliah, kalender akademik operasional."*
-> Rencana teknis lengkap: [`IMPLEMENTATION_PLAN_MVP2_BACKEND.md`](../IMPLEMENTATION_PLAN_MVP2_BACKEND.md)
+| Method | Endpoint | Deskripsi | Otorisasi |
+| --- | --- | --- | --- |
+| `GET` | `/health` | Status server | Publik |
+| `GET` | `/api` | Informasi selamat datang + daftar endpoint | Publik |
+| `POST` | `/api/auth/login` | Autentikasi & pembuatan sesi | Publik |
+| `POST` | `/api/auth/refresh` | Perpanjang access token | Terotentikasi |
+| `POST` | `/api/auth/logout` | Cabut refresh token | Terotentikasi |
+| `POST` | `/api/auth/forgot-password` | Pengajuan reset kata sandi (FR-003) | Publik |
+| `PUT` | `/api/auth/change-password` | Ganti kata sandi (verifikasi sandi lama) | Terotentikasi |
+| `GET` | `/api/profile` | Ambil data profil sendiri | Terotentikasi |
+| `PUT` | `/api/profile` | Perbarui kontak & bio profil | Terotentikasi |
+| `GET` | `/api/admin/users` | Daftar akun pengguna | Admin |
+| `POST` | `/api/admin/users` | Buat akun baru (FR-044) | Admin |
+| `GET` | `/api/admin/users/:id` | Detail akun pengguna | Admin |
+| `PUT` | `/api/admin/users/:id` | Ubah data akun (termasuk role) | Admin |
+| `PATCH` | `/api/admin/users/:id/status` | Ubah status akun (`ACTIVE`/`INACTIVE`/`SUSPENDED`) | Admin |
+| `GET` | `/api/admin/audit-logs` | Riwayat jejak audit dengan filter (FR-052) | Admin |
+| `GET` | `/api/admin/audit-logs/:id` | Detail log (old_values vs new_values) | Admin |
 
-### ✅ Fase 7: Migrasi Skema & Seed Data MVP 2 (Selesai)
-- [x] **Skema Prisma** (`prisma/schema.prisma`): enum baru `StatusKRS`, `HariJadwal`, `KategoriAgenda`; model `PeriodeKRS`, `KRS`, `KRSDetail`, `JadwalKelas` mengikuti konvensi MVP 1 (`uuid`, snake_case, `@@map`).
-- [x] **Migrasi additive-only** `add_mvp2_krs_jadwal` + `enforce_single_active_periode_krs` — tidak ada kolom MVP 1 yang dihapus/diubah tipe; seluruh tes Fase 2–6 tetap hijau.
-- [x] **Seed idempoten** (`prisma/seed.js`): 1 `PeriodeKRS` aktif (`sks_maks: 24`), `JadwalKelas` contoh untuk kelas RPL/Basis Data/Web, `kategori` agenda kalender, dan 3 KRS contoh (DRAFT/DIAJUKAN/DISETUJUI).
-- [x] **5 permission + mapping role** di seed: `krs:submit` (MAHASISWA), `krs:approve` (DOSEN_WALI), `krs:manage` (ADMIN_AKADEMIK), `jadwal:manage` (ADMIN_AKADEMIK), `jadwal:view` (semua role login).
+## Skema Database (Prisma)
 
-### ✅ Fase 8: Periode KRS + Siklus Draft Mahasiswa (Selesai)
-- [x] **`periode.service.js`**: CRUD + `activate` atomik (pola `semester.service.js` — auto-close periode aktif lain dalam `$transaction`).
-- [x] **`krs-rules.service.js`** (murni, teruji): cek jendela periode, eligibilitas kelas (kurikulum prodi + `semester_paket` ≤ semester berjalan + kelas semester aktif), kapasitas vs `KRS_ENROLLED_STATUSES`, akumulasi SKS, bentrok jam via `konflik.service.js` (kelas belum berjadwal = *warning*, bukan blocker).
-- [x] **Endpoint mahasiswa**: `/api/v1/krs/periode-aktif`, `/saya`, `/tersedia`, `POST /saya/items`, `DELETE /saya/items/:detailId`, `POST /saya/submit` — submit mengembalikan `errors[]` terstruktur (format SRS Bab 4.7) saat ditolak.
-- [x] **State machine server-side**: `DRAFT → DIAJUKAN` dengan guard `updateMany({ where: { status: { in: [...] } } })` + advisory lock `pg_advisory_xact_lock`; transisi ilegal → 400/409.
-- [x] **Audit**: `CREATE_KRS_DRAFT`, `UPDATE_KRS_ITEM`, `SUBMIT_KRS`.
-- [x] **Test** (`tests/phase8.test.js`): 6 skenario — periode/katalog, draft+duplikat, SKS overrun→reasons, hapus+rekalkulasi, mutasi paralel, penolakan semester nonaktif/CUTI.
+`schema.prisma` merefleksikan MVP 1 (IMPLEMENTATION_PLAN Bab 3 & SRS Bab 13) — 3 role sebagai enum, tanpa entitas SIA/KRS:
 
-### ✅ Fase 9: Alur Persetujuan PA & Monitoring Admin (Selesai)
-- [x] **Endpoint PA** (RBAC `krs:approve`, Super Admin bypass): `GET /api/v1/krs/pengajuan` (scoped `mahasiswa.dosen_wali_id = dosen.id` + pagination/filter), `POST /api/v1/krs/:id/approve`, `POST /api/v1/krs/:id/return` (`catatan` wajib ≥10 karakter).
-- [x] **Ownership check** di service: PA hanya memproses KRS mahasiswa bimbingannya sendiri — non-pemilik ditolak `403` (pola TC-019 / *least privilege* SRS Bab 31).
-- [x] **Guard transisi atomik**: `updateMany({ where: { id, status: 'DIAJUKAN' } })` → `count === 0` = konflik konkurensi → `409`; klik ganda approve paralel menghasilkan tepat satu `200` + satu `409`; approve KRS yang sudah `DISETUJUI` → `400` (idempotensi via state machine, Keputusan Desain #8).
-- [x] **Hook lifecycle** (`src/utils/events.js`): `onKrsSubmitted`/`onKrsApproved`/`onKrsReturned` — stub idempoten dipanggil **dalam transaksi yang sama** (`client = tx`) agar jejak event konsisten dengan transisi status; mencatat baris `KRS_*_EVENT` di `audit_logs`. Titik integrasi `onKrsApproved` disiapkan untuk enrollment SPADA (MVP 3) & notifikasi (MVP 6) — ditandai TODO.
-- [x] **Endpoint admin** (RBAC `krs:manage`): `GET /api/v1/krs/admin/monitor` (rekap status per semester/prodi/PA + pagination + `summary` di `meta`), `POST /api/v1/krs/admin/:id/reset-draft` (intervensi paksa ke `DRAFT` + rekalkulasi `total_sks` + audit `KRS_ADMIN_RESET` dengan `old_values`/`new_values` penuh).
-- [x] **Scoped detail** `GET /api/v1/krs/:id`: pemilik / PA pemilik / admin — 403 bagi pihak lain.
-- [x] **Test** (`tests/phase9.test.js`): 12 skenario — pengajuan+detail scoped, approve+event audit, return+catatan(resubmit), ownership 403 (PA bukan pemilik & dosen biasa), konkurensi ganda approve (200+409), idempotensi approve DISETUJUI (400/409), monitor admin+summary, reset-draft+audit, non-admin 403.
+| Model | Keterangan |
+| --- | --- |
+| `User` | Akun login: `username`, `email`, `password_hash`, `role` (enum), `status` |
+| `Profile` | Data personal: `full_name`, `phone`, `bio`, `avatar_file_id` |
+| `Mahasiswa` | `nim` (unique), `prodi`, `angkatan` — relasi 1:1 ke `User` |
+| `Dosen` | `nidn`/`nip` (unique), `gelar_depan`, `gelar_belakang` — relasi 1:1 ke `User` |
+| `RefreshToken` | Token refresh di-hash (SHA-256) dan disimpan di DB |
+| `Course` | Master mata kuliah: `code` (unique), `name`, `credits`, `is_active` |
+| `Class` | Pembukaan kelas: `course`, `lecturer` (Dosen), `academic_year`, `semester`, `capacity` |
+| `Enrollment` | Pendaftaran mahasiswa ke kelas (BR-002, diinput Admin) — unique `(class_id, student_id)` |
+| `File` | Metadata berkas terproteksi (BR-009) |
+| `AuditLog` | Jejak audit: action, entity, old/new values, ip_address (NFR-009) |
 
-### ✅ Fase 10: Penjadwalan Kuliah (Hari 7-8) (Selesai)
-- [x] **Modul Jadwal** (`src/modules/jadwal/`): CRUD `/api/v1/jadwal` untuk Admin Akademik (`jadwal:manage`) dengan deteksi bentrok otomatis (FR-101) — ruangan sama dan/atau dosen sama pada hari sama + rentang waktu overlap. Waktu disimpan sebagai string `"HH:mm"` zero-padded 24-jam (Keputusan Desain #4); perbandingan leksikografis aman; rentang operasional kampus 06:00–22:00 divalidasi via Zod.
-- [x] **Deteksi bentrok transaksional** (`konflik.service.js` → `detectConflictsForSlot`): kriteria (a) ruangan sama + overlap + (b) dosen sama + overlap; cek awal di luar transaksi (pesan 409 informatif) + re-cek di dalam transaksi. Dua lapis advisory lock Postgres (`pg_advisory_xact_lock`) — per-`(kelas,hari)` mencegah klik ganda, per-`hari` global menserialisasi seluruh tulis slot pada hari yang sama untuk menutup race condition deteksi bentrok lintas-kelas yang tidak ter-cover READ COMMITTED. `P2002` unique `[kelas_id, hari, jam_mulai]` dipetakan ke 409 duplikat slot.
-- [x] **View mahasiswa** `GET /api/v1/jadwal/saya` (FR-036/037): jadwal mingguan diekstrak dari KRS berstatus `DISETUJUI` pada semester aktif/terpilih; `view=list` mengelompokkan per hari (SENIN–SABTU), `view=calendar` memproyeksikan jadwal mingguan ke tanggal konkret dalam rentang semester (atau `mulai`/`selesai` ISO 8601 via query). Non-mahasiswa (mis. calon) → 403.
-- [x] **View dosen** `GET /api/v1/jadwal/mengajar` (FR-038): jadwal kelas yang diampu dosen pada semester aktif/terpilih, dikelompokkan per hari. Non-dosen → 403.
-- [x] **RBAC**: `POST/PUT/DELETE /api/v1/jadwal` & `/api/v1/jadwal/:id` mutasi → `jadwal:manage` (ADMIN_AKADEMIK, SUPER_ADMIN bypass); `GET /` list → `jadwal:view` (seluruh role login); `/saya` & `/mengajar` memeriksa peran di service. Audit `CREATE_JADWAL`/`UPDATE_JADWAL`/`DELETE_JADWAL` dengan `old_values`/`new_values`.
-- [x] **Alias konseptual SRS Bab 32**: `/api/jadwal` & `/api/jadwal/saya` → `GET /api/v1/jadwal/saya` (jadwal mahasiswa).
-- [x] **Test** (`tests/phase10.test.js`): 21 skenario — CRUD+audit, validasi Zod (jam/hari/urutan) 400, duplikat 409, matriks bentrok DOSEN/RUANGAN 409+`bentrok_dengan[]`, tidak bentrok di hari beda 201, slot berdekatan non-overlap 201, update+audit, update ke bentrok 409, hapus+audit+404, RBAC 403 mhs/dosen, 401 tanpa token, `/saya` list+calendar, jadwal kosong (KRS belum disetujui), calon 403, `/mengajar` dosen, mhs 403 di `/mengajar`, list filter+pagination, getById scoped, konkurensi ganda create (201+409).
-
-### ✅ Fase 11: Kalender Operasional + Integrasi Portal (Hari 9) (Selesai)
-- [x] **Ekstensi modul Calendar** (`src/modules/calendar/`): filter `kategori` (SRS Bab 22 — `KRS`, `PERKULIAHAN`, `UTS`, `UAS`, `LAINNYA`) pada `GET /api/v1/calendar`; field `kategori` pada create/update (default `LAINNYA`) + tercatat di `audit_logs` (`old_values`/`new_values`). Endpoint baru `GET /api/v1/calendar/aktif` menyajikan agenda berjalan untuk semester aktif (atau `semester_id` via query) — dipakai portal & frontend; `404` bila semester tidak ditemukan, `400` untuk `semester_id` invalid.
-- [x] **Portal service sebagai sumber kebenaran tunggal** (`src/modules/portal/portal.service.js`): `PeriodeKRS` nyata menggantikan heuristik pencocokan string `'krs'` pada `portal.service.js` lama. `system_context.periode_krs` kini menyajikan `{ id, nama, tanggal_mulai, tanggal_selesai, sks_maks, is_aktif, sisa_hari, sedang_dibuka }`; bila periode ditutup/dihapus, `sedang_dibuka=false` & `sisa_hari=null`.
-- [x] **Dashboard Mahasiswa kontekstual** (SRS Bab 9): `status_krs` kini memuat `periode_krs` (sumber nyata), `krs_personal` (`status`, `total_sks`, `diajukan_at`, `catatan_dosen`), `catatan_revisi` (FR-035 — terisi bila KRS `DIKEMBALIKAN`), serta `sisa_hari` periode. Tetap backwards-compatible: field lama (`periode_krs_buka`, `keterangan`, `modul_terkait`) tidak dihapus.
-- [x] **Dashboard PA antrian persetujuan** (SRS Bab 9): `statistik.jumlah_krs_menunggu_persetujuan` — query nyata `COUNT KRS WHERE status='DIAJUKAN' AND mahasiswa.dosen_wali_id = dosen.id` pada semester aktif; menggantikan heuristic string lama secara internal.
-- [x] **Backwards compatibility**: shape `role_dashboards` lama tidak berubah — hanya *additive fields*; suite `phase5` (portal dashboard MVP 1) tetap hijau tanpa sentuhan.
-- [x] **Test** (`tests/phase11.test.js`): 22 skenario — filter `kategori` (KRS/PERKULIAHAN/invalid 400), `GET /calendar/aktif` (semester aktif, 401 tanpa token, 400 UUID invalid, 404 semester tidak ada), create dengan kategori+audit, default `LAINNYA`, update kategori+audit old/new, RBAC mhs baca-tapi-tidak-create 403, dashboard mhs pakai `PeriodeKRS` nyata, status KRS personal+total SKS, catatan revisi (DIKEMBALIKAN), antrian PA, backwards-compat field lama, admin metrik, periode tertutup→portal tertutup (Bab 33), tanpa PeriodeKRS→`periode_krs=null`, alias `/api/calendar`, 401 portal, calon mhs tidak crash.
-
-### 🎉 Status MVP 2 (Fase 7–11): **Selesai**
-Backend MVP 2 hingga Fase 11 terverifikasi melalui **149 skenario pengujian otomatis** (83 MVP 1 + 6 Fase 8 + 12 Fase 9 + 21 Fase 10 + 22 Fase 11 + lainnya) dengan status 100% lulus, tanpa regresi pada kontrak API MVP 1. `docs:check` melaporkan **0 undocumented endpoints** (62 path terdokumentasi).
-
-## Panduan Menjalankan Backend
+## Panduan Menjalankan
 
 ### 1. Prasyarat
 - Node.js (v20+ LTS)
@@ -159,36 +103,54 @@ Backend MVP 2 hingga Fase 11 terverifikasi melalui **149 skenario pengujian otom
 ```bash
 cd backend
 npm install
-cp .env.example .env # Sesuaikan konfigurasi DATABASE_URL
-npm run db:migrate   # Menjalankan migrasi Prisma
-npm run db:seed      # Mengisi data master awal & akun pengguna
+cp .env.example .env    # Sesuaikan konfigurasi DATABASE_URL
+npm run db:migrate      # Eksekusi migrasi awal (init_spada_mvp1)
+npm run db:seed         # Isi akun pengguna & master awal
 ```
 
-### 3. Menjalankan Server & Pengujian
+### 3. Menjalankan Server
 ```bash
-npm run dev   # Menjalankan server dalam mode development (nodemon)
-npm start     # Menjalankan server dalam mode production
-npm test      # Menjalankan seluruh skenario pengujian otomatis (149 test, Fase 2-11)
-npm run docs:check  # Verifikasi cakupan dokumentasi OpenAPI vs endpoint yang diuji
+npm run dev             # Mode development (nodemon)
+npm start               # Mode produksi
 ```
 
-### 4. Dokumentasi API (OpenAPI 3.0)
-Spesifikasi API lengkap tersedia di [`docs/openapi.yaml`](./docs/openapi.yaml). Berkas dapat diimpor ke:
-- [Swagger Editor](https://editor.swagger.io/)
-- [Redoc](https://redocly.github.io/redoc/)
-- Postman / Insomnia / Bruno (sebagai koleksi)
-- Cursor, VS Code (OpenAPI extension), atau Stoplight Studio
+### 4. Database Alternatif (Embedded Postgres)
+Tanpa instalasi PostgreSQL manual, `scripts/run-pg.js` menyediakan embedded-postgres di port 5433:
+```bash
+node scripts/run-pg.js
+```
 
-Endpoint alias konseptual SRS Bab 32 (`/api/login`, `/api/profile`, `/api/logout`, `/api/calendar`, `/api/dashboard`, `/api/portal/modules`) didokumentasikan pada bagian `info.description`.
+## Akun Bawaan Seeder
 
-### Akun Bawaan Seeder
-| Peran | Username | Email | Password Default |
-|---|---|---|---|
-| Super Admin | `superadmin` | `superadmin@kampus.ac.id` | `Password123!` |
-| Admin Akademik | `admin_akademik` | `admin.akademik@kampus.ac.id` | `Password123!` |
-| Admin LMS | `admin_lms` | `admin.lms@kampus.ac.id` | `Password123!` |
-| Dosen & PA | `198501152010121002` | `budi.santoso@kampus.ac.id` | `Password123!` |
-| Dosen Pengampu | `199003202015042001` | `siti.aminah@kampus.ac.id` | `Password123!` |
-| Mahasiswa | `2024001001` | `ahmad.fauzi@student.kampus.ac.id` | `Password123!` |
-| Mahasiswa | `2024001002` | `siti.nurhaliza@student.kampus.ac.id` | `Password123!` |
-| Calon Mahasiswa | `PMB20260001` | `rizky.pratama@gmail.com` | `Password123!` |
+Password default seluruh akun: `password123`
+
+| Role | Username | Email | Keterangan |
+| --- | --- | --- | --- |
+| Admin | `admin` | `admin@upgris.ac.id` | Administrator SPADA |
+| Dosen | `198501152010121002` | `budi.santoso@upgris.ac.id` | NIDN sebagai username |
+| Dosen | `199003202015042001` | `siti.aminah@upgris.ac.id` | NIDN sebagai username |
+| Dosen | `197805102003122001` | `hadi.wijaya@upgris.ac.id` | NIDN sebagai username |
+| Mahasiswa | `2024001001`–`2024001010` | `<nim>@mhs.upgris.ac.id` | NIM sebagai username |
+
+Seeder juga membuat 5 master mata kuliah (`TIF101`–`TIF105`) dan 2 kelas perkuliahan (`TI-A`, `SI-B`) untuk tahun ajaran `2026/2027` semester `ganjil`.
+
+## Status Pengerjaan Backend
+
+Backend lama yang mengacu pada SRS sebelum revisi **sudah dibersihkan**. Yang tersisa saat ini adalah fondasi yang masih relevan dengan SRS baru:
+
+- ✅ **Fase 1 selesai (skema & setup):** `schema.prisma` (10 model), `seed.js` (1 Admin, 3 Dosen, 10 Mahasiswa, 5 Mata Kuliah, 2 Kelas), konstanta role lowercase, konfigurasi storage (BR-009), utilitas validasi berkas, Prisma Client teregenerasi.
+- ✅ **Dipertahankan:** Autentikasi (login/refresh/logout/forgot/change password), Profil, Manajemen User (Admin), Audit Log, middleware RBAC inti, konfigurasi, dan utilitas.
+- 🗑️ **Dihapus:** Modul KRS manual, Jadwal, Kalender, seluruh Master Data SIA (Fakultas, Prodi, Kurikulum, Mata Kuliah, Gedung, Ruangan, Semester, Tahun Akademik), Portal gateway, modul Roles/Permissions, migrasi lama, `docs/openapi.yaml`, dan skrip coverage.
+- ⚠️ **Catatan:** Test suite integrasi lama (`tests/phase2/3/4/6.test.js`) ikut dihapus karena seluruhnya menguji sistem yang sudah dihapus (8 role lama, endpoint `/api/v1/master/*`, permission `portal:view`/`calendar:view`).
+
+### Modul SRS yang **belum diimplementasikan**
+
+Sesuai prioritas MVP (SRS Bab 27), modul berikut belum dibangun dan menjadi pekerjaan selanjutnya:
+
+| MVP | Modul | Entitas SRS |
+| --- | --- | --- |
+| **MVP 1** | Master Mata Kuliah & Kelas, Penugasan Dosen, Enrollment (FR-044 s.d. FR-048) | `Course`, `Class`, `Enrollment` |
+| **MVP 2** | Ruang Kelas 16 Pertemuan, Materi, Presensi Digital (FR-013 s.d. FR-015, FR-023 s.d. FR-024, FR-030 s.d. FR-031, FR-036 s.d. FR-039) | `Meeting`, `Material`, `Attendance` |
+| **MVP 3** | Tugas, Validasi File, Submission, Penilaian Skor 0–100 (FR-016 s.d. FR-022, FR-032 s.d. FR-035, FR-053 s.d. FR-054) | `Assignment`, `Submission` |
+| **MVP 4** | Timeline Pembelajaran, Kuis, Notifikasi (FR-009 s.d. FR-012, FR-025, FR-040 s.d. FR-041, FR-057) | `Quiz`, `Notification` |
+| **MVP 5** | UTS/UAS + Gatekeeping Presensi, Rekap Nilai, Audit Lanjut (FR-026 s.d. FR-027, FR-042 s.d. FR-043, FR-055 s.d. FR-056, FR-058) | exam gate, grade recap |
