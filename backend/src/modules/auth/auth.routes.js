@@ -18,19 +18,19 @@ const optionalAuth = (req, res, next) => {
   return next();
 };
 
-// POST /api/v1/auth/login
+// POST /api/auth/login
 router.post('/login', validate(loginSchema), AuthController.login);
 
-// POST /api/v1/auth/refresh
+// POST /api/auth/refresh
 router.post('/refresh', validate(refreshTokenSchema), AuthController.refresh);
 
-// POST /api/v1/auth/logout
+// POST /api/auth/logout
 router.post('/logout', optionalAuth, AuthController.logout);
 
-// POST /api/v1/auth/forgot-password
+// POST /api/auth/forgot-password
 router.post('/forgot-password', validate(forgotPasswordSchema), AuthController.forgotPassword);
 
-// PUT /api/v1/auth/change-password (Wajib Login)
+// PUT /api/auth/change-password (Wajib Login)
 router.put(
   '/change-password',
   authenticateToken,

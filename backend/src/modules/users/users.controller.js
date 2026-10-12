@@ -52,24 +52,23 @@ export class UsersController {
     }
   }
 
-  static async updateRoles(req, res, next) {
+  static async updateUser(req, res, next) {
     try {
-      const { roles } = req.body;
       const targetUserId = req.params.id;
       const adminId = req.user.id;
       const { ipAddress, userAgent } = extractClientInfo(req);
 
-      const result = await UsersService.updateRoles({
+      const result = await UsersService.updateUser({
         adminId,
         targetUserId,
-        newRoles: roles,
+        updateData: req.body,
         ipAddress,
         userAgent,
       });
 
       return apiResponse.success(res, {
         statusCode: 200,
-        message: 'Penugasan role pengguna berhasil diperbarii',
+        message: 'Data pengguna berhasil diperbarui',
         data: result,
       });
     } catch (error) {

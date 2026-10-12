@@ -30,7 +30,7 @@ export const auditLogQuerySchema = {
         message: 'Format endDate harus tanggal yang valid',
       }),
     search: z.string().trim().optional(),
-    sortBy: z.enum(['waktu', 'action', 'entity']).optional().default('waktu'),
+    sortBy: z.enum(['created_at', 'action', 'entity']).optional().default('created_at'),
     sortOrder: z.enum(['asc', 'desc', 'ASC', 'DESC']).optional().default('desc'),
   }),
 };

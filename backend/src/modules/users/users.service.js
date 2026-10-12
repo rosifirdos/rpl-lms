@@ -2,141 +2,43 @@ import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
 import { hashPassword } from '../../utils/password.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
+import { ROLES } from '../../constants/roles.js';
 
 /**
- * Layanan Manajemen Pengguna & Roles (IPM 4.6 & SRS Bab 31 & Bab 35)
+ * Layanan Manajemen Pengguna SPADA LMS (FR-044 s/d FR-048)
+ *
+ * Revised: role adalah enum tunggal pada User (ADMIN/DOSEN/MAHASISWA).
+ * Tidak ada tabel Role/Permission, tidak ada CalonMahasiswa/DosenWali.
  */
 export class UsersService {
   /**
-   * Pembuatan akun pengguna baru secara manual beserta profil entitasnya (Super Admin)
+   * Pembuatan akun pengguna baru (Admin only)
    */
   static async createUser({ adminId, userData, ipAddress, userAgent }) {
-    const {
-      username,
-      email,
-      password,
-      status = 'ACTIVE',
-      mahasiswa_profile,
-      dosen_profile,
-      admin_profile,
-      calon_mhs_profile,
-    } = userData;
+    const { username, email, password, status = 'ACTIVE', role, full_name } = userData;
 
-    // 1. Validasi keunikan username & email — cek kedua field secara terpisah
-    // agar tidak ada benturan username-vs-email antar akun (username seseorang
-    // boleh sama dengan email orang lain sekalipun keduanya unik per-kolom).
-    const existingByUsername = await prisma.user.findUnique({
-      where: { username },
-    });
-    if (existingByUsername) {
-      throw new AppError('Username sudah digunakan oleh akun lain', 409);
-    }
-    const existingByEmail = await prisma.user.findUnique({
-      where: { email },
-    });
-    if (existingByEmail) {
-      throw new AppError('Email sudah terdaftar pada sistem', 409);
-    }
-
-    // 2. Validasi keberadaan role di database (dengan dedup input)
-    const roles = Array.from(new Set(userData.roles ?? []));
-    if (roles.length === 0) {
-      throw new AppError('Pengguna minimal harus memiliki setidaknya satu role', 400);
-    }
-    const roleRecords = await prisma.role.findMany({
-      where: {
-        name: { in: roles },
-      },
-    });
-
-    if (roleRecords.length !== roles.length) {
-      const foundNames = new Set(roleRecords.map((r) => r.name));
-      const missing = roles.filter((r) => !foundNames.has(r));
+    // Validasi role
+    if (!Object.values(ROLES).includes(role)) {
       throw new AppError(
-        `Role tidak ditemukan di sistem: [${missing.join(', ')}]`,
+        `Role tidak valid. Gunakan salah satu: ${Object.values(ROLES).join(', ')}`,
         400
       );
     }
 
-    // 3. Validasi entitas profil spesifik bila disediakan
-    if (mahasiswa_profile) {
-      const nimToCheck = mahasiswa_profile.nim || username;
-      const existingMhs = await prisma.mahasiswa.findUnique({
-        where: { nim: nimToCheck },
-      });
-      if (existingMhs) {
-        throw new AppError(`NIM '${nimToCheck}' sudah terdaftar untuk mahasiswa lain`, 409);
-      }
-
-      const prodi = await prisma.programStudi.findUnique({
-        where: { id: mahasiswa_profile.prodi_id },
-      });
-      if (!prodi) {
-        throw new AppError('Program studi mahasiswa tidak ditemukan', 404);
-      }
-
-      if (mahasiswa_profile.dosen_wali_id) {
-        const dosenWali = await prisma.dosen.findUnique({
-          where: { id: mahasiswa_profile.dosen_wali_id },
-        });
-        if (!dosenWali) {
-          throw new AppError('Dosen wali yang dipilih tidak ditemukan', 404);
-        }
-        if (!dosenWali.is_active) {
-          throw new AppError('Dosen wali yang dipilih sedang tidak aktif', 400);
-        }
-      }
+    // Validasi keunikan username & email
+    const existingByUsername = await prisma.user.findUnique({ where: { username } });
+    if (existingByUsername) {
+      throw new AppError('Username sudah digunakan oleh akun lain', 409);
+    }
+    const existingByEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingByEmail) {
+      throw new AppError('Email sudah terdaftar pada sistem', 409);
     }
 
-    if (dosen_profile) {
-      if (dosen_profile.nidn) {
-        const existingNidn = await prisma.dosen.findUnique({
-          where: { nidn: dosen_profile.nidn },
-        });
-        if (existingNidn) {
-          throw new AppError(`NIDN '${dosen_profile.nidn}' sudah terdaftar untuk dosen lain`, 409);
-        }
-      }
-      if (dosen_profile.nip) {
-        const existingNip = await prisma.dosen.findUnique({
-          where: { nip: dosen_profile.nip },
-        });
-        if (existingNip) {
-          throw new AppError(`NIP '${dosen_profile.nip}' sudah terdaftar untuk dosen lain`, 409);
-        }
-      }
-      if (dosen_profile.prodi_id) {
-        const prodi = await prisma.programStudi.findUnique({
-          where: { id: dosen_profile.prodi_id },
-        });
-        if (!prodi) {
-          throw new AppError('Program studi dosen tidak ditemukan', 404);
-        }
-      }
-    }
-
-    if (calon_mhs_profile) {
-      const noPendaftaranToCheck = calon_mhs_profile.no_pendaftaran || username;
-      const existingCalon = await prisma.calonMahasiswa.findUnique({
-        where: { no_pendaftaran: noPendaftaranToCheck },
-      });
-      if (existingCalon) {
-        throw new AppError(`Nomor pendaftaran '${noPendaftaranToCheck}' sudah terdaftar`, 409);
-      }
-      if (calon_mhs_profile.prodi_pilihan_id) {
-        const prodi = await prisma.programStudi.findUnique({
-          where: { id: calon_mhs_profile.prodi_pilihan_id },
-        });
-        if (!prodi) {
-          throw new AppError('Program studi pilihan tidak ditemukan', 404);
-        }
-      }
-    }
-
-    // 4. Hash password
+    // Hash password
     const password_hash = await hashPassword(password);
 
-    // 5. Eksekusi pembuatan user, user_roles, dan profil dalam transaksi Prisma
+    // Buat user + profile dalam transaksi
     const createdUser = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
@@ -144,111 +46,39 @@ export class UsersService {
           email,
           password_hash,
           status,
+          role,
         },
       });
 
-      // Hubungkan user dengan roles
-      await tx.userRole.createMany({
-        data: roleRecords.map((role) => ({
-          user_id: newUser.id,
-          role_id: role.id,
-        })),
-      });
-
-      // Buat profil entitas sesuai data
-      if (mahasiswa_profile) {
-        await tx.mahasiswa.create({
+      // Buat profile dasar
+      if (full_name) {
+        await tx.profile.create({
           data: {
             user_id: newUser.id,
-            nim: mahasiswa_profile.nim || username,
-            nama: mahasiswa_profile.nama,
-            prodi_id: mahasiswa_profile.prodi_id,
-            angkatan: mahasiswa_profile.angkatan || new Date().getFullYear(),
-            status_akademik: mahasiswa_profile.status_akademik || 'AKTIF',
-            dosen_wali_id: mahasiswa_profile.dosen_wali_id || null,
+            full_name,
           },
         });
       }
 
-      if (dosen_profile) {
-        await tx.dosen.create({
-          data: {
-            user_id: newUser.id,
-            nidn: dosen_profile.nidn || null,
-            nip: dosen_profile.nip || null,
-            nama: dosen_profile.nama,
-            gelar_depan: dosen_profile.gelar_depan || null,
-            gelar_belakang: dosen_profile.gelar_belakang || null,
-            prodi_id: dosen_profile.prodi_id || null,
-            is_active: dosen_profile.is_active !== undefined ? dosen_profile.is_active : true,
-          },
-        });
-      }
-
-      if (admin_profile) {
-        await tx.adminProfile.create({
-          data: {
-            user_id: newUser.id,
-            nip: admin_profile.nip || null,
-            nama: admin_profile.nama,
-            unit_kerja: admin_profile.unit_kerja,
-          },
-        });
-      }
-
-      if (calon_mhs_profile) {
-        await tx.calonMahasiswa.create({
-          data: {
-            user_id: newUser.id,
-            no_pendaftaran: calon_mhs_profile.no_pendaftaran || username,
-            nama: calon_mhs_profile.nama,
-            status_seleksi: calon_mhs_profile.status_seleksi || 'MENUNGGU',
-            prodi_pilihan_id: calon_mhs_profile.prodi_pilihan_id || null,
-            jalur_pendaftaran: calon_mhs_profile.jalur_pendaftaran || null,
-          },
-        });
-      }
-
-      // Ambil data lengkap pengguna di dalam transaksi (menjamin row ada,
-      // sekaligus menghindari round-trip DB kedua di luar transaksi).
       return tx.user.findUnique({
         where: { id: newUser.id },
-        include: {
-          user_roles: {
-            include: {
-              role: {
-                select: { id: true, name: true, description: true },
-              },
-            },
-          },
-          mahasiswa_profile: {
-            include: {
-              prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-              dosen_wali: { select: { id: true, nama: true, nidn: true } },
-            },
-          },
-          dosen_profile: {
-            include: {
-              prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-            },
-          },
-          admin_profile: true,
-          calon_mhs_profile: {
-            include: {
-              prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-            },
-          },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          status: true,
+          role: true,
+          created_at: true,
+          profile: true,
         },
       });
     });
 
-    // Guard null defensif (meskipun fetch kini di dalam transaksi, jaga-jaga
-    // bila row terhapus tepat setelah commit sebelum read kembali).
     if (!createdUser) {
       throw new AppError('Pengguna baru saja dibuat namun gagal diambil ulang', 500);
     }
 
-    // 6. Catat jejak audit pembuatan akun (SRS Bab 35)
+    // Catat jejak audit pembuatan akun (SRS Bab 35)
     await AuditLogService.record({
       userId: adminId,
       action: 'CREATE_USER',
@@ -257,142 +87,44 @@ export class UsersService {
       newValues: {
         username: createdUser.username,
         email: createdUser.email,
-        roles,
+        role: createdUser.role,
         status: createdUser.status,
       },
       ipAddress,
       userAgent,
     });
 
-    // Sanitasi output (sembunyikan password_hash)
-    const { password_hash: _hash, user_roles, ...safeUser } = createdUser;
-    return {
-      ...safeUser,
-      roles: user_roles.map((ur) => ur.role.name),
-    };
-  }
-
-  /**
-   * Ubah Role Pengguna (mencatat ke audit_logs)
-   */
-  static async updateRoles({ adminId, targetUserId, newRoles, ipAddress, userAgent }) {
-    // Proteksi: tidak diizinkan mengubah role akun sendiri (mencegah lockout)
-    if (targetUserId === adminId) {
-      throw new AppError('Tidak diizinkan mengubah role akun sendiri', 400);
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: targetUserId },
-      include: {
-        user_roles: {
-          include: {
-            role: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      throw new AppError('Pengguna tidak ditemukan', 404);
-    }
-
-    const oldRoles = user.user_roles.map((ur) => ur.role.name);
-
-    // Dedup input role sebelum validasi (mencegah false-negative saat
-    // newRoles berisi duplikat seperti ['DOSEN', 'DOSEN'])
-    const uniqueRoles = Array.from(new Set(newRoles ?? []));
-    if (uniqueRoles.length === 0) {
-      throw new AppError('Pengguna minimal harus memiliki setidaknya satu role', 400);
-    }
-
-    // Cari data role dari database
-    const roleRecords = await prisma.role.findMany({
-      where: {
-        name: { in: uniqueRoles },
-      },
-    });
-
-    if (roleRecords.length !== uniqueRoles.length) {
-      const foundNames = new Set(roleRecords.map((r) => r.name));
-      const missing = uniqueRoles.filter((r) => !foundNames.has(r));
-      throw new AppError(
-        `Role tidak ditemukan di sistem: [${missing.join(', ')}]`,
-        400
-      );
-    }
-
-    // Transaksi untuk mengganti role pengguna
-    await prisma.$transaction(async (tx) => {
-      await tx.userRole.deleteMany({
-        where: { user_id: targetUserId },
-      });
-
-      await tx.userRole.createMany({
-        data: roleRecords.map((role) => ({
-          user_id: targetUserId,
-          role_id: role.id,
-        })),
-      });
-    });
-
-    // Catat jejak audit perubahan role pengguna (SRS Chapter 35)
-    await AuditLogService.logRoleChange({
-      adminId,
-      targetUserId,
-      oldRoles,
-      newRoles: uniqueRoles,
-      ipAddress,
-      userAgent,
-    });
-
-    return {
-      userId: targetUserId,
-      username: user.username,
-      oldRoles,
-      newRoles: uniqueRoles,
-    };
+    return createdUser;
   }
 
   /**
    * Ubah Status Pengguna (ACTIVE, INACTIVE, SUSPENDED)
    */
   static async updateStatus({ adminId, targetUserId, newStatus, reason, ipAddress, userAgent }) {
-    // Proteksi: tidak diizinkan mengubah status akun sendiri (mencegah
-    // lockout diri sendiri, mis. men-suspend akun sendiri tanpa jalur pemulihan)
     if (targetUserId === adminId) {
       throw new AppError('Tidak diizinkan mengubah status akun sendiri', 400);
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: targetUserId },
-    });
-
+    const user = await prisma.user.findUnique({ where: { id: targetUserId } });
     if (!user) {
       throw new AppError('Pengguna tidak ditemukan', 404);
     }
 
     const oldStatus = user.status;
 
-    // Update status di database
     const updatedUser = await prisma.user.update({
       where: { id: targetUserId },
-      data: {
-        status: newStatus,
-      },
+      data: { status: newStatus },
       select: {
         id: true,
         username: true,
         email: true,
         status: true,
+        role: true,
       },
     });
 
-    // Jika status diubah menjadi INACTIVE atau SUSPENDED,
-    // cabut semua refresh token pengguna untuk memutus sesi aktif (security).
-    // Catatan: access token (JWT) tetap valid sampai kedaluwarsa, namun
-    // middleware authenticateToken (auth.middleware.js) mengecek status user
-    // dari database di setiap request, sehingga user yang di-suspend/INACTIVE
-    // langsung ditolak 403 terlepas dari masa berlaku access token.
+    // Cabut refresh token jika di-nonaktifkan/suspend
     if (newStatus !== 'ACTIVE') {
       await prisma.refreshToken.updateMany({
         where: { user_id: targetUserId, revoked_at: null },
@@ -400,7 +132,6 @@ export class UsersService {
       });
     }
 
-    // Catat jejak audit perubahan status pengguna (SRS Chapter 35)
     await AuditLogService.logStatusChange({
       adminId,
       targetUserId,
@@ -420,6 +151,77 @@ export class UsersService {
   }
 
   /**
+   * Update data pengguna (termasuk role) — Admin only
+   */
+  static async updateUser({ adminId, targetUserId, updateData, ipAddress, userAgent }) {
+    if (targetUserId === adminId && updateData.role) {
+      throw new AppError('Tidak diizinkan mengubah role akun sendiri', 400);
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!user) {
+      throw new AppError('Pengguna tidak ditemukan', 404);
+    }
+
+    const oldValues = {};
+    const newValues = {};
+    const data = {};
+
+    if (updateData.role && updateData.role !== user.role) {
+      if (!Object.values(ROLES).includes(updateData.role)) {
+        throw new AppError(
+          `Role tidak valid. Gunakan salah satu: ${Object.values(ROLES).join(', ')}`,
+          400
+        );
+      }
+      oldValues.role = user.role;
+      newValues.role = updateData.role;
+      data.role = updateData.role;
+    }
+
+    if (updateData.email && updateData.email !== user.email) {
+      const existingEmail = await prisma.user.findFirst({
+        where: { email: updateData.email, NOT: { id: targetUserId } },
+      });
+      if (existingEmail) {
+        throw new AppError('Email sudah digunakan oleh akun lain', 409);
+      }
+      oldValues.email = user.email;
+      newValues.email = updateData.email;
+      data.email = updateData.email;
+    }
+
+    if (Object.keys(data).length === 0) {
+      throw new AppError('Tidak ada data yang perlu diperbarui', 400);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: targetUserId },
+      data,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        status: true,
+        role: true,
+      },
+    });
+
+    await AuditLogService.record({
+      userId: adminId,
+      action: 'UPDATE_USER',
+      entity: 'users',
+      entityId: targetUserId,
+      oldValues,
+      newValues,
+      ipAddress,
+      userAgent,
+    });
+
+    return updatedUser;
+  }
+
+  /**
    * Daftar Pengguna dengan paginasi dan filter
    */
   static async getUsers({ page = 1, limit = 20, role, status, search } = {}) {
@@ -434,24 +236,14 @@ export class UsersService {
     }
 
     if (role) {
-      where.user_roles = {
-        some: {
-          role: { name: role },
-        },
-      };
+      where.role = role;
     }
 
     if (search) {
-      // Perluas pencarian agar juga menjangkau `nama` pada seluruh tabel profil
-      // relasional (mahasiswa/dosen/admin/calon-mahasiswa), bukan hanya
-      // username & email.
       where.OR = [
         { username: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
-        { mahasiswa_profile: { nama: { contains: search, mode: 'insensitive' } } },
-        { dosen_profile: { nama: { contains: search, mode: 'insensitive' } } },
-        { admin_profile: { nama: { contains: search, mode: 'insensitive' } } },
-        { calon_mhs_profile: { nama: { contains: search, mode: 'insensitive' } } },
+        { profile: { full_name: { contains: search, mode: 'insensitive' } } },
       ];
     }
 
@@ -467,11 +259,10 @@ export class UsersService {
           username: true,
           email: true,
           status: true,
+          role: true,
           created_at: true,
-          user_roles: {
-            select: {
-              role: { select: { id: true, name: true, description: true } },
-            },
+          profile: {
+            select: { full_name: true },
           },
         },
       }),
@@ -485,8 +276,9 @@ export class UsersService {
         username: u.username,
         email: u.email,
         status: u.status,
+        role: u.role,
+        full_name: u.profile?.full_name || null,
         createdAt: u.created_at,
-        roles: u.user_roles.map((ur) => ur.role.name),
       })),
       meta: {
         page: currentPage,
@@ -501,8 +293,6 @@ export class UsersService {
    * Detail Pengguna berdasarkan ID
    */
   static async getUserById(id) {
-    // Gunakan `select` eksplisit (bukan `include`) agar `password_hash`
-    // tidak ikut bocor ke response GET /api/v1/users/:id.
     const user = await prisma.user.findUnique({
       where: { id },
       select: {
@@ -510,30 +300,10 @@ export class UsersService {
         username: true,
         email: true,
         status: true,
+        role: true,
         last_login_at: true,
         created_at: true,
-        user_roles: {
-          select: {
-            role: { select: { id: true, name: true, description: true } },
-          },
-        },
-        mahasiswa_profile: {
-          include: {
-            prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-            dosen_wali: { select: { id: true, nama: true, nidn: true } },
-          },
-        },
-        dosen_profile: {
-          include: {
-            prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-          },
-        },
-        admin_profile: true,
-        calon_mhs_profile: {
-          include: {
-            prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-          },
-        },
+        profile: true,
       },
     });
 
@@ -541,11 +311,6 @@ export class UsersService {
       throw new AppError('Pengguna tidak ditemukan', 404);
     }
 
-    // Tambahkan field terderivasi `roles` (array of code) untuk konsistensi
-    // dengan `getUsers` & `createUser`, sambil tetap mempertahankan `user_roles`.
-    return {
-      ...user,
-      roles: user.user_roles.map((ur) => ur.role.name),
-    };
+    return user;
   }
 }

@@ -1,4 +1,4 @@
-﻿import prisma from '../../config/prisma.js';
+import prisma from '../../config/prisma.js';
 import { hashPassword, comparePassword } from '../../utils/password.js';
 import {
   generateAccessToken,
@@ -20,35 +20,7 @@ export class AuthService {
         OR: [{ username: identifier }, { email: identifier }],
       },
       include: {
-        user_roles: {
-          include: {
-            role: {
-              include: {
-                role_permissions: {
-                  include: {
-                    permission: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        mahasiswa_profile: {
-          include: {
-            prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-          },
-        },
-        dosen_profile: {
-          include: {
-            prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-          },
-        },
-        admin_profile: true,
-        calon_mhs_profile: {
-          include: {
-            prodi: { select: { id: true, kode: true, nama: true, jenjang: true } },
-          },
-        },
+        profile: true,
       },
     });
 
@@ -64,7 +36,7 @@ export class AuthService {
           ? 'ditangguhkan'
           : user.status.toLowerCase();
       throw new AppError(
-        `Akses login ditolak: Akun Anda sedang berstatus ${statusLabel} (${user.status}). Silakan hubungi administrator kampus.`,
+        `Akses login ditolak: Akun Anda sedang berstatus ${statusLabel} (${user.status}). Silakan hubungi administrator.`,
         403
       );
     }
@@ -80,26 +52,13 @@ export class AuthService {
       data: { last_login_at: new Date() },
     });
 
-    // Ekstrak roles & permissions
-    const roles = user.user_roles.map((ur) => ur.role.name);
-    const permissionSet = new Set();
-    user.user_roles.forEach((ur) => {
-      ur.role.role_permissions.forEach((rp) => {
-        if (rp.permission?.code) {
-          permissionSet.add(rp.permission.code);
-        }
-      });
-    });
-    const permissions = Array.from(permissionSet);
-
-    // Bentuk Token
+    // Bentuk Token — role langsung dari enum
     const tokenPayload = {
       sub: user.id,
       userId: user.id,
       username: user.username,
       email: user.email,
-      roles,
-      permissions,
+      role: user.role,
     };
 
     const accessToken = generateAccessToken(tokenPayload);
@@ -127,22 +86,10 @@ export class AuthService {
       userAgent,
       newValues: {
         username: user.username,
-        roles,
+        role: user.role,
         timestamp: new Date().toISOString(),
       },
     });
-
-    // Tentukan profil aktif
-    let activeProfile = null;
-    if (user.mahasiswa_profile) {
-      activeProfile = { type: 'MAHASISWA', ...user.mahasiswa_profile };
-    } else if (user.dosen_profile) {
-      activeProfile = { type: 'DOSEN', ...user.dosen_profile };
-    } else if (user.admin_profile) {
-      activeProfile = { type: 'ADMIN', ...user.admin_profile };
-    } else if (user.calon_mhs_profile) {
-      activeProfile = { type: 'CALON_MAHASISWA', ...user.calon_mhs_profile };
-    }
 
     return {
       accessToken,
@@ -152,9 +99,8 @@ export class AuthService {
         username: user.username,
         email: user.email,
         status: user.status,
-        roles,
-        permissions,
-        profile: activeProfile,
+        role: user.role,
+        profile: user.profile || null,
       },
     };
   }
@@ -174,23 +120,7 @@ export class AuthService {
     const savedToken = await prisma.refreshToken.findUnique({
       where: { token_hash: tokenHash },
       include: {
-        user: {
-          include: {
-            user_roles: {
-              include: {
-                role: {
-                  include: {
-                    role_permissions: {
-                      include: {
-                        permission: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
+        user: true,
       },
     });
 
@@ -203,24 +133,12 @@ export class AuthService {
       throw new AppError('Akun pengguna tidak aktif atau tidak ditemukan', 403);
     }
 
-    const roles = user.user_roles.map((ur) => ur.role.name);
-    const permissionSet = new Set();
-    user.user_roles.forEach((ur) => {
-      ur.role.role_permissions.forEach((rp) => {
-        if (rp.permission?.code) {
-          permissionSet.add(rp.permission.code);
-        }
-      });
-    });
-    const permissions = Array.from(permissionSet);
-
     const accessToken = generateAccessToken({
       sub: user.id,
       userId: user.id,
       username: user.username,
       email: user.email,
-      roles,
-      permissions,
+      role: user.role,
     });
 
     return {
@@ -293,13 +211,13 @@ export class AuthService {
 
     // Catat jejak audit
     await AuditLogService.record({
-        userId,
-        action: 'CHANGE_PASSWORD',
-        entity: 'users',
-        entityId: userId,
-        ipAddress,
-        userAgent,
-      });
+      userId,
+      action: 'CHANGE_PASSWORD',
+      entity: 'users',
+      entityId: userId,
+      ipAddress,
+      userAgent,
+    });
 
     return {
       message: 'Kata sandi berhasil diperbarui. Silakan login kembali dengan kata sandi baru.',

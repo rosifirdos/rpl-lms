@@ -2,8 +2,7 @@ import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
 
 /**
- * Layanan terpusat Audit Trail (SRS Bab 15 & Bab 35)
- * Mendukung pencatatan mutasi asinkron non-blocking agar tidak memperlambat latensi API.
+ * Layanan terpusat Audit Trail SPADA LMS (SRS Bab 15 & Bab 35)
  */
 export class AuditLogService {
   /**
@@ -18,7 +17,6 @@ export class AuditLogService {
     newValues = null,
     ipAddress = null,
     userAgent = null,
-    isAsync = true,
   }) {
     const payload = {
       user_id: userId || null,
@@ -57,7 +55,7 @@ export class AuditLogService {
     startDate,
     endDate,
     search,
-    sortBy = 'waktu',
+    sortBy = 'created_at',
     sortOrder = 'desc',
   } = {}) {
     const currentPage = Math.max(1, parseInt(page, 10) || 1);
@@ -79,12 +77,12 @@ export class AuditLogService {
     }
 
     if (startDate || endDate) {
-      where.waktu = {};
+      where.created_at = {};
       if (startDate) {
-        where.waktu.gte = new Date(startDate);
+        where.created_at.gte = new Date(startDate);
       }
       if (endDate) {
-        where.waktu.lte = new Date(endDate);
+        where.created_at.lte = new Date(endDate);
       }
     }
 
@@ -96,8 +94,8 @@ export class AuditLogService {
       ];
     }
 
-    const validSortFields = ['waktu', 'action', 'entity'];
-    const resolvedSortBy = validSortFields.includes(sortBy) ? sortBy : 'waktu';
+    const validSortFields = ['created_at', 'action', 'entity'];
+    const resolvedSortBy = validSortFields.includes(sortBy) ? sortBy : 'created_at';
     const resolvedSortOrder = sortOrder?.toLowerCase() === 'asc' ? 'asc' : 'desc';
 
     const [total, items] = await Promise.all([
@@ -114,6 +112,7 @@ export class AuditLogService {
               username: true,
               email: true,
               status: true,
+              role: true,
             },
           },
         },
@@ -152,13 +151,7 @@ export class AuditLogService {
             username: true,
             email: true,
             status: true,
-            user_roles: {
-              include: {
-                role: {
-                  select: { id: true, name: true, description: true },
-                },
-              },
-            },
+            role: true,
           },
         },
       },
@@ -169,29 +162,6 @@ export class AuditLogService {
     }
 
     return auditLog;
-  }
-
-  /**
-   * Helper audit mutasi Role pengguna
-   */
-  static async logRoleChange({
-    adminId,
-    targetUserId,
-    oldRoles,
-    newRoles,
-    ipAddress,
-    userAgent,
-  }) {
-    return this.record({
-      userId: adminId,
-      action: 'UPDATE_USER_ROLES',
-      entity: 'user_roles',
-      entityId: targetUserId,
-      oldValues: { roles: oldRoles },
-      newValues: { roles: newRoles },
-      ipAddress,
-      userAgent,
-    });
   }
 
   /**

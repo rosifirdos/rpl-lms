@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -8,13 +8,6 @@ import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
 import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
-import rolesRoutes from './modules/roles/roles.routes.js';
-import permissionsRoutes from './modules/permissions/permissions.routes.js';
-import calendarRoutes from './modules/calendar/calendar.routes.js';
-import masterRoutes from './modules/master/master.routes.js';
-import portalRoutes from './modules/portal/portal.routes.js';
-import krsRoutes from './modules/krs/krs.routes.js';
-import jadwalRoutes from './modules/jadwal/jadwal.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
 import { generalLimiter, authLimiter } from './middlewares/rateLimit.middleware.js';
@@ -35,7 +28,7 @@ app.use(
       if (!origin || ENV.CORS_ORIGIN.includes(origin) || ENV.CORS_ORIGIN.includes('*')) {
         return callback(null, true);
       }
-      return callback(new Error('Akses diblokir oleh kebijakan CORS kampus'));
+      return callback(new Error('Akses diblokir oleh kebijakan CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -43,7 +36,7 @@ app.use(
   })
 );
 
-// Pembatasan Frekuensi Global (General Rate Limiting - Fase 3)
+// Pembatasan Frekuensi Global (General Rate Limiting)
 app.use(generalLimiter);
 
 // Middleware Body Parser
@@ -60,7 +53,7 @@ if (ENV.NODE_ENV !== 'test') {
 // Health check endpoint
 app.get('/health', (req, res) => {
   return apiResponse.success(res, {
-    message: 'RPL-LMS Backend API is operational',
+    message: 'SPADA LMS Backend API is operational',
     data: {
       timestamp: new Date().toISOString(),
       env: ENV.NODE_ENV,
@@ -68,85 +61,32 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Root API v1 welcome
-app.get('/api/v1', (req, res) => {
+// Root API welcome (flat /api per SRS Bab 21)
+app.get('/api', (req, res) => {
   return apiResponse.success(res, {
-    message: 'Selamat datang di API Sistem Akademik Kampus Terintegrasi (Portal, SIA, SPADA, PMB)',
+    message: 'Selamat datang di API SPADA LMS — Universitas PGRI Semarang',
     data: {
       version: '1.0.0 (MVP 1)',
       status: 'active',
       endpoints: {
-        auth: '/api/v1/auth',
-        profile: '/api/v1/profile',
-        portal: '/api/v1/portal',
-        auditLogs: '/api/v1/audit-logs',
-        users: '/api/v1/users',
-        roles: '/api/v1/roles',
-        permissions: '/api/v1/permissions',
-        calendar: '/api/v1/calendar',
-        master: '/api/v1/master',
-        krs: '/api/v1/krs',
-        jadwal: '/api/v1/jadwal',
+        auth: '/api/auth',
+        profile: '/api/profile',
+        admin_users: '/api/admin/users',
+        admin_audit_logs: '/api/admin/audit-logs',
       },
     },
   });
 });
 
-// Proteksi Frekuensi Percobaan Autentikasi (Brute-force protection - SRS Chapter 35)
-app.use('/api/v1/auth/login', authLimiter);
-app.use('/api/v1/auth/forgot-password', authLimiter);
+// Proteksi Frekuensi Percobaan Autentikasi (Brute-force protection)
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/forgot-password', authLimiter);
 
-// Modul MVP 1 (Fase 2, Fase 3, Fase 4, Fase 5 & Fase 6)
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/profile', profileRoutes);
-app.use('/api/v1/portal', portalRoutes);
-app.use('/api/v1/audit-logs', auditLogRoutes);
-app.use('/api/v1/users', usersRoutes);
-app.use('/api/v1/roles', rolesRoutes);
-app.use('/api/v1/permissions', permissionsRoutes);
-app.use('/api/v1/calendar', calendarRoutes);
-app.use('/api/v1/master', masterRoutes);
-
-// Modul MVP 2 - KRS & Jadwal (Fase 8-10)
-app.use('/api/v1/krs', krsRoutes);
-app.use('/api/v1/jadwal', jadwalRoutes);
-
-// Endpoint Konseptual Alias (SRS Bab 32 - Tabel 16)
-// Memetakan /api/login, /api/logout, /api/profile, /api/calendar, /api/dashboard, /api/portal langsung ke handler modul terkait
-app.use('/api', (req, res, next) => {
-  if (req.path === '/login') {
-    return authLimiter(req, res, () => {
-      req.url = '/login';
-      return authRoutes(req, res, next);
-    });
-  }
-  if (req.path === '/logout') {
-    req.url = '/logout';
-    return authRoutes(req, res, next);
-  }
-  if (req.path === '/profile') {
-    req.url = '/';
-    return profileRoutes(req, res, next);
-  }
-  if (req.path === '/calendar') {
-    req.url = '/';
-    return calendarRoutes(req, res, next);
-  }
-  // Alias konseptual SRS Bab 32: /api/jadwal → jadwal mahasiswa (/saya)
-  if (req.path === '/jadwal' || req.path === '/jadwal/saya') {
-    req.url = '/saya';
-    return jadwalRoutes(req, res, next);
-  }
-  if (req.path === '/dashboard') {
-    req.url = '/dashboard';
-    return portalRoutes(req, res, next);
-  }
-  if (req.path.startsWith('/portal')) {
-    req.url = req.url.replace('/portal', '') || '/';
-    return portalRoutes(req, res, next);
-  }
-  next();
-});
+// === Modul Inti SPADA LMS (flat /api paths per SRS Bab 21) ===
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/admin/users', usersRoutes);
+app.use('/api/admin/audit-logs', auditLogRoutes);
 
 // 404 Handler untuk rute tak terdefinisi
 app.use((req, res) => {

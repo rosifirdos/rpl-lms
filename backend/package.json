@@ -1,7 +1,7 @@
 {
   "name": "rpl-lms-backend",
   "version": "1.0.0",
-  "description": "Backend API untuk Sistem Akademik Kampus Terintegrasi (Portal, SIA, SPADA, PMB)",
+  "description": "Backend API untuk SPADA LMS — Sistem Pembelajaran Daring Universitas PGRI Semarang",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
@@ -12,8 +12,7 @@
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
     "db:studio": "prisma studio",
-    "prisma:generate": "prisma generate",
-    "docs:check": "node scripts/check-openapi-coverage.mjs"
+    "prisma:generate": "prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
