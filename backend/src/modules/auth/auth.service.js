@@ -12,20 +12,32 @@ import { AuditLogService } from '../audit-log/audit-log.service.js';
 
 export class AuthService {
   /**
-   * Autentikasi Pengguna (Login)
+   * Autentikasi Pengguna (Login — FR-001)
+   * Mendukung multi-kredensial: username, email, NIM (mahasiswa), NIDN/NIP (dosen)
    */
   static async login({ identifier, password, ipAddress, userAgent }) {
     const user = await prisma.user.findFirst({
       where: {
-        OR: [{ username: identifier }, { email: identifier }],
+        OR: [
+          { username: identifier },
+          { email: identifier },
+          { mahasiswa: { nim: identifier } },
+          { dosen: { OR: [{ nidn: identifier }, { nip: identifier }] } },
+        ],
       },
       include: {
-        profile: true,
+        profile: {
+          include: {
+            avatar_file: true,
+          },
+        },
+        mahasiswa: true,
+        dosen: true,
       },
     });
 
     if (!user) {
-      throw new AppError('Kredensial tidak valid: username/email atau password salah', 401);
+      throw new AppError('Kredensial tidak valid: username/email/NIM/NIDN atau password salah', 401);
     }
 
     if (user.status !== 'ACTIVE') {
@@ -101,6 +113,8 @@ export class AuthService {
         status: user.status,
         role: user.role,
         profile: user.profile || null,
+        mahasiswa: user.mahasiswa || null,
+        dosen: user.dosen || null,
       },
     };
   }
@@ -225,12 +239,17 @@ export class AuthService {
   }
 
   /**
-   * Lupa Kata Sandi (FR-015)
+   * Lupa Kata Sandi (FR-003)
    */
   static async forgotPassword({ identifier, ipAddress, userAgent }) {
     const user = await prisma.user.findFirst({
       where: {
-        OR: [{ username: identifier }, { email: identifier }],
+        OR: [
+          { username: identifier },
+          { email: identifier },
+          { mahasiswa: { nim: identifier } },
+          { dosen: { OR: [{ nidn: identifier }, { nip: identifier }] } },
+        ],
       },
     });
 

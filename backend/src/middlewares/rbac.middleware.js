@@ -9,7 +9,7 @@ import { apiResponse } from '../utils/apiResponse.js';
  * @param  {...string} allowedRoles  Daftar role yang diizinkan
  */
 export function requireRole(...allowedRoles) {
-  const flattenedRoles = allowedRoles.flat();
+  const flattenedRoles = allowedRoles.flat().map((r) => String(r).toLowerCase());
 
   return (req, res, next) => {
     if (!req.user) {
@@ -19,7 +19,7 @@ export function requireRole(...allowedRoles) {
       });
     }
 
-    const userRole = req.user.role;
+    const userRole = String(req.user.role || '').toLowerCase();
 
     if (!flattenedRoles.includes(userRole)) {
       return apiResponse.error(res, {

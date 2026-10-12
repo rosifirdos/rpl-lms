@@ -13,6 +13,20 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
+  // Multer Errors (Upload Avatar / Dokumen)
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return apiResponse.error(res, {
+        statusCode: 400,
+        message: 'Ukuran berkas melebihi batas maksimal yang diizinkan (maksimal 2MB)',
+      });
+    }
+    return apiResponse.error(res, {
+      statusCode: 400,
+      message: `Kesalahan unggah berkas: ${err.message}`,
+    });
+  }
+
   // Zod Validation Error
   if (err instanceof ZodError) {
     const formattedErrors = err.errors.map((e) => ({

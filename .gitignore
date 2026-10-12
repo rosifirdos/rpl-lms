@@ -10,4 +10,6 @@ backend/data/
 
 # Private file storage (BR-009) — berkas upload tidak boleh di-commit
 backend/storage/private/*
+backend/storage/private/**/*
+!backend/storage/private/**/.gitkeep
 !backend/storage/private/.gitkeep
