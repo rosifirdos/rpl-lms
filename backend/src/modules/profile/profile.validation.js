@@ -18,3 +18,45 @@ export const updateProfileSchema = z.object({
     .optional()
     .nullable(),
 });
+
+export const changeProfilePasswordSchema = z
+  .object({
+    oldPassword: z.string().optional(),
+    old_password: z.string().optional(),
+    newPassword: z.string().optional(),
+    new_password: z.string().optional(),
+    confirmPassword: z.string().optional(),
+    confirm_password: z.string().optional(),
+  })
+  .refine((data) => data.oldPassword || data.old_password, {
+    message: 'Kata sandi lama wajib diisi',
+    path: ['oldPassword'],
+  })
+  .refine(
+    (data) => {
+      const np = data.newPassword || data.new_password;
+      return typeof np === 'string' && np.length >= 8;
+    },
+    {
+      message: 'Kata sandi baru minimal 8 karakter',
+      path: ['newPassword'],
+    }
+  )
+  .refine(
+    (data) => {
+      const np = data.newPassword || data.new_password;
+      const cp = data.confirmPassword || data.confirm_password;
+      if (cp !== undefined) {
+        return np === cp;
+      }
+      return true;
+    },
+    {
+      message: 'Konfirmasi kata sandi baru tidak cocok dengan kata sandi baru',
+      path: ['confirmPassword'],
+    }
+  )
+  .transform((data) => ({
+    oldPassword: data.oldPassword || data.old_password,
+    newPassword: data.newPassword || data.new_password,
+  }));
