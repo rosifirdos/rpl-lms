@@ -1,4 +1,4 @@
-import prisma from '../../config/prisma.js';
+﻿import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
 import { hashPassword, validatePasswordComplexity } from '../../utils/password.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
@@ -8,7 +8,6 @@ import { ROLES } from '../../constants/roles.js';
  * Layanan Manajemen Pengguna SPADA LMS (FR-044 s/d FR-048)
  *
  * Revised: role adalah enum tunggal pada User (ADMIN/DOSEN/MAHASISWA).
- * Tidak ada tabel Role/Permission, tidak ada CalonMahasiswa/DosenWali.
  */
 export class UsersService {
   /**
@@ -78,18 +77,10 @@ export class UsersService {
       throw new AppError('Pengguna baru saja dibuat namun gagal diambil ulang', 500);
     }
 
-    // Catat jejak audit pembuatan akun (SRS Bab 35)
-    await AuditLogService.record({
-      userId: adminId,
-      action: 'CREATE_USER',
-      entity: 'users',
-      entityId: createdUser.id,
-      newValues: {
-        username: createdUser.username,
-        email: createdUser.email,
-        role: createdUser.role,
-        status: createdUser.status,
-      },
+    // Catat jejak audit pembuatan akun (SRS Bab 35, FR-044)
+    await AuditLogService.logUserCreation({
+      adminId,
+      newUser: createdUser,
       ipAddress,
       userAgent,
     });
@@ -207,11 +198,9 @@ export class UsersService {
       },
     });
 
-    await AuditLogService.record({
-      userId: adminId,
-      action: 'UPDATE_USER',
-      entity: 'users',
-      entityId: targetUserId,
+    await AuditLogService.logUserUpdate({
+      adminId,
+      targetUserId,
       oldValues,
       newValues,
       ipAddress,
@@ -219,6 +208,49 @@ export class UsersService {
     });
 
     return updatedUser;
+  }
+
+  /**
+   * Reset kata sandi akun pengguna oleh Admin (FR-044, SRS Bab 35)
+   */
+  static async resetPassword({ adminId, targetUserId, newPassword, ipAddress, userAgent }) {
+    if (targetUserId === adminId) {
+      throw new AppError('Gunakan endpoint profil mandiri untuk mengganti kata sandi sendiri', 400);
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!user) {
+      throw new AppError('Pengguna tidak ditemukan', 404);
+    }
+
+    const password_hash = await hashPassword(newPassword);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: targetUserId },
+        data: { password_hash },
+      });
+
+      // Cabut seluruh refresh token pengguna untuk memaksa re-login
+      await tx.refreshToken.updateMany({
+        where: { user_id: targetUserId, revoked_at: null },
+        data: { revoked_at: new Date() },
+      });
+    });
+
+    // Catat ke AuditLog
+    await AuditLogService.logPasswordReset({
+      adminId,
+      targetUserId,
+      targetUsername: user.username,
+      ipAddress,
+      userAgent,
+    });
+
+    return {
+      userId: targetUserId,
+      username: user.username,
+    };
   }
 
   /**

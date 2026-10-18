@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 import { ALL_ROLES } from '../../constants/roles.js';
 
 /**
@@ -68,6 +68,20 @@ export const updateUserStatusSchema = {
       message: 'Status harus ACTIVE, INACTIVE, atau SUSPENDED',
     }),
     reason: z.string().trim().optional(),
+  }),
+};
+
+/**
+ * Skema reset password pengguna oleh Admin (FR-044, SRS Bab 35)
+ */
+export const resetPasswordSchema = {
+  params: z.object({
+    id: z.string().uuid({ message: 'Format ID pengguna harus UUID valid' }),
+  }),
+  body: z.object({
+    new_password: z
+      .string({ required_error: 'Kata sandi baru wajib diisi' })
+      .min(8, { message: 'Kata sandi baru minimal 8 karakter' }),
   }),
 };
 
