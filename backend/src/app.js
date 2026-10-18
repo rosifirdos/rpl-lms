@@ -1,9 +1,10 @@
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { ENV } from './config/env.js';
 import { apiResponse } from './utils/apiResponse.js';
+import { AppError } from './utils/errors.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
 import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
@@ -28,11 +29,11 @@ app.use(
       if (!origin || ENV.CORS_ORIGIN.includes(origin) || ENV.CORS_ORIGIN.includes('*')) {
         return callback(null, true);
       }
-      return callback(new Error('Akses diblokir oleh kebijakan CORS'));
+      return callback(new AppError('Akses diblokir oleh kebijakan CORS', 403));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Enforce-Rate-Limit'],
   })
 );
 
@@ -87,6 +88,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/admin/users', usersRoutes);
 app.use('/api/admin/audit-logs', auditLogRoutes);
+app.use('/api/audit-logs', auditLogRoutes); // Alias kemudahan akses
 
 // 404 Handler untuk rute tak terdefinisi
 app.use((req, res) => {

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { UsersController } from './users.controller.js';
 import { authenticateToken } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/rbac.middleware.js';
@@ -8,6 +8,7 @@ import {
   createUserSchema,
   updateUserSchema,
   updateUserStatusSchema,
+  resetPasswordSchema,
   userListQuerySchema,
   userIdParamSchema,
 } from './users.validation.js';
@@ -60,12 +61,22 @@ router.put(
 
 /**
  * PATCH /api/admin/users/:id/status
- * Mengubah status akun (ACTIVE, INACTIVE, SUSPENDED)
+ * Mengubah status akun (ACTIVE, INACTIVE, SUSPENDED) — FR-044
  */
 router.patch(
   '/:id/status',
   validate(updateUserStatusSchema),
   UsersController.updateStatus
+);
+
+/**
+ * PUT /api/admin/users/:id/reset-password
+ * Reset kata sandi pengguna oleh Admin (FR-044, SRS Bab 35)
+ */
+router.put(
+  '/:id/reset-password',
+  validate(resetPasswordSchema),
+  UsersController.resetPassword
 );
 
 export default router;

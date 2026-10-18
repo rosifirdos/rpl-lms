@@ -1,4 +1,4 @@
-import { UsersService } from './users.service.js';
+﻿import { UsersService } from './users.service.js';
 import { apiResponse } from '../../utils/apiResponse.js';
 import { extractClientInfo } from '../../middlewares/audit.middleware.js';
 
@@ -95,6 +95,30 @@ export class UsersController {
       return apiResponse.success(res, {
         statusCode: 200,
         message: `Status pengguna berhasil diubah menjadi ${status}`,
+        data: result,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  static async resetPassword(req, res, next) {
+    try {
+      const targetUserId = req.params.id;
+      const adminId = req.user.id;
+      const { ipAddress, userAgent } = extractClientInfo(req);
+
+      const result = await UsersService.resetPassword({
+        adminId,
+        targetUserId,
+        newPassword: req.body.new_password,
+        ipAddress,
+        userAgent,
+      });
+
+      return apiResponse.success(res, {
+        statusCode: 200,
+        message: 'Kata sandi pengguna berhasil direset oleh Admin',
         data: result,
       });
     } catch (error) {

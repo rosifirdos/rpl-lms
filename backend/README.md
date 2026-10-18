@@ -1,4 +1,4 @@
-# Backend API: SPADA (Learning Management System)
+﻿# Backend API: SPADA (Learning Management System)
 
 Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan PostgreSQL untuk **SPADA LMS — Universitas PGRI Semarang**.
 
@@ -28,7 +28,7 @@ Mengacu pada dokumen [SRS.md](../SRS.md) hasil revisi (fokus eksklusif modul SPA
 
 ## Struktur Modul
 
-Modul usang telah dibersihkan (`krs`, `jadwal`, `calendar`, `master`, `portal`, `roles`, `permissions`). Berikut yang tersisa dan masih relevan dengan SRS baru:
+Modul usang telah dibersihkan (`krs`, `jadwal`, `calendar`, `master`, `portal`, `roles`, `permissions`). Berikut modul yang relevan dengan SRS baru:
 
 ```
 backend/
@@ -46,9 +46,9 @@ backend/
 │   ├── utils/                 # apiResponse, errors, password, token, storage
 │   └── modules/
 │       ├── auth/              # login, refresh, logout, forgot-password, change-password
-│       ├── profile/           # getProfile, updateProfile
-│       ├── users/             # CRUD manajemen akun (Admin only)
-│       └── audit-log/         # query jejak audit (Admin only)
+│       ├── profile/           # getProfile, updateProfile, avatar upload, password
+│       ├── users/             # CRUD manajemen akun, status, reset password (Admin only)
+│       └── audit-log/         # query jejak audit, inspeksi JSON diff (Admin only)
 └── storage/private/           # Penyimpanan berkas terproteksi (BR-009)
     ├── avatars/               #   avatar (FR-007: .jpg/.png, maks 2MB)
     ├── materials/             #   materi (BR-007: .pdf/.docx/.xlsx/.zip, maks 10MB)
@@ -68,13 +68,18 @@ backend/
 | `PUT` | `/api/auth/change-password` | Ganti kata sandi (verifikasi sandi lama) | Terotentikasi |
 | `GET` | `/api/profile` | Ambil data profil sendiri | Terotentikasi |
 | `PUT` | `/api/profile` | Perbarui kontak & bio profil | Terotentikasi |
-| `GET` | `/api/admin/users` | Daftar akun pengguna | Admin |
+| `POST` | `/api/profile/avatar` | Unggah/ganti foto profil (.jpg/.png, maks 2MB) | Terotentikasi |
+| `GET` | `/api/profile/avatar` | Stream foto profil privat | Terotentikasi |
+| `PUT` | `/api/profile/password` | Ganti password profil mandiri | Terotentikasi |
+| `GET` | `/api/admin/users` | Daftar akun pengguna (filter role, status, pencarian) | Admin |
 | `POST` | `/api/admin/users` | Buat akun baru (FR-044) | Admin |
 | `GET` | `/api/admin/users/:id` | Detail akun pengguna | Admin |
 | `PUT` | `/api/admin/users/:id` | Ubah data akun (termasuk role) | Admin |
 | `PATCH` | `/api/admin/users/:id/status` | Ubah status akun (`ACTIVE`/`INACTIVE`/`SUSPENDED`) | Admin |
-| `GET` | `/api/admin/audit-logs` | Riwayat jejak audit dengan filter (FR-052) | Admin |
-| `GET` | `/api/admin/audit-logs/:id` | Detail log (old_values vs new_values) | Admin |
+| `PUT` | `/api/admin/users/:id/reset-password` | Reset kata sandi pengguna oleh Admin (FR-044, SRS Bab 35) | Admin |
+| `GET` | `/api/admin/audit-logs` | Riwayat jejak audit dengan filter komprehensif & paginasi (FR-052) | Admin |
+| `GET` | `/api/admin/audit-logs/:id` | Detail log audit (old_values vs new_values) | Admin |
+| `GET` | `/api/audit-logs` | Alias flat endpoint jejak audit | Admin |
 
 ## Skema Database (Prisma)
 
@@ -108,10 +113,11 @@ npm run db:migrate      # Eksekusi migrasi awal (init_spada_mvp1)
 npm run db:seed         # Isi akun pengguna & master awal
 ```
 
-### 3. Menjalankan Server
+### 3. Menjalankan Server & Pengujian
 ```bash
 npm run dev             # Mode development (nodemon)
 npm start               # Mode produksi
+npm test                # Menjalankan seluruh pengujian otomatis (57 test, Fase 2 & Fase 3)
 ```
 
 ### 4. Database Alternatif (Embedded Postgres)
@@ -136,21 +142,26 @@ Seeder juga membuat 5 master mata kuliah (`TIF101`–`TIF105`) dan 2 kelas perku
 
 ## Status Pengerjaan Backend
 
-Backend lama yang mengacu pada SRS sebelum revisi **sudah dibersihkan**. Yang tersisa saat ini adalah fondasi yang masih relevan dengan SRS baru:
-
-- ✅ **Fase 1 selesai (skema & setup):** `schema.prisma` (10 model), `seed.js` (1 Admin, 3 Dosen, 10 Mahasiswa, 5 Mata Kuliah, 2 Kelas), konstanta role lowercase, konfigurasi storage (BR-009), utilitas validasi berkas, Prisma Client teregenerasi.
-- ✅ **Dipertahankan:** Autentikasi (login/refresh/logout/forgot/change password), Profil, Manajemen User (Admin), Audit Log, middleware RBAC inti, konfigurasi, dan utilitas.
-- 🗑️ **Dihapus:** Modul KRS manual, Jadwal, Kalender, seluruh Master Data SIA (Fakultas, Prodi, Kurikulum, Mata Kuliah, Gedung, Ruangan, Semester, Tahun Akademik), Portal gateway, modul Roles/Permissions, migrasi lama, `docs/openapi.yaml`, dan skrip coverage.
-- ⚠️ **Catatan:** Test suite integrasi lama (`tests/phase2/3/4/6.test.js`) ikut dihapus karena seluruhnya menguji sistem yang sudah dihapus (8 role lama, endpoint `/api/v1/master/*`, permission `portal:view`/`calendar:view`).
+- ✅ **Fase 1: Setup Lingkungan & Skema Database (Selesai)**
+  - `schema.prisma` (10 model), migrasi awal `init_spada_mvp1`, seeder idempoten, konfigurasi storage berkas privat (BR-009).
+- ✅ **Fase 2: Autentikasi, Profil & RBAC Guard (Selesai — 24 test)**
+  - Multi-credential login (username/email/NIM/NIDN/NIP), penolakan akun INACTIVE/SUSPENDED, refresh token & revocation, RBAC guard, modul profil mandiri, unggah avatar privat (2MB limit).
+- ✅ **Fase 3: Layanan Audit Trail Engine & Keamanan Server (Selesai — 33 test)**
+  - Layanan terpusat `AuditLogService` dengan pencatatan mutasi terstruktur (`record`, `findAll`, `findById`, structured helpers).
+  - Integrasi pencatatan audit pada pembuatan akun (`CREATE_USER`), pengubahan status pengguna (`UPDATE_USER_STATUS`), pembaruan profil (`UPDATE_USER`), dan reset kata sandi oleh Admin (`RESET_PASSWORD`).
+  - Endpoint peninjau jejak audit untuk Admin: `GET /api/admin/audit-logs` (filter tanggal, aksi, entitas, user, search, sorting, pagination) dan `GET /api/admin/audit-logs/:id` (detail JSON diff).
+  - Endpoint reset password Admin: `PUT /api/admin/users/:id/reset-password`.
+  - HTTP Security Hardening: Helmet security headers, CORS terproteksi dengan validasi origin ketat, general & auth rate limiting (`express-rate-limit`).
+  - Total pengujian otomatis: **57 test (100% lulus)**.
 
 ### Modul SRS yang **belum diimplementasikan**
 
-Sesuai prioritas MVP (SRS Bab 27), modul berikut belum dibangun dan menjadi pekerjaan selanjutnya:
+Sesuai prioritas MVP (SRS Bab 27), modul berikut menjadi tahapan selanjutnya:
 
 | MVP | Modul | Entitas SRS |
 | --- | --- | --- |
-| **MVP 1** | Master Mata Kuliah & Kelas, Penugasan Dosen, Enrollment (FR-044 s.d. FR-048) | `Course`, `Class`, `Enrollment` |
-| **MVP 2** | Ruang Kelas 16 Pertemuan, Materi, Presensi Digital (FR-013 s.d. FR-015, FR-023 s.d. FR-024, FR-030 s.d. FR-031, FR-036 s.d. FR-039) | `Meeting`, `Material`, `Attendance` |
-| **MVP 3** | Tugas, Validasi File, Submission, Penilaian Skor 0–100 (FR-016 s.d. FR-022, FR-032 s.d. FR-035, FR-053 s.d. FR-054) | `Assignment`, `Submission` |
-| **MVP 4** | Timeline Pembelajaran, Kuis, Notifikasi (FR-009 s.d. FR-012, FR-025, FR-040 s.d. FR-041, FR-057) | `Quiz`, `Notification` |
-| **MVP 5** | UTS/UAS + Gatekeeping Presensi, Rekap Nilai, Audit Lanjut (FR-026 s.d. FR-027, FR-042 s.d. FR-043, FR-055 s.d. FR-056, FR-058) | exam gate, grade recap |
+| **MVP 1 (Fase 4–5)** | Master Data Akademik (Course, Class), Direct Enrollment & Dasbor Kontekstual | `Course`, `Class`, `Enrollment` |
+| **MVP 2** | Ruang Kelas 16 Pertemuan, Materi, Presensi Digital | `Meeting`, `Material`, `Attendance` |
+| **MVP 3** | Tugas, Validasi File, Submission, Penilaian Skor 0–100 | `Assignment`, `Submission` |
+| **MVP 4** | Timeline Pembelajaran, Kuis, Notifikasi | `Quiz`, `Notification` |
+| **MVP 5** | UTS/UAS + Gatekeeping Presensi, Rekap Nilai, Audit Lanjut | exam gate, grade recap |
