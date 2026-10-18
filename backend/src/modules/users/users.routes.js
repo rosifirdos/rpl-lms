@@ -3,6 +3,7 @@ import { UsersController } from './users.controller.js';
 import { authenticateToken } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/rbac.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
+import { adminOperationsLimiter } from '../../middlewares/rateLimit.middleware.js';
 import { ROLES } from '../../constants/roles.js';
 import {
   createUserSchema,
@@ -10,6 +11,7 @@ import {
   updateUserStatusSchema,
   userListQuerySchema,
   userIdParamSchema,
+  resetPasswordSchema,
 } from './users.validation.js';
 
 const router = Router();
@@ -34,6 +36,7 @@ router.get(
  */
 router.post(
   '/',
+  adminOperationsLimiter,
   validate(createUserSchema),
   UsersController.createUser
 );
@@ -54,6 +57,7 @@ router.get(
  */
 router.put(
   '/:id',
+  adminOperationsLimiter,
   validate(updateUserSchema),
   UsersController.updateUser
 );
@@ -64,8 +68,20 @@ router.put(
  */
 router.patch(
   '/:id/status',
+  adminOperationsLimiter,
   validate(updateUserStatusSchema),
   UsersController.updateStatus
+);
+
+/**
+ * PUT /api/admin/users/:id/reset-password
+ * Reset kata sandi pengguna oleh Admin (FR-044)
+ */
+router.put(
+  '/:id/reset-password',
+  adminOperationsLimiter,
+  validate(resetPasswordSchema),
+  UsersController.resetPassword
 );
 
 export default router;

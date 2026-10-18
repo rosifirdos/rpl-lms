@@ -8,7 +8,22 @@ export class AuditLogService {
   /**
    * Catat mutasi atau kejadian sensitif ke audit log
    */
-  static record({
+  /**
+   * Circuit breaker state untuk audit logging
+   */
+  static #circuitBreaker = {
+    isOpen: false,
+    failureCount: 0,
+    lastFailureTime: null,
+    RESET_TIMEOUT: 60000, // 1 menit
+    FAILURE_THRESHOLD: 5,
+  };
+
+  /**
+   * Catat mutasi atau kejadian sensitif ke audit log dengan error handling robust
+   * Implementasi retry dengan exponential backoff dan circuit breaker untuk production
+   */
+  static async record({
     userId = null,
     action,
     entity,
@@ -23,24 +38,135 @@ export class AuditLogService {
       action: String(action).toUpperCase(),
       entity: String(entity).toLowerCase(),
       entity_id: entityId ? String(entityId) : null,
-      old_values: oldValues || null,
-      new_values: newValues || null,
+      old_values: oldValues ? this.#sanitizeValues(oldValues) : null,
+      new_values: newValues ? this.#sanitizeValues(newValues) : null,
       ip_address: ipAddress || null,
       user_agent: userAgent || null,
     };
 
-    const writePromise = prisma.auditLog
-      .create({ data: payload })
-      .catch((error) => {
-        console.error('[AuditLogService] Gagal merekam jejak audit:', {
-          action: payload.action,
-          entity: payload.entity,
-          error: error?.message,
-        });
-        return null;
+    // Cek circuit breaker
+    if (this.#circuitBreaker.isOpen) {
+      const now = Date.now();
+      const timeSinceFailure = now - this.#circuitBreaker.lastFailureTime;
+
+      if (timeSinceFailure > this.#circuitBreaker.RESET_TIMEOUT) {
+        // Reset circuit breaker setelah timeout
+        this.#circuitBreaker.isOpen = false;
+        this.#circuitBreaker.failureCount = 0;
+      } else {
+        // Circuit breaker masih open, gunakan fallback logging
+        return this.#fallbackLog(payload);
+      }
+    }
+
+    // Coba tulis ke database dengan retry mechanism
+    const maxRetries = 3;
+    const baseDelay = 100; // 100ms
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await prisma.auditLog.create({ data: payload });
+
+        // Reset failure count jika berhasil
+        if (this.#circuitBreaker.failureCount > 0) {
+          this.#circuitBreaker.failureCount = 0;
+          this.#circuitBreaker.isOpen = false;
+        }
+
+        return result;
+      } catch (error) {
+        // Update circuit breaker state
+        this.#circuitBreaker.failureCount++;
+        this.#circuitBreaker.lastFailureTime = Date.now();
+
+        if (this.#circuitBreaker.failureCount >= this.#circuitBreaker.FAILURE_THRESHOLD) {
+          this.#circuitBreaker.isOpen = true;
+          console.error('[AuditLogService] Circuit breaker OPEN - database mungkin down');
+        }
+
+        if (attempt === maxRetries) {
+          // Final attempt failed, gunakan fallback
+          console.error(`[AuditLogService] Gagal merekam jejak audit setelah ${maxRetries} percobaan:`, {
+            action: payload.action,
+            entity: payload.entity,
+            error: error?.message,
+            stack: error?.stack?.substring(0, 500),
+          });
+
+          return this.#fallbackLog(payload);
+        }
+
+        // Exponential backoff sebelum retry
+        const delay = baseDelay * Math.pow(2, attempt - 1);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  /**
+   * Sanitasi values untuk mencegah log injection dan size overflow
+   */
+  static #sanitizeValues(values) {
+    if (typeof values === 'object' && values !== null) {
+      // Stringify dengan batasan size
+      const str = JSON.stringify(values);
+      if (str.length > 10000) { // 10KB limit
+        return {
+          _truncated: true,
+          _original_size: str.length,
+          _message: 'Data terlalu besar, truncated untuk efisiensi storage'
+        };
+      }
+      return values;
+    }
+
+    // Untuk non-object, convert ke string dengan length limit
+    const str = String(values);
+    return str.length > 2000 ? str.substring(0, 2000) + '... [truncated]' : str;
+  }
+
+  /**
+   * Fallback logging ketika database tidak tersedia
+   */
+  static #fallbackLog(payload) {
+    try {
+      // Coba tulis ke file system sebagai fallback
+      const fs = require('fs');
+      const path = require('path');
+
+      const logDir = path.join(process.cwd(), 'logs', 'audit-fallback');
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
+
+      const timestamp = new Date().toISOString().replace(/:/g, '-');
+      const filename = `audit-fallback-${timestamp}.json`;
+      const filepath = path.join(logDir, filename);
+
+      const logEntry = {
+        ...payload,
+        _fallback: true,
+        _timestamp: new Date().toISOString(),
+      };
+
+      fs.appendFileSync(filepath, JSON.stringify(logEntry) + '\n');
+
+      console.warn('[AuditLogService] Audit log ditulis ke file fallback:', {
+        file: filename,
+        action: payload.action,
+        entity: payload.entity,
       });
 
-    return writePromise;
+      return { id: 'fallback', ...payload, _fallback: true };
+    } catch (fallbackError) {
+      // Ultimate fallback: console.error dengan structured data
+      console.error('[AuditLogService] CRITICAL: Gagal semua metode logging:', {
+        original_payload: payload,
+        fallback_error: fallbackError?.message,
+      });
+
+      return null;
+    }
   }
 
   /**

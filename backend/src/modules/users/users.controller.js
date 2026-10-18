@@ -101,4 +101,32 @@ export class UsersController {
       return next(error);
     }
   }
+
+  /**
+   * Reset password pengguna oleh Admin
+   */
+  static async resetPassword(req, res, next) {
+    try {
+      const targetUserId = req.params.id;
+      const adminId = req.user.id;
+      const { newPassword } = req.body;
+      const { ipAddress, userAgent } = extractClientInfo(req);
+
+      const result = await UsersService.resetPassword({
+        adminId,
+        targetUserId,
+        newPassword,
+        ipAddress,
+        userAgent,
+      });
+
+      return apiResponse.success(res, {
+        statusCode: 200,
+        message: 'Password berhasil direset. Pengguna harus login ulang.',
+        data: result,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }

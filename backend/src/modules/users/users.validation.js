@@ -83,3 +83,32 @@ export const userListQuerySchema = {
     search: z.string().trim().optional(),
   }),
 };
+
+/**
+ * Skema reset password oleh Admin (FR-044)
+ */
+export const resetPasswordSchema = {
+  params: z.object({
+    id: z.string().uuid({ message: 'Format ID pengguna harus UUID valid' }),
+  }),
+  body: z.object({
+    newPassword: z
+      .string({ required_error: 'Password baru wajib diisi' })
+      .min(8, { message: 'Password minimal 8 karakter' })
+      .max(100, { message: 'Password maksimal 100 karakter' })
+      .refine((password) => {
+        // Validasi kompleksitas password
+        if (password.length < 8) return false;
+        if (!/[A-Z]/.test(password)) return false; // minimal 1 huruf besar
+        if (!/[a-z]/.test(password)) return false; // minimal 1 huruf kecil
+        if (!/\d/.test(password)) return false;    // minimal 1 angka
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return false; // minimal 1 simbol
+
+        // Cek password umum/tidak aman
+        const commonPasswords = ['password', '12345678', 'qwerty123', 'admin123', 'password123'];
+        return !commonPasswords.includes(password.toLowerCase());
+      }, {
+        message: 'Password harus mengandung minimal 8 karakter dengan kombinasi huruf besar, huruf kecil, angka, dan simbol. Tidak boleh menggunakan password umum.',
+      }),
+  }),
+};

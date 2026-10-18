@@ -10,7 +10,7 @@ import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
-import { generalLimiter, authLimiter } from './middlewares/rateLimit.middleware.js';
+import { generalLimiter, authLimiter, publicApiLimiter } from './middlewares/rateLimit.middleware.js';
 
 const app = express();
 
@@ -81,6 +81,16 @@ app.get('/api', (req, res) => {
 // Proteksi Frekuensi Percobaan Autentikasi (Brute-force protection)
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
+
+// Health Check Endpoint (public, rate limited lebih longgar)
+app.get('/health', publicApiLimiter, (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    service: 'SPADA LMS Backend API',
+    version: '1.0.0',
+  });
+});
 
 // === Modul Inti SPADA LMS (flat /api paths per SRS Bab 21) ===
 app.use('/api/auth', authRoutes);

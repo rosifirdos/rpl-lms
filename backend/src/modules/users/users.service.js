@@ -1,6 +1,6 @@
 import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
-import { hashPassword } from '../../utils/password.js';
+import { hashPassword, validatePasswordComplexity } from '../../utils/password.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
 import { ROLES } from '../../constants/roles.js';
 
@@ -312,5 +312,60 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  /**
+   * Reset kata sandi akun pengguna oleh Admin (FR-044, SRS Bab 35)
+   * Mencakup validasi kompleksitas password dan pencabutan token aktif
+   */
+  static async resetPassword({ adminId, targetUserId, newPassword, ipAddress, userAgent }) {
+    if (targetUserId === adminId) {
+      throw new AppError('Gunakan endpoint profil mandiri untuk mengganti kata sandi sendiri', 400);
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: targetUserId } });
+    if (!user) {
+      throw new AppError('Pengguna tidak ditemukan', 404);
+    }
+
+    // Validasi kompleksitas password
+    const validation = validatePasswordComplexity(newPassword);
+    if (!validation.isValid) {
+      throw new AppError(validation.message, 400);
+    }
+
+    // Hash password baru
+    const password_hash = await hashPassword(newPassword);
+
+    // Eksekusi transaksi atomik: update password + cabut token
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: targetUserId },
+        data: { password_hash },
+      });
+
+      // Cabut seluruh refresh token pengguna untuk memaksa re-login
+      await tx.refreshToken.updateMany({
+        where: { user_id: targetUserId, revoked_at: null },
+        data: { revoked_at: new Date() },
+      });
+    });
+
+    // Catat ke AuditLog
+    await AuditLogService.record({
+      userId: adminId,
+      action: 'RESET_PASSWORD',
+      entity: 'users',
+      entityId: targetUserId,
+      newValues: { password_reset: true, reset_by_admin: true },
+      ipAddress,
+      userAgent,
+    });
+
+    return {
+      userId: targetUserId,
+      username: user.username,
+      message: 'Password berhasil direset. Semua sesi aktif telah dicabut.',
+    };
   }
 }
