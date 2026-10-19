@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Plus+Jakarta+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"surface-bright":"#2d3a4a","on-error":"#690005","on-secondary-fixed":"#001e2c","primary":"#adc6ff","tertiary":"#4edea3","on-primary-container":"#00285d","on-surface":"#d6e4f9","inverse-on-surface":"#243141","tertiary-fixed-dim":"#4edea3","background":"#061423","secondary-fixed-dim":"#7bd0ff","secondary":"#7bd0ff","on-tertiary":"#003824","primary-container":"#4d8eff","on-secondary-fixed-variant":"#004c69","on-tertiary-container":"#00311f","inverse-primary":"#005ac2","on-secondary":"#00354a","on-tertiary-fixed":"#002113","on-primary-fixed-variant":"#004395","error-container":"#93000a","surface-dim":"#061423","secondary-container":"#00a6e0","secondary-fixed":"#c4e7ff","surface-container-highest":"#283646","tertiary-container":"#00a572","error":"#ffb4ab","on-error-container":"#ffdad6","outline-variant":"#424754","on-background":"#d6e4f9","on-tertiary-fixed-variant":"#005236","on-secondary-container":"#00374d","on-primary-fixed":"#001a42","primary-fixed":"#d8e2ff","outline":"#8c909f","surface-tint":"#adc6ff","primary-fixed-dim":"#adc6ff","surface":"#061423","surface-container":"#132030","on-surface-variant":"#c2c6d6","tertiary-fixed":"#6ffbbe","surface-container-high":"#1e2b3b","surface-container-low":"#0f1c2c","surface-container-lowest":"#020f1e","inverse-surface":"#d6e4f9","surface-variant":"#283646","on-primary":"#002e6a"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"gutter":"1.5rem","margin":"2rem","margin-mobile":"1rem","space-md":"1rem","space-xl":"2rem","gutter-mobile":"1rem","space-sm":"0.5rem","space-xs":"0.25rem","space-lg":"1.5rem"},fontFamily:{"headline-md":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-md":["Inter"],"display-hero":["Plus Jakarta Sans"],"label-sm":["Inter"],"display-hero-mobile":["Plus Jakarta Sans"],"body-lg":["Inter"],"body-sm":["Inter"],"title-md":["Plus Jakarta Sans"],"label-md":["Inter"],"caption":["Inter"],"title-lg":["Plus Jakarta Sans"]},fontSize:{"headline-md":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"600"}],"headline-lg":["30px",{lineHeight:"38px",letterSpacing:"-0.01em",fontWeight:"700"}],"body-md":["14px",{lineHeight:"22px",fontWeight:"400"}],"display-hero":["40px",{lineHeight:"48px",letterSpacing:"-0.02em",fontWeight:"800"}],"label-sm":["12px",{lineHeight:"16px",letterSpacing:"0.02em",fontWeight:"600"}],"display-hero-mobile":["28px",{lineHeight:"36px",letterSpacing:"-0.01em",fontWeight:"700"}],"body-lg":["16px",{lineHeight:"26px",fontWeight:"400"}],"body-sm":["12px",{lineHeight:"18px",fontWeight:"400"}],"title-md":["16px",{lineHeight:"24px",fontWeight:"600"}],"label-md":["14px",{lineHeight:"20px",fontWeight:"500"}],"caption":["11px",{lineHeight:"14px",fontWeight:"500"}],"title-lg":["20px",{lineHeight:"28px",fontWeight:"600"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 h-16 bg-surface-container/90 backdrop-blur-xl z-50 shadow-[0_1px_8px_rgba(0,0,0,0.3)]"><div class="w-full h-16 px-gutter flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><button aria-label="Toggle Sidebar" class="p-space-xs rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" type="button"><span class="material-symbols-outlined text-[24px]">menu</span></button><div class="flex items-center gap-space-sm"><div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container"><span class="material-symbols-outlined text-[24px]">school</span></div><div class="flex flex-col"><span class="font-title-md text-title-md text-on-surface tracking-tight leading-tight">SPADA UPGRIS</span><span class="font-caption text-caption text-on-surface-variant leading-none">Sistem Pembelajaran Daring</span></div></div><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm"><span class="material-symbols-outlined text-[14px]">circle</span><span>Semester Ganjil 2026/2027</span></div></div><div class="hidden md:flex flex-1 max-w-md mx-space-md items-center"><div class="w-full relative flex items-center bg-surface-container-low rounded-lg px-space-md py-space-xs focus-within:ring-1 focus-within:ring-primary"><span class="material-symbols-outlined text-outline mr-space-sm text-[20px]">search</span><input class="w-full bg-transparent font-body-sm text-body-sm text-on-surface placeholder-outline focus:outline-none" placeholder="Cari mata kuliah, materi, atau tugas..." type="text"/><kbd class="hidden sm:inline-block px-space-xs py-0.5 rounded bg-surface-container font-caption text-caption text-on-surface-variant">Ctrl+K</kbd></div></div><div class="flex items-center gap-space-md"><div class="hidden lg:flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm"><span class="material-symbols-outlined text-[16px]">schedule</span><span>Server: 08:30 WIB</span></div><button aria-label="Notifikasi" class="relative p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="hidden sm:flex items-center bg-surface-container-low p-space-xs rounded-lg gap-space-xs"><button class="px-space-sm py-space-xs rounded font-label-sm text-label-sm bg-primary-container text-on-primary-container font-bold" type="button">Mahasiswa</button><button class="px-space-sm py-space-xs rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high" type="button">Dosen</button><button class="px-space-sm py-space-xs rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high" type="button">Admin</button></div><div class="relative flex items-center gap-space-sm pl-space-xs"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden md:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Dimas Arya Pratama</span><span class="font-caption text-caption text-secondary uppercase">Mahasiswa</span></div><button aria-label="Profile Options" class="text-on-surface-variant hover:text-on-surface" type="button"><span class="material-symbols-outlined text-[20px]">keyboard_arrow_down</span></button></div></div></div></header><aside class="fixed left-0 top-16 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="px-gutter py-space-md bg-surface-container-lowest/50 flex flex-col gap-0.5"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-primary text-[18px]">layers</span><span class="font-title-md text-title-md text-on-surface font-bold">SPADA LMS</span></div><span class="font-caption text-caption text-outline uppercase tracking-wider">Team Membangun Negeri</span></div><nav class="flex flex-col px-space-sm py-space-sm gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-bold"><div class="px-space-sm pt-space-sm pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">Menu Utama</div><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="dasbor-mahasiswa" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span>Dasbor</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="kelas-saya" href="#"><span class="material-symbols-outlined text-[20px]">menu_book</span>Kelas Saya</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="panduan-belajar" href="#"><span class="material-symbols-outlined text-[20px]">explore</span>Panduan Belajar</a><div class="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">Akademik</div><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="central-timeline" href="#"><span class="material-symbols-outlined text-[20px]">calendar_today</span>Central Timeline</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="rekap-nilai-dan-presensi" href="#"><span class="material-symbols-outlined text-[20px]">check_circle</span>Rekap Nilai &amp; Presensi</a><div class="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">Menu Dosen</div><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="dasbor-dosen" href="#"><span class="material-symbols-outlined text-[20px]">co_present</span>Kelas Diampu</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="pemeriksaan-tugas" href="#"><span class="material-symbols-outlined text-[20px]">assignment_turned_in</span>Pemeriksaan Tugas</a><div class="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">Administrasi SPADA</div><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="manajemen-pengguna" href="#"><span class="material-symbols-outlined text-[20px]">group</span>Manajemen Pengguna</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="master-mata-kuliah" href="#"><span class="material-symbols-outlined text-[20px]">local_library</span>Master Mata Kuliah</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="pembukaan-kelas" href="#"><span class="material-symbols-outlined text-[20px]">edit_calendar</span>Pembukaan Kelas</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="jejak-audit" href="#"><span class="material-symbols-outlined text-[20px]">security</span>Jejak Audit</a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-label-md text-label-md" data-path="konfigurasi-sistem" href="#"><span class="material-symbols-outlined text-[20px]">settings</span>Konfigurasi Sistem</a></nav></div><div class="p-space-md bg-surface-container-lowest/80 flex flex-col gap-space-sm"><div class="text-center font-caption text-caption text-outline">SPADA UPGRIS v2.4 • Standalone LMS</div><a class="w-full flex items-center justify-center gap-space-xs py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-secondary hover:text-on-surface transition-colors font-label-sm text-label-sm" data-path="bantuan-helpdesk" href="#"><span class="material-symbols-outlined text-[16px]">support_agent</span><span>IT Helpdesk</span></a></div></aside><div class="pl-64"><main class="w-full pt-16 px-gutter bg-background min-h-screen"><div class="flex flex-col w-full pb-space-xl">
+<!-- Dynamic Glow Scrim -->
+<div class="relative w-full">
+<div class="absolute -top-10 left-1/4 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<div class="absolute top-48 right-10 w-80 h-80 bg-secondary-container/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<!-- 1. Breadcrumb -->
+<nav aria-label="Breadcrumb" class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm pt-space-md mb-space-md">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[16px]">home</span>
+<span>Beranda</span>
+</a>
+<span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
+<span class="text-secondary font-semibold">Dasbor Pembelajaran Mahasiswa</span>
+</nav>
+<!-- 2. Greeting Banner -->
+<div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-surface-container-high via-surface-container to-surface-container-low p-space-lg shadow-xl mb-space-lg">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md relative z-10">
+<div class="flex flex-col gap-space-xs max-w-3xl">
+<div class="flex flex-wrap items-center gap-space-xs mb-1">
+<span class="px-2.5 py-0.5 rounded-full bg-primary-container/30 text-primary font-caption text-caption uppercase tracking-wider font-bold">Portal Mahasiswa Terpadu</span>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-tertiary-container/20 text-tertiary font-caption text-caption font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+              Sinkronisasi Terpusat Aktif
+            </span>
+</div>
+<h1 class="font-display-hero text-display-hero text-on-surface tracking-tight">
+            Selamat Datang, <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Ahmad Fauzi!</span>
+</h1>
+<div class="flex flex-wrap items-center gap-x-space-md gap-y-1 text-on-surface-variant font-body-md text-body-md">
+<span class="flex items-center gap-1 text-on-surface font-semibold">
+<span class="material-symbols-outlined text-[18px] text-secondary">badge</span>
+              NIM: 24670001
+            </span>
+<span class="text-outline">•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-outline">school</span>
+              Semester Ganjil 2026/2027
+            </span>
+<span class="text-outline">•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary">pace</span>
+              Waktu Server: <span class="text-on-surface font-mono font-medium">08:30 WIB</span>
+</span>
+</div>
+</div>
+<!-- Academic Date Capsule -->
+<div class="flex items-center gap-space-md bg-surface-container-lowest/70 backdrop-blur-md px-space-md py-space-sm rounded-lg self-start lg:self-center shadow-sm">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">calendar_month</span>
+</div>
+<div class="flex flex-col text-left">
+<span class="font-caption text-caption text-outline uppercase tracking-wider">Kalender Akademik</span>
+<span class="font-title-md text-title-md text-on-surface font-bold">Senin, 13 Oktober 2026</span>
+</div>
+</div>
+</div>
+<!-- Subtle Geometric Corner Accent SVG -->
+<div class="absolute right-0 bottom-0 opacity-10 pointer-events-none">
+<svg fill="none" height="120" viewbox="0 0 240 120" width="240" xmlns="http://www.w3.org/2000/svg">
+<circle class="text-primary" cx="200" cy="120" r="100" stroke="currentColor" stroke-width="2"></circle>
+<circle class="text-secondary" cx="200" cy="120" r="60" stroke="currentColor" stroke-width="2"></circle>
+<path class="text-outline" d="M120 120L200 40" stroke="currentColor" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<!-- 3. Summary Cards (Row of 3 Horizontal Cards) -->
+<section aria-label="Identitas Akademik" class="grid grid-cols-1 md:grid-cols-3 gap-space-md mb-space-lg">
+<!-- Card 1: Program Studi -->
+<div class="flex items-center gap-space-md p-space-md rounded-xl bg-surface-container shadow-md transition-transform duration-200 hover:-translate-y-0.5">
+<div class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-[28px]">school</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-caption text-caption text-outline uppercase tracking-wider font-semibold">Program Studi</span>
+<span class="font-title-lg text-title-lg text-on-surface font-bold truncate">S1 Teknik Informatika</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Fakultas Teknologi Informasi</span>
+</div>
+</div>
+<!-- Card 2: Angkatan -->
+<div class="flex items-center gap-space-md p-space-md rounded-xl bg-surface-container shadow-md transition-transform duration-200 hover:-translate-y-0.5">
+<div class="w-12 h-12 rounded-lg bg-secondary-container/20 flex items-center justify-center text-secondary flex-shrink-0">
+<span class="material-symbols-outlined text-[28px]">date_range</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-caption text-caption text-outline uppercase tracking-wider font-semibold">Tahun Masuk / Angkatan</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-title-lg text-title-lg text-on-surface font-bold">2024</span>
+<span class="font-caption text-caption text-secondary font-medium">Tingkat II</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Mahasiswa Reguler Aktif</span>
+</div>
+</div>
+<!-- Card 3: Status Akun -->
+<div class="flex items-center gap-space-md p-space-md rounded-xl bg-surface-container shadow-md transition-transform duration-200 hover:-translate-y-0.5">
+<div class="w-12 h-12 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary flex-shrink-0">
+<span class="material-symbols-outlined text-[28px]">verified_user</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-caption text-caption text-outline uppercase tracking-wider font-semibold">Status Mahasiswa</span>
+<div class="flex items-center gap-space-xs">
+<span class="px-2 py-0.5 rounded font-label-sm text-label-sm font-bold bg-tertiary-container text-on-tertiary-container">
+              AKTIF
+            </span>
+<span class="flex items-center gap-1 font-caption text-caption text-tertiary">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Terverifikasi
+            </span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">SSO Terpusat &amp; Enrolled SPADA</span>
+</div>
+</div>
+</section>
+<!-- 4. Grid Kelas Perkuliahan Semester Ini -->
+<section aria-labelledby="kelas-heading" class="mb-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-space-sm mb-space-md">
+<div>
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight" id="kelas-heading">
+              Kelas Perkuliahan Semester Ini
+            </h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+            Daftar mata kuliah hasil enrollment terpusat oleh Administrator SPADA
+          </p>
+</div>
+<a class="inline-flex items-center gap-1 font-label-md text-label-md text-secondary hover:text-primary transition-colors" href="#">
+          Lihat Semua KRS <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
+<!-- Card Kelas 1 -->
+<article class="flex flex-col justify-between rounded-xl bg-surface-container p-space-md shadow-lg transition-all duration-300 hover:shadow-2xl hover:bg-surface-container-high group">
+<div class="flex flex-col gap-space-sm">
+<!-- Header Badges -->
+<div class="flex items-center justify-between gap-space-xs">
+<span class="px-2.5 py-1 rounded-md bg-primary-container text-on-primary-container font-label-sm text-label-sm font-bold">
+                TI-A • 3 SKS
+              </span>
+<span class="font-caption text-caption text-outline font-mono">TIF-301</span>
+</div>
+<!-- Subject Title & Lecturer -->
+<div class="mt-1">
+<h3 class="font-title-lg text-title-lg text-on-surface font-bold group-hover:text-primary transition-colors line-clamp-1">
+                Rekayasa Perangkat Lunak
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">person</span>
+                Dr. Awan Rosi, M.Kom.
+              </p>
+</div>
+<!-- Structure & Progress -->
+<div class="bg-surface-container-low p-space-sm rounded-lg mt-space-xs flex flex-col gap-1.5">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">event_available</span>
+                  Pertemuan 4 dari 16
+                </span>
+<span class="text-primary font-bold">68%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-500" style="width: 68%"></div>
+</div>
+<span class="font-caption text-caption text-outline">16 Pertemuan Terstruktur (LMS Sync)</span>
+</div>
+</div>
+<!-- Card Footer Action -->
+<div class="pt-space-md mt-space-sm">
+<a class="w-full inline-flex items-center justify-center gap-space-xs py-2.5 px-space-md rounded-lg bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-md text-label-md font-bold transition-all shadow-md group-hover:shadow-lg" href="#">
+<span>Buka Ruang Kelas</span>
+<span class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
+</a>
+</div>
+</article>
+<!-- Card Kelas 2 -->
+<article class="flex flex-col justify-between rounded-xl bg-surface-container p-space-md shadow-lg transition-all duration-300 hover:shadow-2xl hover:bg-surface-container-high group">
+<div class="flex flex-col gap-space-sm">
+<!-- Header Badges -->
+<div class="flex items-center justify-between gap-space-xs">
+<span class="px-2.5 py-1 rounded-md bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">
+                TI-B • 3 SKS
+              </span>
+<span class="font-caption text-caption text-outline font-mono">TIF-304</span>
+</div>
+<!-- Subject Title & Lecturer -->
+<div class="mt-1">
+<h3 class="font-title-lg text-title-lg text-on-surface font-bold group-hover:text-secondary transition-colors line-clamp-1">
+                Pemrograman Web Lanjut
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">person</span>
+                Ir. Siti Aminah, M.T.
+              </p>
+</div>
+<!-- Structure & Progress -->
+<div class="bg-surface-container-low p-space-sm rounded-lg mt-space-xs flex flex-col gap-1.5">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">event_available</span>
+                  Pertemuan 4 dari 16
+                </span>
+<span class="text-secondary font-bold">82%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-gradient-to-r from-secondary-container to-secondary h-2 rounded-full transition-all duration-500" style="width: 82%"></div>
+</div>
+<span class="font-caption text-caption text-outline">16 Pertemuan Terstruktur (LMS Sync)</span>
+</div>
+</div>
+<!-- Card Footer Action -->
+<div class="pt-space-md mt-space-sm">
+<a class="w-full inline-flex items-center justify-center gap-space-xs py-2.5 px-space-md rounded-lg bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-md text-label-md font-bold transition-all shadow-md group-hover:shadow-lg" href="#">
+<span>Buka Ruang Kelas</span>
+<span class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
+</a>
+</div>
+</article>
+<!-- Card Kelas 3 -->
+<article class="flex flex-col justify-between rounded-xl bg-surface-container p-space-md shadow-lg transition-all duration-300 hover:shadow-2xl hover:bg-surface-container-high group">
+<div class="flex flex-col gap-space-sm">
+<!-- Header Badges -->
+<div class="flex items-center justify-between gap-space-xs">
+<span class="px-2.5 py-1 rounded-md bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm font-bold">
+                TI-A • 2 SKS
+              </span>
+<span class="font-caption text-caption text-outline font-mono">TIF-309</span>
+</div>
+<!-- Subject Title & Lecturer -->
+<div class="mt-1">
+<h3 class="font-title-lg text-title-lg text-on-surface font-bold group-hover:text-tertiary transition-colors line-clamp-1">
+                Basis Data Terdistribusi
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1.5 mt-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">person</span>
+                Budi Santoso, M.Cs.
+              </p>
+</div>
+<!-- Structure & Progress -->
+<div class="bg-surface-container-low p-space-sm rounded-lg mt-space-xs flex flex-col gap-1.5">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-on-surface font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">event_available</span>
+                  Pertemuan 3 dari 16
+                </span>
+<span class="text-tertiary font-bold">54%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
+<div class="bg-gradient-to-r from-tertiary-container to-tertiary h-2 rounded-full transition-all duration-500" style="width: 54%"></div>
+</div>
+<span class="font-caption text-caption text-outline">16 Pertemuan Terstruktur (LMS Sync)</span>
+</div>
+</div>
+<!-- Card Footer Action -->
+<div class="pt-space-md mt-space-sm">
+<a class="w-full inline-flex items-center justify-center gap-space-xs py-2.5 px-space-md rounded-lg bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-md text-label-md font-bold transition-all shadow-md group-hover:shadow-lg" href="#">
+<span>Buka Ruang Kelas</span>
+<span class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
+</a>
+</div>
+</article>
+</div>
+</section>
+<!-- 5. Blue Informative Banner -->
+<section aria-label="Informasi Akademik Penting" class="relative overflow-hidden rounded-xl bg-gradient-to-br from-surface-container-high via-surface-container to-surface-container-low p-space-lg shadow-xl mb-space-lg">
+<div class="flex flex-col md:flex-row items-start gap-space-md relative z-10">
+<!-- Megaphone Glow Icon -->
+<div class="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center text-secondary flex-shrink-0 shadow-inner">
+<span class="material-symbols-outlined text-[28px]">campaign</span>
+</div>
+<div class="flex-1 flex flex-col gap-space-xs">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-caption font-bold bg-secondary/10 text-secondary uppercase tracking-wider">
+              Pemberitahuan Resmi
+            </span>
+<span class="font-caption text-caption text-outline">Diterbitkan 10 Okt 2026</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface font-bold tracking-tight">
+            Pengumuman Jadwal Operasional &amp; Central Timeline Pembelajaran
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed text-justify md:text-left">
+            Periode perkuliahan aktif Semester Ganjil 2026/2027 sedang berlangsung. Batas akhir pengumpulan <strong class="text-on-surface">Tugas 02</strong> dan persiapan Ujian Tengah Semester (UTS - Pertemuan 8) wajib dipantau melalui Central Timeline. Seluruh penyerahan berkas tugas diverifikasi dengan format <code class="px-1.5 py-0.5 rounded bg-surface-container-lowest text-secondary font-mono text-xs font-semibold">.pdf, .docx, .xlsx, .zip</code> maksimal 10MB.
+          </p>
+<!-- Quick Action Buttons -->
+<div class="flex flex-wrap items-center gap-space-sm pt-space-xs mt-1">
+<a class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md font-bold transition-all shadow-md" href="#">
+<span class="material-symbols-outlined text-[18px]">calendar_month</span>
+<span>Lihat Central Timeline Lengkap</span>
+</a>
+<a class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md text-label-md font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px] text-secondary">download</span>
+<span>Unduh Panduan Mahasiswa (PDF)</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. Quick Metrics / Central Timeline Mini Widget -->
+<section aria-labelledby="timeline-widget-heading" class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+<!-- Left Column: Tugas Terdekat (Takes 2 cols on lg) -->
+<div class="lg:col-span-2 rounded-xl bg-surface-container p-space-md shadow-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-[22px]">assignment_late</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold" id="timeline-widget-heading">
+                Tugas Terdekat Menunggu Pengumpulan
+              </h3>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+              2 Tenggat Kritis
+            </span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Assignment Item 1 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-error-container/30 text-error flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">assignment</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">Tugas 02: Analisis Kebutuhan SRS IEEE 830</span>
+<span class="font-caption text-caption text-on-surface-variant truncate">Rekayasa Perangkat Lunak • Dr. Awan Rosi, M.Kom.</span>
+</div>
+</div>
+<div class="flex flex-col items-end flex-shrink-0">
+<span class="font-label-sm text-label-sm text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> Hari Ini, 23:59 WIB
+                </span>
+<span class="font-caption text-caption text-outline">Sisa 15 jam lagi</span>
+</div>
+</div>
+<!-- Assignment Item 2 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-secondary-container/20 text-secondary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-title-md text-title-md text-on-surface font-semibold truncate">Proyek 01: Setup REST API &amp; Middleware JWT</span>
+<span class="font-caption text-caption text-on-surface-variant truncate">Pemrograman Web Lanjut • Ir. Siti Aminah, M.T.</span>
+</div>
+</div>
+<div class="flex flex-col items-end flex-shrink-0">
+<span class="font-label-sm text-label-sm text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> Besok, 18:00 WIB
+                </span>
+<span class="font-caption text-caption text-outline">Sisa 33 jam lagi</span>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-space-sm mt-space-xs text-right">
+<a class="font-label-sm text-label-sm text-primary hover:underline inline-flex items-center gap-1" href="#">
+            Buka Sentral Penugasan LMS <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Right Column: Presensi Hari Ini Mini Widget -->
+<div class="rounded-xl bg-surface-container p-space-md shadow-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[22px]">how_to_reg</span>
+<h3 class="font-title-md text-title-md text-on-surface font-bold">
+                Presensi Kuliah Hari Ini
+              </h3>
+</div>
+<span class="font-caption text-caption text-tertiary font-bold">1 Aktif</span>
+</div>
+<div class="flex flex-col gap-space-sm">
+<!-- Active Attendance Card -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-start justify-between gap-1">
+<div>
+<span class="font-label-md text-label-md text-on-surface font-bold block">Rekayasa Perangkat Lunak</span>
+<span class="font-caption text-caption text-on-surface-variant">Ruang Lab Komputasi 3 &amp; Hybrid</span>
+</div>
+<span class="px-2 py-0.5 rounded text-caption font-bold bg-tertiary-container text-on-tertiary-container">
+                  BUKA
+                </span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-outline pt-1">
+<span>08:00 - 10:30 WIB</span>
+<span class="text-tertiary font-medium">Validasi Geo-Lock OK</span>
+</div>
+<button class="mt-1 w-full py-1.5 rounded-lg bg-tertiary text-on-tertiary font-label-sm text-label-sm font-bold hover:bg-tertiary-fixed transition-colors flex items-center justify-center gap-1 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">touch_app</span>
+<span>Klik Presensi Kehadiran</span>
+</button>
+</div>
+<!-- Inactive Attendance Item -->
+<div class="p-space-sm rounded-lg bg-surface-container-low/60 flex items-center justify-between text-on-surface-variant">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface block font-medium">Basis Data Terdistribusi</span>
+<span class="font-caption text-caption text-outline">13:00 - 15:30 WIB</span>
+</div>
+<span class="font-caption text-caption text-outline bg-surface-container-high px-2 py-0.5 rounded">
+                Belum Dibuka
+              </span>
+</div>
+</div>
+</div>
+<div class="pt-space-sm mt-space-xs flex items-center justify-between font-caption text-caption text-outline">
+<span>Tingkat Presensi: <strong class="text-on-surface font-mono">100%</strong></span>
+<a class="text-secondary hover:underline" href="#">Riwayat Lengkap</a>
+</div>
+</div>
+</section>
+</div>
+</div></main></div></body></html>

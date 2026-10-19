@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="web_dashboard" name="shell-type"/>
+  <title>SPADA UPGRIS – LMS</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+
+  <!-- Base Styles -->
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child  { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#2d3a4a",
+            "on-error": "#690005",
+            "on-secondary-fixed": "#001e2c",
+            "primary": "#adc6ff",
+            "tertiary": "#4edea3",
+            "on-primary-container": "#00285d",
+            "on-surface": "#d6e4f9",
+            "inverse-on-surface": "#243141",
+            "tertiary-fixed-dim": "#4edea3",
+            "background": "#061423",
+            "secondary-fixed-dim": "#7bd0ff",
+            "secondary": "#7bd0ff",
+            "on-tertiary": "#003824",
+            "primary-container": "#4d8eff",
+            "on-secondary-fixed-variant": "#004c69",
+            "on-tertiary-container": "#00311f",
+            "inverse-primary": "#005ac2",
+            "on-secondary": "#00354a",
+            "on-tertiary-fixed": "#002113",
+            "on-primary-fixed-variant": "#004395",
+            "error-container": "#93000a",
+            "surface-dim": "#061423",
+            "secondary-container": "#00a6e0",
+            "secondary-fixed": "#c4e7ff",
+            "surface-container-highest": "#283646",
+            "tertiary-container": "#00a572",
+            "error": "#ffb4ab",
+            "on-error-container": "#ffdad6",
+            "outline-variant": "#424754",
+            "on-background": "#d6e4f9",
+            "on-tertiary-fixed-variant": "#005236",
+            "on-secondary-container": "#00374d",
+            "on-primary-fixed": "#001a42",
+            "primary-fixed": "#d8e2ff",
+            "outline": "#8c909f",
+            "surface-tint": "#adc6ff",
+            "primary-fixed-dim": "#adc6ff",
+            "surface": "#061423",
+            "surface-container": "#132030",
+            "on-surface-variant": "#c2c6d6",
+            "tertiary-fixed": "#6ffbbe",
+            "surface-container-high": "#1e2b3b",
+            "surface-container-low": "#0f1c2c",
+            "surface-container-lowest": "#020f1e",
+            "inverse-surface": "#d6e4f9",
+            "surface-variant": "#283646",
+            "on-primary": "#002e6a"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"
+          },
+          spacing: {
+            "gutter": "1.5rem", "margin": "2rem", "margin-mobile": "1rem",
+            "space-md": "1rem", "space-xl": "2rem", "gutter-mobile": "1rem",
+            "space-sm": "0.5rem", "space-xs": "0.25rem", "space-lg": "1.5rem"
+          },
+          fontFamily: {
+            "headline-md": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"],
+            "body-md": ["Inter"], "display-hero": ["Plus Jakarta Sans"],
+            "label-sm": ["Inter"], "display-hero-mobile": ["Plus Jakarta Sans"],
+            "body-lg": ["Inter"], "body-sm": ["Inter"], "title-md": ["Plus Jakarta Sans"],
+            "label-md": ["Inter"], "caption": ["Inter"], "title-lg": ["Plus Jakarta Sans"]
+          },
+          fontSize: {
+            "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "headline-lg": ["30px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "body-md": ["14px", { lineHeight: "22px", fontWeight: "400" }],
+            "display-hero": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }],
+            "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }],
+            "display-hero-mobile": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "body-lg": ["16px", { lineHeight: "26px", fontWeight: "400" }],
+            "body-sm": ["12px", { lineHeight: "18px", fontWeight: "400" }],
+            "title-md": ["16px", { lineHeight: "24px", fontWeight: "600" }],
+            "label-md": ["14px", { lineHeight: "20px", fontWeight: "500" }],
+            "caption": ["11px", { lineHeight: "14px", fontWeight: "500" }],
+            "title-lg": ["20px", { lineHeight: "28px", fontWeight: "600" }]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React + ReactDOM + Babel (CDN) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-background font-body-md text-on-surface antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    /* ─────────────────────────────────────────
+       Icon Helper
+    ───────────────────────────────────────── */
+    const Icon = ({ name, size = 20, className = "" }) => (
+      <span
+        className={`material-symbols-outlined text-[${size}px] ${className}`}
+        style={{ fontSize: size }}
+      >
+        {name}
+      </span>
+    );
+
+    /* ─────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────── */
+    const Header = ({ activeRole, setActiveRole }) => {
+      const [dropdownOpen, setDropdownOpen] = useState(false);
+      const dropdownRef = useRef(null);
+
+      useEffect(() => {
+        const handler = (e) => {
+          if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+            setDropdownOpen(false);
+          }
+        };
+        window.addEventListener("click", handler);
+        return () => window.removeEventListener("click", handler);
+      }, []);
+
+      return (
+        <header className="fixed top-0 left-0 right-0 h-16 bg-surface-container/90 backdrop-blur-xl z-50 shadow-[0_1px_8px_rgba(0,0,0,0.3)]">
+          <div className="w-full h-16 px-gutter flex items-center justify-between gap-space-md">
+            {/* Left: Logo */}
+            <div className="flex items-center gap-space-md">
+              <button
+                aria-label="Toggle Sidebar"
+                className="p-space-xs rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                type="button"
+              >
+                <Icon name="menu" size={24} />
+              </button>
+              <div className="flex items-center gap-space-sm">
+                <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+                  <Icon name="school" size={24} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-title-md text-title-md text-on-surface tracking-tight leading-tight">SPADA UPGRIS</span>
+                  <span className="font-caption text-caption text-on-surface-variant leading-none">Sistem Pembelajaran Daring</span>
+                </div>
+              </div>
+              <div className="hidden xl:flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm">
+                <Icon name="circle" size={14} />
+                <span>Semester Ganjil 2026/2027</span>
+              </div>
+            </div>
+
+            {/* Center: Search */}
+            <div className="hidden md:flex flex-1 max-w-md mx-space-md items-center">
+              <div className="w-full relative flex items-center bg-surface-container-low rounded-lg px-space-md py-space-xs focus-within:ring-1 focus-within:ring-primary">
+                <Icon name="search" size={20} className="text-outline mr-space-sm" />
+                <input
+                  className="w-full bg-transparent font-body-sm text-body-sm text-on-surface placeholder-outline focus:outline-none"
+                  placeholder="Cari mata kuliah, materi, atau tugas..."
+                  type="text"
+                />
+                <kbd className="hidden sm:inline-block px-space-xs py-0.5 rounded bg-surface-container font-caption text-caption text-on-surface-variant">
+                  Ctrl+K
+                </kbd>
+              </div>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-space-md">
+              {/* Server time */}
+              <div className="hidden lg:flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+                <Icon name="schedule" size={16} />
+                <span>Server: 08:30 WIB</span>
+              </div>
+
+              {/* Notifications */}
+              <button
+                aria-label="Notifikasi"
+                className="relative p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                type="button"
+              >
+                <Icon name="notifications" size={22} />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span>
+              </button>
+
+              {/* Role Switcher */}
+              <div className="hidden sm:flex items-center bg-surface-container-low p-space-xs rounded-lg gap-space-xs">
+                {["Mahasiswa", "Dosen", "Admin"].map((role) => {
+                  const key = role.toLowerCase();
+                  const isActive = activeRole === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setActiveRole(key)}
+                      className={`px-space-sm py-space-xs rounded font-label-sm text-label-sm transition-colors ${
+                        isActive
+                          ? "bg-primary-container text-on-primary-container font-bold"
+                          : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high"
+                      }`}
+                      type="button"
+                    >
+                      {role}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Profile Dropdown */}
+              <div className="relative flex items-center gap-space-sm pl-space-xs" ref={dropdownRef}>
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                  <Icon name="person" size={18} className="text-on-primary" />
+                </div>
+                <div className="hidden md:flex flex-col text-left">
+                  <span className="font-label-md text-label-md text-on-surface leading-tight">Dimas Arya Pratama</span>
+                  <span className="font-caption text-caption text-secondary uppercase">Mahasiswa</span>
+                </div>
+                <button
+                  aria-label="Profile Options"
+                  className="text-on-surface-variant hover:text-on-surface"
+                  type="button"
+                  onClick={() => setDropdownOpen((v) => !v)}
+                >
+                  <Icon name="keyboard_arrow_down" size={20} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-10 mt-space-xs w-64 rounded-xl bg-surface-container-lowest p-space-sm shadow-xl z-30">
+                    <div className="px-space-sm py-space-xs mb-space-xs rounded-lg bg-surface-container-low">
+                      <p className="font-title-md text-title-md text-on-surface">Dimas Arya Pratama</p>
+                      <p className="font-caption text-caption text-secondary">NIM: 22670014 • Informatika</p>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      {[
+                        { icon: "badge", label: "Profil Saya" },
+                        { icon: "key", label: "Ganti Kata Sandi" },
+                        { icon: "tune", label: "Preferensi Notifikasi" },
+                      ].map(({ icon, label }) => (
+                        <a
+                          key={label}
+                          href="#"
+                          className="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-md text-label-md transition-colors"
+                        >
+                          <Icon name={icon} size={18} />
+                          <span>{label}</span>
+                        </a>
+                      ))}
+                      <div className="h-px bg-surface-container-high my-space-xs"></div>
+                      <a
+                        href="#"
+                        className="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-error hover:bg-error-container/20 font-label-md text-label-md transition-colors"
+                      >
+                        <Icon name="logout" size={18} />
+                        <span>Keluar Sesi</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+      );
+    };
+
+    /* ─────────────────────────────────────────
+       SIDEBAR NAV ITEM
+    ───────────────────────────────────────── */
+    const NavItem = ({ icon, label, active, onClick }) => (
+      <a
+        href="#"
+        onClick={(e) => { e.preventDefault(); onClick && onClick(); }}
+        className={`flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors font-label-md text-label-md ${
+          active
+            ? "bg-primary-container text-on-primary-container font-bold"
+            : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+        }`}
+        aria-current={active ? "page" : undefined}
+      >
+        <Icon name={icon} size={20} />
+        {label}
+      </a>
+    );
+
+    const NavSection = ({ title }) => (
+      <div className="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
+        {title}
+      </div>
+    );
+
+    /* ─────────────────────────────────────────
+       SIDEBAR
+    ───────────────────────────────────────── */
+    const Sidebar = ({ activePage, setActivePage }) => {
+      const navItems = [
+        { section: "Menu Utama", items: [
+          { id: "dasbor-mahasiswa", icon: "grid_view", label: "Dasbor" },
+          { id: "kelas-saya", icon: "menu_book", label: "Kelas Saya" },
+          { id: "panduan-belajar", icon: "explore", label: "Panduan Belajar" },
+        ]},
+        { section: "Akademik", items: [
+          { id: "central-timeline", icon: "calendar_today", label: "Central Timeline" },
+          { id: "rekap-nilai-dan-presensi", icon: "check_circle", label: "Rekap Nilai & Presensi" },
+        ]},
+        { section: "Menu Dosen", items: [
+          { id: "dasbor-dosen", icon: "co_present", label: "Kelas Diampu" },
+          { id: "pemeriksaan-tugas", icon: "assignment_turned_in", label: "Pemeriksaan Tugas" },
+        ]},
+        { section: "Administrasi SPADA", items: [
+          { id: "manajemen-pengguna", icon: "group", label: "Manajemen Pengguna" },
+          { id: "master-mata-kuliah", icon: "local_library", label: "Master Mata Kuliah" },
+          { id: "pembukaan-kelas", icon: "edit_calendar", label: "Pembukaan Kelas" },
+          { id: "jejak-audit", icon: "security", label: "Jejak Audit" },
+          { id: "konfigurasi-sistem", icon: "settings", label: "Konfigurasi Sistem" },
+        ]},
+      ];
+
+      return (
+        <aside className="fixed left-0 top-16 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col justify-between overflow-y-auto">
+          <div className="flex flex-col">
+            {/* Brand */}
+            <div className="px-gutter py-space-md bg-surface-container-lowest/50 flex flex-col gap-0.5">
+              <div className="flex items-center gap-space-xs">
+                <Icon name="layers" size={18} className="text-primary" />
+                <span className="font-title-md text-title-md text-on-surface font-bold">SPADA LMS</span>
+              </div>
+              <span className="font-caption text-caption text-outline uppercase tracking-wider">Team Membangun Negeri</span>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex flex-col px-space-sm py-space-sm gap-space-xs">
+              {navItems.map(({ section, items }) => (
+                <React.Fragment key={section}>
+                  <NavSection title={section} />
+                  {items.map(({ id, icon, label }) => (
+                    <NavItem
+                      key={id}
+                      icon={icon}
+                      label={label}
+                      active={activePage === id}
+                      onClick={() => setActivePage(id)}
+                    />
+                  ))}
+                </React.Fragment>
+              ))}
+            </nav>
+          </div>
+
+          {/* Footer */}
+          <div className="p-space-md bg-surface-container-lowest/80 flex flex-col gap-space-sm">
+            <div className="text-center font-caption text-caption text-outline">SPADA UPGRIS v2.4 • Standalone LMS</div>
+            <a
+              href="#"
+              className="w-full flex items-center justify-center gap-space-xs py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-secondary hover:text-on-surface transition-colors font-label-sm text-label-sm"
+            >
+              <Icon name="support_agent" size={16} />
+              <span>IT Helpdesk</span>
+            </a>
+          </div>
+        </aside>
+      );
+    };
+
+    /* ─────────────────────────────────────────
+       STAT CARD
+    ───────────────────────────────────────── */
+    const StatCard = ({ label, value, unit, icon, iconBg, iconColor, footnoteIcon, footnoteText, footnoteColor }) => (
+      <div className="flex flex-col justify-between p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors shadow-sm">
+        <div className="flex items-center justify-between mb-space-sm">
+          <span className="font-label-sm text-label-sm text-outline uppercase tracking-wider">{label}</span>
+          <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center ${iconColor}`}>
+            <Icon name={icon} size={20} />
+          </div>
+        </div>
+        <div className="flex items-baseline gap-space-xs">
+          <span className={`font-headline-lg text-headline-lg font-extrabold ${iconColor}`}>{value}</span>
+          <span className="font-title-md text-title-md text-on-surface-variant">{unit}</span>
+        </div>
+        <div className={`mt-space-sm pt-space-xs flex items-center gap-space-xs ${footnoteColor} font-caption text-caption`}>
+          <Icon name={footnoteIcon} size={14} />
+          <span>{footnoteText}</span>
+        </div>
+      </div>
+    );
+
+    /* ─────────────────────────────────────────
+       TIMELINE ITEM
+    ───────────────────────────────────────── */
+    const TimelineItem = ({ iconBg, iconColor, iconName, badgeBg, badgeText, badgeTextColor, timeColor, timeText, title, description, footnote, actionLabel, actionBg, actionText, disabled }) => (
+      <div className="flex items-start gap-space-md p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm">
+        <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center ${iconColor} shrink-0`}>
+          <Icon name={iconName} size={22} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-space-xs mb-1">
+            <span className={`px-space-xs py-0.5 rounded font-caption text-caption font-bold ${badgeBg} ${badgeTextColor} uppercase`}>{badgeText}</span>
+            <span className={`font-caption text-caption ${timeColor} font-medium`}>{timeText}</span>
+          </div>
+          <h4 className="font-title-md text-title-md text-on-surface truncate">{title}</h4>
+          <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">{description}</p>
+          <div className="mt-space-sm flex items-center justify-between pt-space-xs">
+            <span className="font-caption text-caption text-outline">{footnote}</span>
+            <button
+              disabled={disabled}
+              className={`px-space-md py-1 rounded-lg font-label-sm text-label-sm transition-opacity ${
+                disabled
+                  ? "bg-surface-container-high text-outline cursor-not-allowed"
+                  : `${actionBg} ${actionText} hover:opacity-90`
+              }`}
+            >
+              {actionLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+
+    /* ─────────────────────────────────────────
+       COURSE CARD
+    ───────────────────────────────────────── */
+    const CourseCard = ({ code, sks, title, lecturer, meeting, total, progress, progressColor, progressTextColor, footnoteIcon, footnoteText, footnoteColor }) => (
+      <div className="flex flex-col p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container transition-all shadow-sm">
+        <div className="flex items-start justify-between gap-space-sm mb-space-sm">
+          <div className="flex flex-col">
+            <span className="font-caption text-caption text-secondary font-bold uppercase tracking-wide">{code} • {sks} SKS</span>
+            <h4 className="font-title-md text-title-md text-on-surface font-semibold">{title}</h4>
+            <p className="font-body-sm text-body-sm text-outline">Dosen: {lecturer}</p>
+          </div>
+          <span className={`px-2 py-1 rounded-lg ${progressColor}/20 ${progressTextColor} font-caption text-caption font-semibold whitespace-nowrap`}>
+            Pertemuan {meeting} dari {total}
+          </span>
+        </div>
+        {/* Progress Bar */}
+        <div className="flex flex-col gap-1 mb-space-md">
+          <div className="flex justify-between font-caption text-caption">
+            <span className="text-on-surface-variant">Progres Materi &amp; Evaluasi</span>
+            <span className={`${progressTextColor} font-bold`}>{progress}%</span>
+          </div>
+          <div className="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+            <div className={`h-full ${progressColor} rounded-full`} style={{ width: `${progress}%` }}></div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between pt-space-xs">
+          <span className={`font-caption text-caption ${footnoteColor} flex items-center gap-1`}>
+            <Icon name={footnoteIcon} size={14} />
+            {footnoteText}
+          </span>
+          <a
+            href="#"
+            className="px-space-md py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-sm text-label-sm flex items-center gap-1 transition-colors"
+          >
+            <span>Masuk Ruang Kelas</span>
+            <Icon name="arrow_forward" size={16} />
+          </a>
+        </div>
+      </div>
+    );
+
+    /* ─────────────────────────────────────────
+       ROLE TABS
+    ───────────────────────────────────────── */
+    const RoleTabs = ({ activeRole, setActiveRole }) => {
+      const roles = [
+        {
+          id: "mahasiswa",
+          icon: "school",
+          label: "Mahasiswa",
+          desc: "Dasbor, Kelas Saya, Panduan Belajar, Central Timeline, Rekap Nilai & Presensi",
+        },
+        {
+          id: "dosen",
+          icon: "co_present",
+          label: "Dosen Pengampu",
+          desc: "Dasbor Dosen, Kelas Diampu, Panduan Dosen, Central Timeline, Pemeriksaan Tugas",
+        },
+        {
+          id: "admin",
+          icon: "admin_panel_settings",
+          label: "Administrator SPADA",
+          desc: "Manajemen Pengguna, Master Mata Kuliah, Pembukaan Kelas, Direct Enrollment, Audit",
+        },
+      ];
+
+      return (
+        <section className="flex flex-col gap-space-xs mb-space-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-space-xs">
+              <Icon name="account_tree" size={20} className="text-primary" />
+              <h2 className="font-title-md text-title-md text-on-surface">Arsitektur Navigasi Multi-Peran SPADA LMS</h2>
+            </div>
+            <span className="font-caption text-caption text-outline">Role-Based Access Control Mode</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-space-sm p-space-xs bg-surface-container-low rounded-xl">
+            {roles.map(({ id, icon, label, desc }) => {
+              const isActive = activeRole === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveRole(id)}
+                  className={`flex flex-col text-left p-space-md rounded-lg transition-all ${
+                    isActive
+                      ? "bg-surface-container-high text-on-surface shadow-sm"
+                      : "hover:bg-surface-container text-on-surface-variant"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-space-xs">
+                    <span className={`font-label-md text-label-md font-bold flex items-center gap-space-xs ${isActive ? "text-primary" : "text-on-surface"}`}>
+                      <Icon name={icon} size={18} />
+                      {label}
+                    </span>
+                    {isActive ? (
+                      <span className="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-caption text-caption uppercase font-semibold">
+                        Aktif
+                      </span>
+                    ) : (
+                      <span className="font-caption text-caption text-outline">Pratinjau</span>
+                    )}
+                  </div>
+                  <p className={`font-body-sm text-body-sm ${isActive ? "text-on-surface-variant" : "text-outline"}`}>{desc}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      );
+    };
+
+    /* ─────────────────────────────────────────
+       PROFILE DROPDOWN DEMO BANNER
+    ───────────────────────────────────────── */
+    const ProfileDropdownDemo = () => {
+      const [open, setOpen] = useState(false);
+      const ref = useRef(null);
+
+      useEffect(() => {
+        const handler = (e) => {
+          if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        window.addEventListener("click", handler);
+        return () => window.removeEventListener("click", handler);
+      }, []);
+
+      return (
+        <div className="relative w-full mb-space-md">
+          <div className="flex items-center justify-between bg-surface-container-high/60 backdrop-blur-md px-gutter py-space-sm rounded-xl">
+            <div className="flex items-center gap-space-sm text-secondary">
+              <Icon name="info" size={20} />
+              <span className="font-body-sm text-body-sm text-on-surface">
+                Pratinjau Navigasi Cepat Topbar: Simulasi menu interaktif profil mahasiswa.
+              </span>
+            </div>
+            <div className="relative" ref={ref}>
+              <button
+                onClick={() => setOpen((v) => !v)}
+                className="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-sm text-label-sm shadow-sm transition-all"
+              >
+                <Icon name="account_circle" size={18} className="text-primary" />
+                <span>Aksi Menu Profil</span>
+                <Icon name="expand_more" size={16} />
+              </button>
+
+              {open && (
+                <div className="absolute right-0 mt-space-xs w-64 rounded-xl bg-surface-container-lowest p-space-sm shadow-xl z-30">
+                  <div className="px-space-sm py-space-xs mb-space-xs rounded-lg bg-surface-container-low">
+                    <p className="font-title-md text-title-md text-on-surface">Dimas Arya Pratama</p>
+                    <p className="font-caption text-caption text-secondary">NIM: 22670014 • Informatika</p>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    {[
+                      { icon: "badge", label: "Profil Saya" },
+                      { icon: "key", label: "Ganti Kata Sandi" },
+                      { icon: "tune", label: "Preferensi Notifikasi" },
+                    ].map(({ icon, label }) => (
+                      <a key={label} href="#" className="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-md text-label-md transition-colors">
+                        <Icon name={icon} size={18} />
+                        <span>{label}</span>
+                      </a>
+                    ))}
+                    <div className="h-px bg-surface-container-high my-space-xs"></div>
+                    <a href="#" className="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-error hover:bg-error-container/20 font-label-md text-label-md transition-colors">
+                      <Icon name="logout" size={18} />
+                      <span>Keluar Sesi</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    /* ─────────────────────────────────────────
+       DASHBOARD PAGE
+    ───────────────────────────────────────── */
+    const Dashboard = ({ activeRole, setActiveRole }) => {
+      const statCards = [
+        {
+          label: "Kelas Aktif", value: "6", unit: "Mata Kuliah",
+          icon: "auto_stories", iconBg: "bg-primary-container/20", iconColor: "text-primary",
+          footnoteIcon: "done_all", footnoteText: "18 SKS Terdaftar via Direct Enrollment", footnoteColor: "text-secondary",
+        },
+        {
+          label: "Tugas Berjalan", value: "3", unit: "Tugas Belum Selesai",
+          icon: "assignment", iconBg: "bg-secondary-container/20", iconColor: "text-secondary",
+          footnoteIcon: "alarm", footnoteText: "Batas Waktu Terdekat: 2 Hari Lagi", footnoteColor: "text-error",
+        },
+        {
+          label: "Rata-rata Skor SPADA", value: "88.50", unit: "/ 100.00",
+          icon: "analytics", iconBg: "bg-tertiary-container/20", iconColor: "text-tertiary",
+          footnoteIcon: "verified", footnoteText: "Transparan numerik otomatis dosen", footnoteColor: "text-on-surface-variant",
+        },
+        {
+          label: "Presensi Kehadiran", value: "94.2%", unit: "",
+          icon: "fact_check", iconBg: "bg-surface-container-highest", iconColor: "text-primary",
+          footnoteIcon: "check_circle", footnoteText: "Syarat UTS & UAS min. 70.0% terpenuhi", footnoteColor: "text-on-surface-variant",
+        },
+      ];
+
+      const timelineItems = [
+        {
+          iconBg: "bg-error-container/20", iconColor: "text-error", iconName: "assignment_late",
+          badgeBg: "bg-error-container", badgeText: "Tugas", badgeTextColor: "text-on-error-container",
+          timeColor: "text-error", timeText: "Batas Waktu: Jumat, 23:59 WIB",
+          title: "Rekayasa Perangkat Lunak",
+          description: "Tugas 02: Analisis Kebutuhan SRS & Diagram UML Sistem Terdistribusi",
+          footnote: "Pengampu: Dr. Supriyono, M.Kom.",
+          actionLabel: "Kirim Berkas", actionBg: "bg-primary", actionText: "text-on-primary", disabled: false,
+        },
+        {
+          iconBg: "bg-tertiary-container/20", iconColor: "text-tertiary", iconName: "how_to_reg",
+          badgeBg: "bg-tertiary-container", badgeText: "Presensi", badgeTextColor: "text-on-tertiary-container",
+          timeColor: "text-tertiary", timeText: "Sesi Dibuka Dosen (Berakhir 10:00 WIB)",
+          title: "Pemrograman Web Berbasis Komponen",
+          description: "Pertemuan 4: Implementasi Modularisasi & Lifecycle Management",
+          footnote: "Lab Komputer 302 • Kelas Reguler A",
+          actionLabel: "Isi Presensi Hadir", actionBg: "bg-tertiary", actionText: "text-on-tertiary", disabled: false,
+        },
+        {
+          iconBg: "bg-secondary-container/20", iconColor: "text-secondary", iconName: "quiz",
+          badgeBg: "bg-secondary-container", badgeText: "Kuis", badgeTextColor: "text-on-secondary-container",
+          timeColor: "text-secondary", timeText: "Dibuka Besok Pukul 09:00 WIB",
+          title: "Basis Data Terdistribusi",
+          description: "Kuis Singkat Modul 3: Replikasi & Sharding Data Skala Besar",
+          footnote: "Durasi: 30 Menit • Percobaan: 1 Kali",
+          actionLabel: "Terkunci", disabled: true,
+        },
+      ];
+
+      const courseCards = [
+        {
+          code: "INF308", sks: 3, title: "Rekayasa Perangkat Lunak", lecturer: "Dr. Supriyono, M.Kom.",
+          meeting: 4, total: 16, progress: 68,
+          progressColor: "bg-primary", progressTextColor: "text-primary",
+          footnoteIcon: "task_alt", footnoteText: "Presensi Sempurna (4/4)", footnoteColor: "text-tertiary",
+        },
+        {
+          code: "INF312", sks: 3, title: "Pemrograman Web Berbasis Komponen", lecturer: "Ir. Nina Kartika, M.T.",
+          meeting: 4, total: 16, progress: 82,
+          progressColor: "bg-tertiary", progressTextColor: "text-tertiary",
+          footnoteIcon: "pending_actions", footnoteText: "1 Tugas Menunggu Submit", footnoteColor: "text-secondary",
+        },
+      ];
+
+      return (
+        <div className="flex flex-col w-full pb-margin">
+          {/* Profile Dropdown Demo */}
+          <ProfileDropdownDemo />
+
+          {/* Greeting Banner */}
+          <section className="relative w-full rounded-2xl bg-surface-container-low p-gutter overflow-hidden shadow-sm mb-space-lg">
+            <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-container/10 blur-3xl pointer-events-none"></div>
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg">
+              <div className="flex flex-col gap-space-xs">
+                <nav className="flex items-center gap-space-xs font-caption text-caption text-outline">
+                  <span className="hover:text-primary cursor-pointer transition-colors">Beranda</span>
+                  <Icon name="chevron_right" size={14} />
+                  <span className="text-secondary font-medium">Dasbor Pembelajaran</span>
+                </nav>
+                <h1 className="font-headline-lg text-headline-lg text-on-surface mt-space-xs tracking-tight">
+                  Selamat Datang Kembali, Dimas Arya Pratama!
+                </h1>
+                <p className="font-body-md text-body-md text-on-surface-variant">
+                  Semester Ganjil 2026/2027 • Program Studi Pendidikan Informatika UPGRIS
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-space-sm">
+                <div className="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-tertiary-container/15 text-tertiary font-label-sm text-label-sm">
+                  <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+                  <span>Status: Aktif Enrolled</span>
+                </div>
+                <div className="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm">
+                  <Icon name="update" size={16} className="text-secondary" />
+                  <span>Waktu Server: 08:30 WIB (Sinkron Terpusat)</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Role Tabs */}
+          <RoleTabs activeRole={activeRole} setActiveRole={setActiveRole} />
+
+          {/* Stat Cards */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-xl">
+            {statCards.map((card) => (
+              <StatCard key={card.label} {...card} />
+            ))}
+          </section>
+
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+            {/* Central Timeline */}
+            <div className="lg:col-span-7 flex flex-col gap-space-md">
+              <div className="flex items-center justify-between bg-surface-container-low px-space-md py-space-sm rounded-xl">
+                <div className="flex items-center gap-space-xs">
+                  <div className="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+                    <Icon name="calendar_clock" size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-title-md text-title-md text-on-surface">Central Timeline Perkuliahan</h3>
+                    <p className="font-caption text-caption text-outline">Batas waktu penugasan dan sesi perkuliahan aktif</p>
+                  </div>
+                </div>
+                <a href="#" className="flex items-center gap-0.5 text-primary hover:text-secondary font-label-sm text-label-sm transition-colors">
+                  Lihat Semua
+                  <Icon name="arrow_forward" size={16} />
+                </a>
+              </div>
+              <div className="flex flex-col gap-space-sm">
+                {timelineItems.map((item, i) => (
+                  <TimelineItem key={i} {...item} />
+                ))}
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="lg:col-span-5 flex flex-col gap-space-md">
+              <div className="flex items-center justify-between bg-surface-container-low px-space-md py-space-sm rounded-xl">
+                <div className="flex items-center gap-space-xs">
+                  <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+                    <Icon name="menu_book" size={18} />
+                  </div>
+                  <h3 className="font-title-md text-title-md text-on-surface">Kelas Saya (Akses Cepat)</h3>
+                </div>
+                <a href="#" className="font-label-sm text-label-sm text-primary hover:text-secondary transition-colors">Semua Kelas (6)</a>
+              </div>
+
+              {courseCards.map((card, i) => (
+                <CourseCard key={i} {...card} />
+              ))}
+
+              {/* Learning Guide Banner */}
+              <div className="flex items-center gap-space-md p-space-md rounded-xl bg-gradient-to-r from-surface-container-low to-surface-container-high shadow-sm">
+                <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shrink-0">
+                  <Icon name="menu_book" size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-title-md text-title-md text-on-surface">Panduan Belajar Mahasiswa</h4>
+                  <p className="font-caption text-caption text-on-surface-variant">
+                    Pedoman teknis submit tugas, kuis berbasis integritas, dan presensi mandiri.
+                  </p>
+                </div>
+                <a href="#" className="p-space-xs rounded-lg text-primary hover:bg-surface-container-highest transition-colors">
+                  <Icon name="download" size={20} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    /* ─────────────────────────────────────────
+       APP ROOT
+    ───────────────────────────────────────── */
+    const App = () => {
+      const [activePage, setActivePage] = useState("dasbor-mahasiswa");
+      const [activeRole, setActiveRole] = useState("mahasiswa");
+
+      // Sync role switcher with sidebar active page
+      const handleRoleChange = (role) => {
+        setActiveRole(role);
+        if (role === "mahasiswa") setActivePage("dasbor-mahasiswa");
+        else if (role === "dosen") setActivePage("dasbor-dosen");
+        else if (role === "admin") setActivePage("manajemen-pengguna");
+      };
+
+      return (
+        <>
+          <Header activeRole={activeRole} setActiveRole={handleRoleChange} />
+          <Sidebar activePage={activePage} setActivePage={setActivePage} />
+          <div className="pl-64">
+            <main className="w-full pt-16 px-gutter bg-background min-h-screen">
+              <Dashboard activeRole={activeRole} setActiveRole={handleRoleChange} />
+            </main>
+          </div>
+        </>
+      );
+    };
+
+    /* ─────────────────────────────────────────
+       MOUNT
+    ───────────────────────────────────────── */
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
