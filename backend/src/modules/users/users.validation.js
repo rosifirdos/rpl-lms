@@ -1,5 +1,6 @@
 ﻿import { z } from 'zod';
 import { ALL_ROLES } from '../../constants/roles.js';
+import { validatePasswordComplexity } from '../../utils/password.js';
 
 /**
  * Skema parameter ID pengguna (UUID)
@@ -13,8 +14,7 @@ export const userIdParamSchema = {
 /**
  * Skema pembuatan pengguna baru (Admin only)
  */
-export const createUserSchema = {
-  body: z.object({
+const createUserBodySchema = z.object({
     username: z
       .string({ required_error: 'Username wajib diisi' })
       .trim()
@@ -38,7 +38,37 @@ export const createUserSchema = {
       .min(2, { message: 'Nama lengkap minimal 2 karakter' })
       .max(150, { message: 'Nama lengkap maksimal 150 karakter' })
       .optional(),
-  }),
+    nim: z.string().trim().min(3).max(20).optional(),
+    prodi: z.string().trim().min(2).max(150).optional(),
+    angkatan: z.coerce.number().int().min(1900).max(9999).optional(),
+    nidn: z.string().trim().min(1).max(20).optional(),
+    nip: z.string().trim().min(1).max(30).optional(),
+    gelar_depan: z.string().trim().max(30).optional(),
+    gelar_belakang: z.string().trim().max(30).optional(),
+  }).superRefine((user, ctx) => {
+    if (user.role === 'mahasiswa') {
+      for (const field of ['nim', 'prodi', 'angkatan']) {
+        if (user[field] === undefined) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [field],
+            message: `Data ${field} wajib diisi untuk akun mahasiswa`,
+          });
+        }
+      }
+    }
+
+    if (user.role === 'dosen' && !user.nidn && !user.nip) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['nidn'],
+        message: 'NIDN atau NIP wajib diisi untuk akun dosen',
+      });
+    }
+  });
+
+export const createUserSchema = {
+  body: createUserBodySchema,
 };
 
 /**
@@ -72,20 +102,6 @@ export const updateUserStatusSchema = {
 };
 
 /**
- * Skema reset password pengguna oleh Admin (FR-044, SRS Bab 35)
- */
-export const resetPasswordSchema = {
-  params: z.object({
-    id: z.string().uuid({ message: 'Format ID pengguna harus UUID valid' }),
-  }),
-  body: z.object({
-    new_password: z
-      .string({ required_error: 'Kata sandi baru wajib diisi' })
-      .min(8, { message: 'Kata sandi baru minimal 8 karakter' }),
-  }),
-};
-
-/**
  * Skema query list pengguna
  */
 export const userListQuerySchema = {
@@ -98,31 +114,20 @@ export const userListQuerySchema = {
   }),
 };
 
-/**
- * Skema reset password oleh Admin (FR-044)
- */
 export const resetPasswordSchema = {
   params: z.object({
     id: z.string().uuid({ message: 'Format ID pengguna harus UUID valid' }),
   }),
   body: z.object({
-    newPassword: z
+    new_password: z
       .string({ required_error: 'Password baru wajib diisi' })
       .min(8, { message: 'Password minimal 8 karakter' })
       .max(100, { message: 'Password maksimal 100 karakter' })
-      .refine((password) => {
-        // Validasi kompleksitas password
-        if (password.length < 8) return false;
-        if (!/[A-Z]/.test(password)) return false; // minimal 1 huruf besar
-        if (!/[a-z]/.test(password)) return false; // minimal 1 huruf kecil
-        if (!/\d/.test(password)) return false;    // minimal 1 angka
-        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return false; // minimal 1 simbol
-
-        // Cek password umum/tidak aman
-        const commonPasswords = ['password', '12345678', 'qwerty123', 'admin123', 'password123'];
-        return !commonPasswords.includes(password.toLowerCase());
-      }, {
-        message: 'Password harus mengandung minimal 8 karakter dengan kombinasi huruf besar, huruf kecil, angka, dan simbol. Tidak boleh menggunakan password umum.',
+      .superRefine((password, ctx) => {
+        const validation = validatePasswordComplexity(password);
+        if (!validation.isValid) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: validation.message });
+        }
       }),
   }),
 };

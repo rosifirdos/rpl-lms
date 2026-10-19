@@ -9,6 +9,7 @@ const pg = new EmbeddedPostgres({
 });
 
 async function main() {
+  await pg.initialise();
   await pg.start();
   console.log('PostgreSQL running on port 5433');
   process.on('SIGINT', async () => {

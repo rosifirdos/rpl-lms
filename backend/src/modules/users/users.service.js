@@ -14,7 +14,21 @@ export class UsersService {
    * Pembuatan akun pengguna baru (Admin only)
    */
   static async createUser({ adminId, userData, ipAddress, userAgent }) {
-    const { username, email, password, status = 'ACTIVE', role, full_name } = userData;
+    const {
+      username,
+      email,
+      password,
+      status = 'ACTIVE',
+      role,
+      full_name,
+      nim,
+      prodi,
+      angkatan,
+      nidn,
+      nip,
+      gelar_depan,
+      gelar_belakang,
+    } = userData;
 
     // Validasi role
     if (!Object.values(ROLES).includes(role)) {
@@ -46,18 +60,22 @@ export class UsersService {
           password_hash,
           status,
           role,
+          profile: full_name ? { create: { full_name } } : undefined,
+          mahasiswa: role === ROLES.MAHASISWA
+            ? { create: { nim, prodi, angkatan } }
+            : undefined,
+          dosen: role === ROLES.DOSEN
+            ? {
+                create: {
+                  nidn: nidn || null,
+                  nip: nip || null,
+                  gelar_depan: gelar_depan || null,
+                  gelar_belakang: gelar_belakang || null,
+                },
+              }
+            : undefined,
         },
       });
-
-      // Buat profile dasar
-      if (full_name) {
-        await tx.profile.create({
-          data: {
-            user_id: newUser.id,
-            full_name,
-          },
-        });
-      }
 
       return tx.user.findUnique({
         where: { id: newUser.id },
@@ -69,6 +87,8 @@ export class UsersService {
           role: true,
           created_at: true,
           profile: true,
+          mahasiswa: true,
+          dosen: true,
         },
       });
     });
@@ -211,49 +231,6 @@ export class UsersService {
   }
 
   /**
-   * Reset kata sandi akun pengguna oleh Admin (FR-044, SRS Bab 35)
-   */
-  static async resetPassword({ adminId, targetUserId, newPassword, ipAddress, userAgent }) {
-    if (targetUserId === adminId) {
-      throw new AppError('Gunakan endpoint profil mandiri untuk mengganti kata sandi sendiri', 400);
-    }
-
-    const user = await prisma.user.findUnique({ where: { id: targetUserId } });
-    if (!user) {
-      throw new AppError('Pengguna tidak ditemukan', 404);
-    }
-
-    const password_hash = await hashPassword(newPassword);
-
-    await prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: targetUserId },
-        data: { password_hash },
-      });
-
-      // Cabut seluruh refresh token pengguna untuk memaksa re-login
-      await tx.refreshToken.updateMany({
-        where: { user_id: targetUserId, revoked_at: null },
-        data: { revoked_at: new Date() },
-      });
-    });
-
-    // Catat ke AuditLog
-    await AuditLogService.logPasswordReset({
-      adminId,
-      targetUserId,
-      targetUsername: user.username,
-      ipAddress,
-      userAgent,
-    });
-
-    return {
-      userId: targetUserId,
-      username: user.username,
-    };
-  }
-
-  /**
    * Daftar Pengguna dengan paginasi dan filter
    */
   static async getUsers({ page = 1, limit = 20, role, status, search } = {}) {
@@ -276,6 +253,9 @@ export class UsersService {
         { username: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
         { profile: { full_name: { contains: search, mode: 'insensitive' } } },
+        { mahasiswa: { nim: { contains: search, mode: 'insensitive' } } },
+        { dosen: { nidn: { contains: search, mode: 'insensitive' } } },
+        { dosen: { nip: { contains: search, mode: 'insensitive' } } },
       ];
     }
 
@@ -296,6 +276,12 @@ export class UsersService {
           profile: {
             select: { full_name: true },
           },
+          mahasiswa: {
+            select: { nim: true, prodi: true, angkatan: true },
+          },
+          dosen: {
+            select: { nidn: true, nip: true, gelar_depan: true, gelar_belakang: true },
+          },
         },
       }),
     ]);
@@ -310,6 +296,8 @@ export class UsersService {
         status: u.status,
         role: u.role,
         full_name: u.profile?.full_name || null,
+        mahasiswa: u.mahasiswa,
+        dosen: u.dosen,
         createdAt: u.created_at,
       })),
       meta: {
@@ -336,6 +324,8 @@ export class UsersService {
         last_login_at: true,
         created_at: true,
         profile: true,
+        mahasiswa: true,
+        dosen: true,
       },
     });
 

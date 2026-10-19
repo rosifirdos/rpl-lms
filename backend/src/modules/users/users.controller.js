@@ -109,7 +109,7 @@ export class UsersController {
     try {
       const targetUserId = req.params.id;
       const adminId = req.user.id;
-      const { newPassword } = req.body;
+      const { new_password: newPassword } = req.body;
       const { ipAddress, userAgent } = extractClientInfo(req);
 
       const result = await UsersService.resetPassword({
