@@ -9,7 +9,7 @@ const menuMahasiswa = [
 ];
 
 const menuDosen = [
-  { icon: 'co_present', label: 'Kelas Diampu', path: 'dasbor-dosen' },
+  { icon: 'co_present', label: 'Kelas Diampu (Dasbor Dosen)', path: 'dasbor-dosen' },
   { icon: 'assignment_turned_in', label: 'Pemeriksaan Tugas', path: 'pemeriksaan-tugas' },
 ];
 
@@ -37,9 +37,18 @@ function NavItem({ item, isActive, onClick }) {
   );
 }
 
-function Sidebar({ isOpen }) {
-  const [activePath, setActivePath] = useState('dasbor-mahasiswa');
+function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
+  const [activePath, setActivePath] = useState(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
   const asideClass = 'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' + (isOpen ? 'translate-x-0' : '-translate-x-full');
+
+  const handleNavClick = (path) => {
+    setActivePath(path);
+    if (path === 'dasbor-dosen' && onRoleChange) {
+      onRoleChange('dosen');
+    } else if (path === 'dasbor-mahasiswa' && onRoleChange) {
+      onRoleChange('mahasiswa');
+    }
+  };
 
   const renderGroup = (items) =>
     items.map((item) => (
@@ -47,7 +56,7 @@ function Sidebar({ isOpen }) {
         key={item.path}
         item={item}
         isActive={activePath === item.path}
-        onClick={setActivePath}
+        onClick={handleNavClick}
       />
     ));
 
@@ -75,7 +84,9 @@ function Sidebar({ isOpen }) {
           SPADA UPGRIS v2.4 &bull; Standalone LMS
         </div>
         <a
-          href="#"
+          href="https://upt-ptik.upgris.ac.id"
+          target="_blank"
+          rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-space-xs py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-secondary hover:text-on-surface transition-colors font-label-sm text-label-sm"
         >
           <span className="material-symbols-outlined text-[16px]">support_agent</span>
