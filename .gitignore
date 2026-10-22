@@ -1,15 +1,25 @@
-node_modules/
+﻿node_modules/
 backend/node_modules/
+frontend/node_modules/
 .env
 backend/.env
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
 dist/
+frontend/dist/
 coverage/
 *.log
 .DS_Store
 backend/data/
 
-# Private file storage (BR-009) — berkas upload tidak boleh di-commit
+# Private file storage (BR-009)
 backend/storage/private/*
 backend/storage/private/**/*
 !backend/storage/private/**/.gitkeep
 !backend/storage/private/.gitkeep
+
+# Exclude raw HTML mockups and handoff HTML from git
+frontend/stitch-handoff/**/*.html
+*.html
+!frontend/index.html
