@@ -119,7 +119,7 @@ export const resetPasswordSchema = {
     id: z.string().uuid({ message: 'Format ID pengguna harus UUID valid' }),
   }),
   body: z.object({
-    new_password: z
+    newPassword: z
       .string({ required_error: 'Password baru wajib diisi' })
       .min(8, { message: 'Password minimal 8 karakter' })
       .max(100, { message: 'Password maksimal 100 karakter' })
