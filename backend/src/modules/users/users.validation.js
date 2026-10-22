@@ -72,20 +72,6 @@ export const updateUserStatusSchema = {
 };
 
 /**
- * Skema reset password pengguna oleh Admin (FR-044, SRS Bab 35)
- */
-export const resetPasswordSchema = {
-  params: z.object({
-    id: z.string().uuid({ message: 'Format ID pengguna harus UUID valid' }),
-  }),
-  body: z.object({
-    new_password: z
-      .string({ required_error: 'Kata sandi baru wajib diisi' })
-      .min(8, { message: 'Kata sandi baru minimal 8 karakter' }),
-  }),
-};
-
-/**
  * Skema query list pengguna
  */
 export const userListQuerySchema = {

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { dosenApi } from '../../services/api';
 
 /**
  * DasborDosen — Feature Component
@@ -11,11 +12,67 @@ export default function DasborDosen({ onRoleChange }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [teachingMetrics, setTeachingMetrics] = useState([]);
+  const [classList, setClassList] = useState([]);
+  const [pendingGrading, setPendingGrading] = useState([]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  const fetchDashboardData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [metricsRes, classesRes, gradingRes] = await Promise.all([
+        dosenApi.getDashboardMetrics().catch(() => ({ data: null })),
+        dosenApi.getMyClasses().catch(() => ({ data: null })),
+        dosenApi.getPendingGrading().catch(() => ({ data: null })),
+      ]);
+
+      // Transform metrics if available
+      if (metricsRes.data) {
+        setTeachingMetrics(metricsRes.data);
+      }
+
+      // Transform classes if available
+      if (classesRes.data?.items) {
+        setClassList(classesRes.data.items.map((cls, idx) => ({
+          code: cls.code || `MK-${idx + 1}`,
+          title: cls.name || cls.course?.name || 'Mata Kuliah',
+          sks: `Bobot ${cls.course?.credits || 3} SKS • ${cls.course?.is_active ? 'Aktif' : 'Nonaktif'}`,
+          badge: cls.is_active ? 'Sesi Presensi Aktif' : 'Tidak Aktif',
+          badgeType: cls.is_active ? 'active' : 'inactive',
+          alarm: cls.schedule ? `${cls.schedule.day}, ${cls.schedule.start_time} - ${cls.schedule.end_time} WIB` : 'Jadwal belum ditentukan',
+          room: cls.room || 'Ruang belum ditentukan',
+          currentMeeting: `Pertemuan ${cls.current_meeting || 1} dari 16`,
+          progressPct: cls.progress_pct || Math.min(100, ((cls.current_meeting || 1) / 16) * 100),
+          students: `${cls.enrolled_count || 0}/${cls.capacity || 0} Kuota (${cls.capacity ? Math.round((cls.enrolled_count || 0) / cls.capacity * 100) : 0}%)`,
+          studentsPct: cls.capacity ? Math.round((cls.enrolled_count || 0) / cls.capacity * 100) : 0,
+          quotaColor: cls.capacity && (cls.enrolled_count || 0) / cls.capacity >= 1 ? 'bg-tertiary' : 'bg-secondary',
+          btnPresensiText: cls.is_active ? 'Kelola Presensi' : 'Jadwal Presensi',
+          btnPresensiIcon: cls.is_active ? 'how_to_reg' : 'calendar_month',
+        })));
+      }
+
+      // Transform grading if available
+      if (gradingRes.data?.items) {
+        setPendingGrading(gradingRes.data.items);
+      }
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err);
+      setError('Gagal memuat data dasbor');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const navMenuItems = [
     {
@@ -43,88 +100,40 @@ export default function DasborDosen({ onRoleChange }) {
     },
   ];
 
-  const teachingMetrics = [
+  // Default fallback metrics when API not available
+  const defaultMetrics = [
     {
       title: 'Total Kelas Diampu',
-      value: '3 Kelas Aktif',
+      value: loading ? 'Memuat...' : '— Kelas Aktif',
       icon: 'co_present',
       iconBg: 'bg-primary-container/20 text-primary',
-      subtitle: 'Program Studi S1 Teknik Informatika',
+      subtitle: loading ? 'Mengambil data dari server...' : 'Belum ada data kelas',
       subIcon: 'domain',
       subColor: 'text-secondary',
     },
     {
       title: 'Beban SKS Semester Ini',
-      value: '8 SKS',
+      value: loading ? 'Memuat...' : '— SKS',
       valColor: 'text-tertiary',
       icon: 'verified',
       iconBg: 'bg-tertiary-container/20 text-tertiary',
-      subtitle: 'Memenuhi Beban Kinerja Dosen (BKD)',
+      subtitle: loading ? 'Mengambil data dari server...' : 'Belum ada beban SKS',
       subIcon: 'check_circle',
       subColor: 'text-on-surface-variant',
-      badgeColor: 'text-tertiary',
     },
     {
       title: 'Total Mahasiswa Terdaftar',
-      value: '118 Mahasiswa',
+      value: loading ? 'Memuat...' : '— Mahasiswa',
       icon: 'groups',
       iconBg: 'bg-secondary-container/20 text-secondary',
-      subtitle: 'Direct Enrollment Admin Terverifikasi',
+      subtitle: loading ? 'Mengambil data dari server...' : 'Belum ada mahasiswa terdaftar',
       subIcon: 'how_to_reg',
       subColor: 'text-secondary-fixed',
     },
   ];
 
-  const classList = [
-    {
-      code: 'TIF-301 • Kelas TI-A',
-      title: 'Rekayasa Perangkat Lunak',
-      sks: 'Bobot 3 SKS • Teori & Praktik',
-      badge: 'Sesi Presensi Aktif',
-      badgeType: 'active',
-      alarm: 'Senin, 08:00 - 10:30 WIB',
-      room: 'Lab Komputasi 3 (Gedung TI Lt. 3)',
-      currentMeeting: 'Pertemuan 4 dari 16 (Silabus Sinkron)',
-      progressPct: 25,
-      students: '40/40 Kuota (Full - 100%)',
-      studentsPct: 100,
-      quotaColor: 'bg-tertiary',
-      btnPresensiText: 'Kelola Presensi',
-      btnPresensiIcon: 'how_to_reg',
-    },
-    {
-      code: 'TIF-305 • Kelas TI-B',
-      title: 'Rekayasa Perangkat Lunak',
-      sks: 'Bobot 3 SKS • Teori & Praktik',
-      badge: 'Jadwal Hari Rabu',
-      badgeType: 'inactive',
-      alarm: 'Rabu, 10:30 - 13:00 WIB',
-      room: 'Ruang Teori 402 (Gedung Utama Lt. 4)',
-      currentMeeting: 'Pertemuan 4 dari 16',
-      progressPct: 25,
-      students: '38/40 Kuota (95%)',
-      studentsPct: 95,
-      quotaColor: 'bg-secondary',
-      btnPresensiText: 'Jadwal Presensi',
-      btnPresensiIcon: 'calendar_month',
-    },
-    {
-      code: 'TIF-402 • Kelas TI-A',
-      title: 'Arsitektur Perangkat Lunak Enterprise',
-      sks: 'Bobot 2 SKS • Teori Terapan',
-      badge: 'Jadwal Hari Kamis',
-      badgeType: 'inactive',
-      alarm: 'Kamis, 13:00 - 14:40 WIB',
-      room: 'Lab Rekayasa Sistem (Gedung TI Lt. 2)',
-      currentMeeting: 'Pertemuan 3 dari 16',
-      progressPct: 18.75,
-      students: '40/40 Kuota (Full - 100%)',
-      studentsPct: 100,
-      quotaColor: 'bg-tertiary',
-      btnPresensiText: 'Jadwal Presensi',
-      btnPresensiIcon: 'calendar_month',
-    },
-  ];
+  const displayMetrics = teachingMetrics.length > 0 ? teachingMetrics : defaultMetrics;
+  const displayClasses = classList.length > 0 ? classList : [];
 
   return (
     <div className="bg-surface font-body-md text-on-surface antialiased min-h-screen selection:bg-primary-container selection:text-on-primary">
@@ -399,7 +408,7 @@ export default function DasborDosen({ onRoleChange }) {
 
             {/* ── 3 Teaching Metric Cards ── */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md">
-              {teachingMetrics.map((metric) => (
+              {displayMetrics.map((metric) => (
                 <div
                   key={metric.title}
                   className="relative overflow-hidden rounded-xl bg-surface-container p-space-md shadow-md transition-transform duration-200 hover:-translate-y-0.5"
@@ -436,7 +445,7 @@ export default function DasborDosen({ onRoleChange }) {
                     </span>
                   </h2>
                   <p className="font-body-sm text-body-sm text-on-surface-variant">
-                    Daftar kelas aktif dengan kurikulum 16 Pertemuan Terstruktur (UTS Pertemuan 8 &amp; UAS Pertemuan 16)
+                    Daftar kelas aktif dengan kurikulum 16 Pertemuan Terstruktur (UTS Pertemuan 8 & UAS Pertemuan 16)
                   </p>
                 </div>
                 <div className="flex items-center gap-space-xs shrink-0">
@@ -461,7 +470,8 @@ export default function DasborDosen({ onRoleChange }) {
 
               {/* Class Cards Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
-                {classList.map((cls) => (
+                {displayClasses.length > 0 ? (
+                  displayClasses.map((cls) => (
                   <div
                     key={cls.code}
                     className="group flex flex-col justify-between rounded-xl bg-surface-container p-space-md shadow-md transition-all duration-200 hover:shadow-xl hover:bg-surface-container-high"
@@ -554,7 +564,20 @@ export default function DasborDosen({ onRoleChange }) {
                       </button>
                     </div>
                   </div>
-                ))}
+                ))
+              ) : (
+                <div className="lg:col-span-3 flex flex-col items-center justify-center py-12 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-[48px] mb-4">class</span>
+                  <p className="font-body-md text-center">Belum ada kelas diampu semester ini</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveMenu('kelas-diampu')}
+                    className="mt-4 px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-sm"
+                  >
+                    Lihat Menu Kelas Diampu
+                  </button>
+                </div>
+              )}
               </div>
             </div>
 
@@ -577,75 +600,126 @@ export default function DasborDosen({ onRoleChange }) {
                         </p>
                       </div>
                     </div>
-                    <span className="px-2 py-0.5 rounded bg-error/20 text-error font-caption font-semibold">
-                      1 Tugas Prioritas
+                    <span className={`px-2 py-0.5 rounded bg-error/20 text-error font-caption font-semibold ${loading ? 'animate-pulse' : ''}`}>
+                      {loading ? 'Memuat...' : pendingGrading.length > 0 ? `${pendingGrading.length} Tugas Prioritas` : '1 Tugas Prioritas'}
                     </span>
                   </div>
 
-                  {/* Task Item 1: Pending Grading */}
-                  <div className="rounded-lg bg-surface-container-low p-space-sm space-y-space-xs transition-colors hover:bg-surface-container-high">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-space-xs">
-                      <div className="space-y-0.5">
-                        <span className="font-title-md text-title-md text-on-surface font-semibold hover:text-primary transition-colors cursor-pointer">
-                          Tugas 02: Analisis Kebutuhan SRS IEEE 830
-                        </span>
-                        <div className="flex flex-wrap items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
-                          <span className="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-mono text-caption">
-                            TIF-301 RPL TI-A
-                          </span>
-                          <span className="text-outline-variant">&bull;</span>
-                          <span>Skor SPADA: 0-100</span>
+                  {pendingGrading.length > 0 ? (
+                    pendingGrading.map((task, idx) => (
+                      <div key={task.id || idx} className="rounded-lg bg-surface-container-low p-space-sm space-y-space-xs transition-colors hover:bg-surface-container-high">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-space-xs">
+                          <div className="space-y-0.5">
+                            <span className="font-title-md text-title-md text-on-surface font-semibold hover:text-primary transition-colors cursor-pointer">
+                              {task.title || `Tugas ${idx + 1}`}
+                            </span>
+                            <div className="flex flex-wrap items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+                              <span className="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-mono text-caption">
+                                {task.class_code || task.course?.code || 'TIF-301'}
+                              </span>
+                              <span className="text-outline-variant">&bull;</span>
+                              <span>Skor SPADA: {task.score_range || '0-100'}</span>
+                            </div>
+                          </div>
+                          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-error-container/20 text-error font-label-sm text-label-sm shrink-0">
+                            <span className="material-symbols-outlined text-[15px]">pending_actions</span>
+                            <span>{task.pending_count || 0} Belum Dinilai</span>
+                          </div>
+                        </div>
+
+                        {/* Progress Submissions (if available) */}
+                        {task.graded_count !== undefined && task.total_count !== undefined && (
+                          <div className="space-y-1 pt-1">
+                            <div className="flex justify-between items-center font-caption text-caption">
+                              <span className="text-on-surface-variant">{task.graded_count} dari {task.total_count} Submissions Telah Dinilai</span>
+                              <span className="text-primary font-semibold">{task.total_count > 0 ? Math.round((task.graded_count / task.total_count) * 100) : 0}% Selesai</span>
+                            </div>
+                            <div className="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
+                              <div className="bg-primary-container h-full rounded-full" style={{ width: `${task.total_count > 0 ? Math.round((task.graded_count / task.total_count) * 100) : 0}%` }} />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end pt-space-xs">
+                          <button
+                            type="button"
+                            onClick={() => showToast(`Membuka lembar penilaian ${task.title || `Tugas ${idx + 1}`}`)}
+                            className="px-3 py-1.5 rounded-md bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-sm text-label-sm flex items-center gap-1.5 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">rate_review</span>
+                            <span>Periksa & Beri Nilai</span>
+                          </button>
                         </div>
                       </div>
-                      <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-error-container/20 text-error font-label-sm text-label-sm shrink-0">
-                        <span className="material-symbols-outlined text-[15px]">pending_actions</span>
-                        <span>4 Belum Dinilai</span>
-                      </div>
-                    </div>
+                    ))
+                  ) : (
+                    <>
+                      {/* Task Item 1: Pending Grading (fallback) */}
+                      <div className="rounded-lg bg-surface-container-low p-space-sm space-y-space-xs transition-colors hover:bg-surface-container-high">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-space-xs">
+                          <div className="space-y-0.5">
+                            <span className="font-title-md text-title-md text-on-surface font-semibold hover:text-primary transition-colors cursor-pointer">
+                              Tugas 02: Analisis Kebutuhan SRS IEEE 830
+                            </span>
+                            <div className="flex flex-wrap items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+                              <span className="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-mono text-caption">
+                                TIF-301 RPL TI-A
+                              </span>
+                              <span className="text-outline-variant">&bull;</span>
+                              <span>Skor SPADA: 0-100</span>
+                            </div>
+                          </div>
+                          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-error-container/20 text-error font-label-sm text-label-sm shrink-0">
+                            <span className="material-symbols-outlined text-[15px]">pending_actions</span>
+                            <span>4 Belum Dinilai</span>
+                          </div>
+                        </div>
 
-                    {/* Progress Submissions */}
-                    <div className="space-y-1 pt-1">
-                      <div className="flex justify-between items-center font-caption text-caption">
-                        <span className="text-on-surface-variant">36 dari 40 Submissions Telah Dinilai</span>
-                        <span className="text-primary font-semibold">90% Selesai</span>
-                      </div>
-                      <div className="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-primary-container h-full rounded-full" style={{ width: '90%' }} />
-                      </div>
-                    </div>
-                    <div className="flex justify-end pt-space-xs">
-                      <button
-                        type="button"
-                        onClick={() => showToast('Membuka lembar penilaian Tugas 02')}
-                        className="px-3 py-1.5 rounded-md bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-sm text-label-sm flex items-center gap-1.5 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">rate_review</span>
-                        <span>Periksa &amp; Beri Nilai</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Task Item 2: Completed Grading */}
-                  <div className="rounded-lg bg-surface-container-low p-space-sm space-y-space-xs opacity-90 hover:opacity-100 transition-opacity">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-space-xs">
-                      <div className="space-y-0.5">
-                        <span className="font-title-md text-title-md text-on-surface font-semibold">
-                          Tugas 01: Diagram Konteks &amp; DFD Level 1
-                        </span>
-                        <div className="flex flex-wrap items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
-                          <span className="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-mono text-caption">
-                            TIF-305 RPL TI-B
-                          </span>
-                          <span className="text-outline-variant">&bull;</span>
-                          <span className="text-tertiary">38/38 Submissions Dinilai Lengkap</span>
+                        {/* Progress Submissions */}
+                        <div className="space-y-1 pt-1">
+                          <div className="flex justify-between items-center font-caption text-caption">
+                            <span className="text-on-surface-variant">36 dari 40 Submissions Telah Dinilai</span>
+                            <span className="text-primary font-semibold">90% Selesai</span>
+                          </div>
+                          <div className="w-full bg-surface-container-highest rounded-full h-1.5 overflow-hidden">
+                            <div className="bg-primary-container h-full rounded-full" style={{ width: '90%' }} />
+                          </div>
+                        </div>
+                        <div className="flex justify-end pt-space-xs">
+                          <button
+                            type="button"
+                            onClick={() => showToast('Membuka lembar penilaian Tugas 02')}
+                            className="px-3 py-1.5 rounded-md bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-sm text-label-sm flex items-center gap-1.5 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">rate_review</span>
+                            <span>Periksa & Beri Nilai</span>
+                          </button>
                         </div>
                       </div>
-                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm shrink-0">
-                        <span className="material-symbols-outlined text-[15px]">done_all</span>
-                        <span>Rata-rata 86.4/100</span>
+
+                      {/* Task Item 2: Completed Grading (fallback) */}
+                      <div className="rounded-lg bg-surface-container-low p-space-sm space-y-space-xs opacity-90 hover:opacity-100 transition-opacity">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-space-xs">
+                          <div className="space-y-0.5">
+                            <span className="font-title-md text-title-md text-on-surface font-semibold">
+                              Tugas 01: Diagram Konteks & DFD Level 1
+                            </span>
+                            <div className="flex flex-wrap items-center gap-2 text-on-surface-variant font-body-sm text-body-sm">
+                              <span className="px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary font-mono text-caption">
+                                TIF-305 RPL TI-B
+                              </span>
+                              <span className="text-outline-variant">&bull;</span>
+                              <span className="text-tertiary">38/38 Submissions Dinilai Lengkap</span>
+                            </div>
+                          </div>
+                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm shrink-0">
+                            <span className="material-symbols-outlined text-[15px]">done_all</span>
+                            <span>Rata-rata 86.4/100</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="pt-space-xs">
