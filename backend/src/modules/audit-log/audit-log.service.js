@@ -326,6 +326,22 @@ export class AuditLogService {
         email: newUser.email,
         role: newUser.role,
         status: newUser.status,
+        full_name: newUser.profile?.full_name || null,
+        mahasiswa: newUser.mahasiswa
+          ? {
+              nim: newUser.mahasiswa.nim,
+              prodi: newUser.mahasiswa.prodi,
+              angkatan: newUser.mahasiswa.angkatan,
+            }
+          : null,
+        dosen: newUser.dosen
+          ? {
+              nidn: newUser.dosen.nidn,
+              nip: newUser.dosen.nip,
+              gelar_depan: newUser.dosen.gelar_depan,
+              gelar_belakang: newUser.dosen.gelar_belakang,
+            }
+          : null,
       },
       ipAddress,
       userAgent,

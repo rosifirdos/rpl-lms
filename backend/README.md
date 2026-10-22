@@ -48,6 +48,8 @@ backend/
 │       ├── auth/              # login, refresh, logout, forgot-password, change-password
 │       ├── profile/           # getProfile, updateProfile, avatar upload, password
 │       ├── users/             # CRUD manajemen akun, status, reset password (Admin only)
+│       ├── courses/           # CRUD master mata kuliah (Admin only)
+│       ├── classes/           # CRUD pembukaan kelas (Admin only)
 │       └── audit-log/         # query jejak audit, inspeksi JSON diff (Admin only)
 └── storage/private/           # Penyimpanan berkas terproteksi (BR-009)
     ├── avatars/               #   avatar (FR-007: .jpg/.png, maks 2MB)
@@ -56,6 +58,8 @@ backend/
 ```
 
 ## Endpoint API (flat `/api` per SRS Bab 21)
+
+Pembuatan akun mahasiswa memerlukan `nim`, `prodi`, dan `angkatan`; pembuatan akun dosen memerlukan minimal `nidn` atau `nip`. Penghapusan mata kuliah bersifat nonaktif agar relasi kelas tetap terjaga. Kelas yang masih memiliki mahasiswa terdaftar tidak dapat dihapus, dan kapasitas tidak dapat diturunkan di bawah jumlah enrollment aktif.
 
 | Method | Endpoint | Deskripsi | Otorisasi |
 | --- | --- | --- | --- |
@@ -77,6 +81,16 @@ backend/
 | `PUT` | `/api/admin/users/:id` | Ubah data akun (termasuk role) | Admin |
 | `PATCH` | `/api/admin/users/:id/status` | Ubah status akun (`ACTIVE`/`INACTIVE`/`SUSPENDED`) | Admin |
 | `PUT` | `/api/admin/users/:id/reset-password` | Reset kata sandi pengguna oleh Admin (FR-044, SRS Bab 35) | Admin |
+| `GET` | `/api/admin/courses` | Daftar mata kuliah dengan pencarian, filter status, dan paginasi | Admin |
+| `POST` | `/api/admin/courses` | Tambah mata kuliah (kode unik, SKS 1–6) | Admin |
+| `GET` | `/api/admin/courses/:id` | Detail mata kuliah | Admin |
+| `PUT` | `/api/admin/courses/:id` | Perbarui mata kuliah | Admin |
+| `DELETE` | `/api/admin/courses/:id` | Nonaktifkan mata kuliah tanpa menghapus riwayat kelas | Admin |
+| `GET` | `/api/admin/classes` | Daftar kelas dengan filter semester, tahun akademik, dan mata kuliah | Admin |
+| `POST` | `/api/admin/classes` | Buka kelas untuk mata kuliah aktif dan dosen aktif | Admin |
+| `GET` | `/api/admin/classes/:id` | Detail kelas, dosen, mata kuliah, dan jumlah enrollment | Admin |
+| `PUT` | `/api/admin/classes/:id` | Perbarui data kelas dan validasi kapasitas | Admin |
+| `DELETE` | `/api/admin/classes/:id` | Hapus kelas yang belum memiliki enrollment | Admin |
 | `GET` | `/api/admin/audit-logs` | Riwayat jejak audit dengan filter komprehensif & paginasi (FR-052) | Admin |
 | `GET` | `/api/admin/audit-logs/:id` | Detail log audit (old_values vs new_values) | Admin |
 | `GET` | `/api/audit-logs` | Alias flat endpoint jejak audit | Admin |
@@ -117,7 +131,7 @@ npm run db:seed         # Isi akun pengguna & master awal
 ```bash
 npm run dev             # Mode development (nodemon)
 npm start               # Mode produksi
-npm test                # Menjalankan seluruh pengujian otomatis (57 test, Fase 2 & Fase 3)
+npm test                # Menjalankan seluruh pengujian otomatis (70 test, Fase 2–4)
 ```
 
 ### 4. Database Alternatif (Embedded Postgres)
@@ -152,7 +166,11 @@ Seeder juga membuat 5 master mata kuliah (`TIF101`–`TIF105`) dan 2 kelas perku
   - Endpoint peninjau jejak audit untuk Admin: `GET /api/admin/audit-logs` (filter tanggal, aksi, entitas, user, search, sorting, pagination) dan `GET /api/admin/audit-logs/:id` (detail JSON diff).
   - Endpoint reset password Admin: `PUT /api/admin/users/:id/reset-password`.
   - HTTP Security Hardening: Helmet security headers, CORS terproteksi dengan validasi origin ketat, general & auth rate limiting (`express-rate-limit`).
-  - Total pengujian otomatis: **57 test (100% lulus)**.
+- ✅ **Fase 4: Master Data Akademik SPADA (Selesai — 5 test integrasi)**
+  - Manajemen pengguna Admin: pencarian username/email/nama/NIM/NIDN/NIP, filter role/status, dan pembuatan akun dengan identitas mahasiswa/dosen.
+  - CRUD mata kuliah dengan pencarian, paginasi, validasi SKS 1–6, dan penonaktifan yang mempertahankan relasi kelas.
+  - CRUD kelas dengan filter akademik, validasi mata kuliah/dosen aktif, jejak audit, dan perlindungan kapasitas serta enrollment.
+  - Seluruh pengujian otomatis Fase 2–4: **70 test**.
 
 ### Modul SRS yang **belum diimplementasikan**
 
@@ -160,7 +178,7 @@ Sesuai prioritas MVP (SRS Bab 27), modul berikut menjadi tahapan selanjutnya:
 
 | MVP | Modul | Entitas SRS |
 | --- | --- | --- |
-| **MVP 1 (Fase 4–5)** | Master Data Akademik (Course, Class), Direct Enrollment & Dasbor Kontekstual | `Course`, `Class`, `Enrollment` |
+| **MVP 1 (Fase 5)** | Direct Enrollment & Dasbor Kontekstual | `Enrollment` |
 | **MVP 2** | Ruang Kelas 16 Pertemuan, Materi, Presensi Digital | `Meeting`, `Material`, `Attendance` |
 | **MVP 3** | Tugas, Validasi File, Submission, Penilaian Skor 0–100 | `Assignment`, `Submission` |
 | **MVP 4** | Timeline Pembelajaran, Kuis, Notifikasi | `Quiz`, `Notification` |
