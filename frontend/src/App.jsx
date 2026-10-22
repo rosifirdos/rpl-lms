@@ -8,9 +8,19 @@ import CourseCards from './components/CourseCards';
 import AnnouncementBanner from './components/AnnouncementBanner';
 import AssignmentWidget from './components/AssignmentWidget';
 import AttendanceWidget from './components/AttendanceWidget';
+import ForgotPasswordPage from './pages/ForgotPassword';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Dukungan routing sederhana untuk pratinjau halaman Lupa Password
+  const pathname = window.location.pathname;
+  const searchParams = new URLSearchParams(window.location.search);
+  const isForgotPassword = pathname === '/forgot-password' || searchParams.get('page') === 'forgot-password';
+
+  if (isForgotPassword) {
+    return <ForgotPasswordPage />;
+  }
 
   const mainWrapClass = sidebarOpen
     ? 'pl-64 transition-all duration-300'
