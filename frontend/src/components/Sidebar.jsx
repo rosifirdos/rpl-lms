@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const menuMahasiswa = [
-  { icon: 'dashboard', label: 'Dasbor Mahasiswa', path: 'dasbor-mahasiswa', active: true },
+  { icon: 'dashboard', label: 'Dasbor Mahasiswa', path: 'dasbor-mahasiswa' },
   { icon: 'auto_stories', label: 'Mata Kuliah Saya', path: 'mata-kuliah-saya' },
   { icon: 'assignment', label: 'Sentral Penugasan', path: 'sentral-penugasan' },
   { icon: 'calendar_today', label: 'Central Timeline', path: 'central-timeline' },
@@ -39,6 +39,12 @@ function NavItem({ item, isActive, onClick }) {
 
 function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
   const [activePath, setActivePath] = useState(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
+
+  // Sync activePath when activeRole changes externally
+  useEffect(() => {
+    setActivePath(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
+  }, [activeRole]);
+
   const asideClass = 'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' + (isOpen ? 'translate-x-0' : '-translate-x-full');
 
   const handleNavClick = (path) => {
@@ -50,33 +56,43 @@ function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
     }
   };
 
-  const renderGroup = (items) =>
-    items.map((item) => (
-      <NavItem
-        key={item.path}
-        item={item}
-        isActive={activePath === item.path}
-        onClick={handleNavClick}
-      />
-    ));
+  const renderGroup = (items, title) => {
+    if (!items.length) return null;
+    return (
+      <div key={title}>
+        <div className="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
+          {title}
+        </div>
+        {items.map((item) => (
+          <NavItem
+            key={item.path}
+            item={item}
+            isActive={activePath === item.path}
+            onClick={handleNavClick}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Filter menus based on activeRole
+  const getVisibleMenus = () => {
+    const menus = [];
+    if (activeRole === 'mahasiswa' || activeRole === 'dosen') {
+      menus.push({ items: menuMahasiswa, title: 'Menu Mahasiswa' });
+      menus.push({ items: menuDosen, title: 'Menu Dosen' });
+    }
+    // Admin menu always visible for admin role (could be extended with role check)
+    menus.push({ items: menuAdmin, title: 'Administrasi SPADA' });
+    return menus;
+  };
+
+  const visibleMenus = getVisibleMenus();
 
   return (
     <aside className={asideClass}>
       <div className="flex-1 overflow-y-auto py-space-md px-space-sm flex flex-col gap-space-xs">
-        <div className="px-space-sm pt-space-xs pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
-          Menu Mahasiswa
-        </div>
-        {renderGroup(menuMahasiswa)}
-
-        <div className="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
-          Menu Dosen
-        </div>
-        {renderGroup(menuDosen)}
-
-        <div className="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
-          Administrasi SPADA
-        </div>
-        {renderGroup(menuAdmin)}
+        {visibleMenus.map(({ items, title }) => renderGroup(items, title))}
       </div>
 
       <div className="p-space-md bg-surface-container-lowest/80 flex flex-col gap-space-sm">
