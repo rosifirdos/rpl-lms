@@ -9,17 +9,35 @@ import AnnouncementBanner from './components/AnnouncementBanner';
 import AssignmentWidget from './components/AssignmentWidget';
 import AttendanceWidget from './components/AttendanceWidget';
 import ForgotPasswordPage from './pages/ForgotPassword';
+import DasborDosenPage from './pages/DasborDosen';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Dukungan routing sederhana untuk pratinjau halaman Lupa Password
+  // Deteksi rute via URL / query param
   const pathname = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
+  const initialRole = searchParams.get('role') || (pathname.includes('/dosen') ? 'dosen' : 'mahasiswa');
+  const [activeRole, setActiveRole] = useState(initialRole);
+
   const isForgotPassword = pathname === '/forgot-password' || searchParams.get('page') === 'forgot-password';
 
   if (isForgotPassword) {
     return <ForgotPasswordPage />;
+  }
+
+  // Jika role Dosen aktif, render Dasbor Dosen terdedikasi
+  if (activeRole === 'dosen') {
+    return (
+      <DasborDosenPage
+        onRoleChange={(newRole) => {
+          setActiveRole(newRole);
+          const url = new URL(window.location.href);
+          url.searchParams.set('role', newRole);
+          window.history.pushState({}, '', url);
+        }}
+      />
+    );
   }
 
   const mainWrapClass = sidebarOpen
@@ -28,8 +46,21 @@ function App() {
 
   return (
     <div className="bg-background font-body-md text-on-surface antialiased">
-      <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <Sidebar isOpen={sidebarOpen} />
+      <Header
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        activeRole={activeRole}
+        onRoleChange={(newRole) => {
+          setActiveRole(newRole);
+          const url = new URL(window.location.href);
+          url.searchParams.set('role', newRole);
+          window.history.pushState({}, '', url);
+        }}
+      />
+      <Sidebar
+        isOpen={sidebarOpen}
+        activeRole={activeRole}
+        onRoleChange={setActiveRole}
+      />
 
       <div className={mainWrapClass}>
         <main className="w-full pt-16 px-gutter bg-background min-h-screen">
