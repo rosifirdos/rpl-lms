@@ -7,10 +7,13 @@ import { apiResponse } from './utils/apiResponse.js';
 import { AppError } from './utils/errors.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
+import userClassesRoutes from './modules/classes/user-classes.routes.js';
 import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
 import coursesRoutes from './modules/courses/courses.routes.js';
 import classesRoutes from './modules/classes/classes.routes.js';
+import enrollmentsRoutes from './modules/enrollments/enrollments.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
 import { generalLimiter, authLimiter, publicApiLimiter } from './middlewares/rateLimit.middleware.js';
@@ -54,12 +57,15 @@ if (ENV.NODE_ENV !== 'test') {
 }
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', publicApiLimiter, (req, res) => {
   return apiResponse.success(res, {
     message: 'SPADA LMS Backend API is operational',
     data: {
       timestamp: new Date().toISOString(),
       env: ENV.NODE_ENV,
+      status: 'healthy',
+      service: 'SPADA LMS Backend API',
+      version: '1.0.0',
     },
   });
 });
@@ -74,9 +80,12 @@ app.get('/api', (req, res) => {
       endpoints: {
         auth: '/api/auth',
         profile: '/api/profile',
+        dashboard: '/api/dashboard',
+        classes: '/api/classes',
         admin_users: '/api/admin/users',
         admin_courses: '/api/admin/courses',
         admin_classes: '/api/admin/classes',
+        admin_enrollments: '/api/admin/enrollments',
         admin_audit_logs: '/api/admin/audit-logs',
       },
     },
@@ -87,22 +96,15 @@ app.get('/api', (req, res) => {
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 
-// Health Check Endpoint (public, rate limited lebih longgar)
-app.get('/health', publicApiLimiter, (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    service: 'SPADA LMS Backend API',
-    version: '1.0.0',
-  });
-});
-
 // === Modul Inti SPADA LMS (flat /api paths per SRS Bab 21) ===
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/classes', userClassesRoutes);
 app.use('/api/admin/users', usersRoutes);
 app.use('/api/admin/courses', coursesRoutes);
 app.use('/api/admin/classes', classesRoutes);
+app.use('/api/admin/enrollments', enrollmentsRoutes);
 app.use('/api/admin/audit-logs', auditLogRoutes);
 app.use('/api/audit-logs', auditLogRoutes); // Alias kemudahan akses
 

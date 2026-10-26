@@ -1,5 +1,6 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { ClassesController } from './classes.controller.js';
+import { EnrollmentsController } from '../enrollments/enrollments.controller.js';
 import { authenticateToken } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/rbac.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
@@ -11,6 +12,10 @@ import {
   createClassSchema,
   updateClassSchema,
 } from './classes.validation.js';
+import {
+  classIdParamSchema as enrollmentClassIdParamSchema,
+  enrollmentListQuerySchema,
+} from '../enrollments/enrollments.validation.js';
 
 const router = Router();
 
@@ -24,6 +29,21 @@ router.post(
   validate(createClassSchema),
   ClassesController.createClass
 );
+
+// Direct Enrollment sub-routes (IMPLEMENTATION_PLAN_MVP1_BACKEND.md 4.7)
+router.get(
+  '/:classId/enrollments',
+  validate(enrollmentClassIdParamSchema),
+  validate(enrollmentListQuerySchema),
+  EnrollmentsController.getClassEnrollments
+);
+router.get(
+  '/:classId/available-students',
+  validate(enrollmentClassIdParamSchema),
+  validate(enrollmentListQuerySchema),
+  EnrollmentsController.getAvailableStudents
+);
+
 router.get('/:id', validate(classIdParamSchema), ClassesController.getClassById);
 router.put(
   '/:id',
