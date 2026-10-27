@@ -1,4 +1,36 @@
+import { useState, useEffect, useRef } from 'react';
+
 function Header({ onToggleSidebar, activeRole = 'mahasiswa', onRoleChange }) {
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const isDosen = activeRole === 'dosen';
+  const isAdmin = activeRole === 'admin';
+
+  const userName = isDosen
+    ? 'Dr. Awan Rosi, M.Kom.'
+    : isAdmin
+    ? 'Administrator SPADA'
+    : 'Dimas Arya Pratama';
+
+  const userSub = isDosen
+    ? 'NIDN: 0612345601 • Dosen'
+    : isAdmin
+    ? 'NIP: 19880101 • Admin PTIK'
+    : 'NIM: 22670014 • Informatika';
+
+  const userInitials = isDosen ? 'AR' : isAdmin ? 'AD' : 'DP';
+
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-surface-container/90 backdrop-blur-xl z-50 shadow-[0_1px_8px_rgba(0,0,0,0.3)]">
       <div className="w-full h-16 px-gutter flex items-center justify-between gap-space-md">
@@ -17,18 +49,28 @@ function Header({ onToggleSidebar, activeRole = 'mahasiswa', onRoleChange }) {
               <span className="material-symbols-outlined text-[24px]">school</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-title-md text-title-md text-on-surface tracking-tight leading-tight">SPADA UPGRIS</span>
-              <span className="font-caption text-caption text-on-surface-variant leading-none">Sistem Pembelajaran Daring</span>
+              <span className="font-title-md text-title-md text-on-surface tracking-tight leading-tight">
+                SPADA UPGRIS
+              </span>
+              <span className="font-caption text-caption text-on-surface-variant leading-none">
+                Sistem Pembelajaran Daring
+              </span>
             </div>
+          </div>
+
+          {/* Semester Badge */}
+          <div className="hidden xl:flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm">
+            <span className="material-symbols-outlined text-[14px]">circle</span>
+            <span>Semester Ganjil 2026/2027</span>
           </div>
 
           {/* Global Search */}
           <div className="hidden md:flex items-center gap-space-xs bg-surface-container-high rounded-lg px-space-sm py-1.5 w-72 border border-outline-variant/30 hover:border-outline-variant transition-colors">
             <span className="material-symbols-outlined text-[18px] text-on-surface-variant">search</span>
             <input
-              aria-label="Cari Materi, Tugas, atau Kelas"
+              aria-label="Cari Mata Kuliah, Materi, atau Tugas"
               className="bg-transparent text-body-md font-body-md text-on-surface placeholder:text-on-surface-variant outline-none flex-1 min-w-0"
-              placeholder="Cari materi, tugas, atau kelas..."
+              placeholder="Cari mata kuliah, materi, atau tugas..."
               readOnly
               type="search"
             />
@@ -38,8 +80,13 @@ function Header({ onToggleSidebar, activeRole = 'mahasiswa', onRoleChange }) {
           </div>
         </div>
 
-        {/* Right: Role Switcher + Notifications + Profile */}
+        {/* Right: Server Time + Role Switcher + Notifications + Profile */}
         <div className="flex items-center gap-space-sm">
+          <div className="hidden lg:flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm mr-2">
+            <span className="material-symbols-outlined text-[16px]">schedule</span>
+            <span>Server: 08:30 WIB</span>
+          </div>
+
           {/* Role Switcher Pill */}
           <div className="hidden sm:flex items-center bg-surface-container-low p-space-xs rounded-lg gap-space-xs border border-outline-variant/30">
             <button
@@ -64,6 +111,17 @@ function Header({ onToggleSidebar, activeRole = 'mahasiswa', onRoleChange }) {
             >
               Dosen
             </button>
+            <button
+              type="button"
+              onClick={() => onRoleChange && onRoleChange('admin')}
+              className={`px-space-sm py-space-xs rounded font-label-sm text-label-sm transition-colors ${
+                activeRole === 'admin'
+                  ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+              }`}
+            >
+              Admin
+            </button>
           </div>
 
           <button
@@ -82,20 +140,74 @@ function Header({ onToggleSidebar, activeRole = 'mahasiswa', onRoleChange }) {
             <span className="material-symbols-outlined text-[22px]">calendar_today</span>
           </button>
 
-          {/* Profile */}
-          <button
-            className="flex items-center gap-space-sm pl-space-sm border-l border-outline-variant/40 hover:bg-surface-container-high rounded-lg py-1 pr-space-xs transition-colors"
-            type="button"
-          >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-on-primary font-bold text-sm">
-              AF
-            </div>
-            <div className="hidden md:flex flex-col text-left">
-              <span className="font-label-md text-label-md text-on-surface leading-tight">Ahmad Fauzi</span>
-              <span className="font-caption text-caption text-on-surface-variant leading-none">Mahasiswa</span>
-            </div>
-            <span className="material-symbols-outlined text-[18px] text-on-surface-variant hidden md:block">expand_more</span>
-          </button>
+          {/* Profile with Interactive Dropdown */}
+          <div className="relative" ref={profileMenuRef}>
+            <button
+              className="flex items-center gap-space-sm pl-space-sm border-l border-outline-variant/40 hover:bg-surface-container-high rounded-lg py-1 pr-space-xs transition-colors"
+              type="button"
+              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+            >
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-on-primary font-bold text-sm">
+                {userInitials}
+              </div>
+              <div className="hidden md:flex flex-col text-left">
+                <span className="font-label-md text-label-md text-on-surface leading-tight">
+                  {userName}
+                </span>
+                <span className="font-caption text-caption text-on-surface-variant leading-none uppercase">
+                  {activeRole}
+                </span>
+              </div>
+              <span className="material-symbols-outlined text-[18px] text-on-surface-variant hidden md:block">
+                expand_more
+              </span>
+            </button>
+
+            {/* Profile Dropdown Card */}
+            {profileDropdownOpen && (
+              <div className="absolute right-0 top-12 mt-space-xs w-64 rounded-xl bg-surface-container-lowest p-space-sm shadow-xl z-50 border border-outline-variant/30">
+                <div className="px-space-sm py-space-xs mb-space-xs rounded-lg bg-surface-container-low">
+                  <p className="font-title-md text-title-md text-on-surface">{userName}</p>
+                  <p className="font-caption text-caption text-secondary">{userSub}</p>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <a
+                    href="#profile"
+                    onClick={(e) => { e.preventDefault(); setProfileDropdownOpen(false); }}
+                    className="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-md text-label-md transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">badge</span>
+                    <span>Profil Saya</span>
+                  </a>
+                  <a
+                    href="/forgot-password"
+                    onClick={(e) => { e.preventDefault(); window.location.href = '/forgot-password'; }}
+                    className="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-md text-label-md transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">key</span>
+                    <span>Ganti Kata Sandi</span>
+                  </a>
+                  <a
+                    href="#notifications"
+                    onClick={(e) => { e.preventDefault(); setProfileDropdownOpen(false); }}
+                    className="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-label-md text-label-md transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">tune</span>
+                    <span>Preferensi Notifikasi</span>
+                  </a>
+                  <div className="h-px bg-surface-container-high my-space-xs" />
+                  <a
+                    href="#logout"
+                    onClick={(e) => { e.preventDefault(); setProfileDropdownOpen(false); }}
+                    className="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-error hover:bg-error-container/20 font-label-md text-label-md transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">logout</span>
+                    <span>Keluar Sesi</span>
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

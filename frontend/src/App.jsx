@@ -10,6 +10,7 @@ import AssignmentWidget from './components/AssignmentWidget';
 import AttendanceWidget from './components/AttendanceWidget';
 import ForgotPasswordPage from './pages/ForgotPassword';
 import DasborDosenPage from './pages/DasborDosen';
+import AppShellGlobalPage from './pages/AppShellGlobal';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -21,9 +22,25 @@ function App() {
   const [activeRole, setActiveRole] = useState(initialRole);
 
   const isForgotPassword = pathname === '/forgot-password' || searchParams.get('page') === 'forgot-password';
+  const isAppShellGlobal = pathname === '/app-shell' || searchParams.get('page') === 'app-shell';
 
   if (isForgotPassword) {
     return <ForgotPasswordPage />;
+  }
+
+  // Jika diminta rute atau pratinjau App Shell Global secara eksplisit
+  if (isAppShellGlobal) {
+    return (
+      <AppShellGlobalPage
+        currentRole={activeRole}
+        onRoleChange={(newRole) => {
+          setActiveRole(newRole);
+          const url = new URL(window.location.href);
+          url.searchParams.set('role', newRole);
+          window.history.pushState({}, '', url);
+        }}
+      />
+    );
   }
 
   // Jika role Dosen aktif, render Dasbor Dosen terdedikasi
