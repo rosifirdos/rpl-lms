@@ -172,7 +172,7 @@ const availableRooms = [
   'Ruang Teori 402 (Gedung Utama Lt. 4)',
 ];
 
-export default function PembukaanKelas() {
+export default function PembukaanKelas({ onNavigate }) {
   const [classes, setClasses] = useState(initialClassesData);
   const [searchQuery, setSearchQuery] = useState('');
   const [semesterFilter, setSemesterFilter] = useState('all');
@@ -212,12 +212,24 @@ export default function PembukaanKelas() {
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
   }, []);
 
+  const toastTimeoutRef = useRef(null);
+
   const showToast = (msg) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
   };
 
   // Filter logic
@@ -283,6 +295,7 @@ export default function PembukaanKelas() {
     const kodeKelas = `${selectedCourse.kode}-${rombelLetter}`;
 
     if (editingClass) {
+      // TODO: Integrasikan dengan REST API PUT /api/akademik/kelas/:id
       setClasses((prev) =>
         prev.map((item) =>
           item.id === editingClass.id
@@ -330,6 +343,7 @@ export default function PembukaanKelas() {
         terdaftar: 0,
         semesterTawaran: 'Semester Ganjil 2026/2027 (Aktif)',
       };
+      // TODO: Integrasikan dengan REST API POST /api/akademik/kelas
       setClasses((prev) => [newClass, ...prev]);
       showToast(`Kelas ${newClass.kodeKelas} berhasil dibuka!`);
     }
@@ -337,6 +351,7 @@ export default function PembukaanKelas() {
   };
 
   const handleDelete = (c) => {
+    // TODO: Integrasikan dengan REST API DELETE /api/akademik/kelas/:id
     setClasses((prev) => prev.filter((item) => item.id !== c.id));
     setDeletingClass(null);
     showToast(`Kelas ${c.rombel} (${c.kodeKelas}) telah dihapus.`);
@@ -347,7 +362,7 @@ export default function PembukaanKelas() {
       {/* Breadcrumbs & Live PDDikti Status */}
       <div className="flex flex-wrap items-center justify-between gap-space-sm mb-space-md">
         <nav aria-label="Breadcrumb" className="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
-          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#">
+          <a className="hover:text-primary transition-colors flex items-center gap-1 cursor-pointer" href="/" onClick={(e) => { e.preventDefault(); onNavigate?.('dasbor-mahasiswa'); }}>
             <span className="material-symbols-outlined text-[16px]">home</span>
             <span>Beranda</span>
           </a>
@@ -686,14 +701,14 @@ export default function PembukaanKelas() {
       {/* Modal Dialog: Buka Kelas Baru / Edit */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md overflow-y-auto animate-in fade-in duration-200">
-          <div className="relative w-full max-w-2xl bg-surface-container rounded-2xl shadow-2xl p-space-xl flex flex-col gap-space-lg my-auto border border-outline-variant/30">
+          <div role="dialog" aria-modal="true" aria-labelledby="modal-class-heading" className="relative w-full max-w-2xl bg-surface-container rounded-2xl shadow-2xl p-space-xl flex flex-col gap-space-lg my-auto border border-outline-variant/30">
             <div className="flex items-start justify-between">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-space-xs text-primary font-label-sm text-label-sm">
                   <span className="material-symbols-outlined text-[18px]">post_add</span>
                   <span>Konfigurasi Perkuliahan Baru</span>
                 </div>
-                <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
+                <h2 id="modal-class-heading" className="font-headline-md text-headline-md text-on-surface font-bold">
                   {editingClass ? `Ubah Kelas ${editingClass.kodeKelas}` : 'Buka Kelas Perkuliahan Baru'}
                 </h2>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -817,11 +832,11 @@ export default function PembukaanKelas() {
       {/* Enrollment Drawer / Modal */}
       {managingClass && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md">
-          <div className="relative w-full max-w-xl bg-surface-container text-on-surface rounded-2xl shadow-2xl p-space-lg flex flex-col gap-space-md border border-outline-variant/30">
+          <div role="dialog" aria-modal="true" aria-labelledby="modal-enrollment-heading" className="relative w-full max-w-xl bg-surface-container text-on-surface rounded-2xl shadow-2xl p-space-lg flex flex-col gap-space-md border border-outline-variant/30">
             <div className="flex items-start justify-between border-b border-outline-variant/20 pb-2">
               <div>
                 <span className="text-xs font-mono text-primary font-bold">{managingClass.kodeKelas} (Rombel {managingClass.rombel})</span>
-                <h3 className="text-lg font-bold font-title-md">{managingClass.mataKuliah}</h3>
+                <h3 id="modal-enrollment-heading" className="text-lg font-bold font-title-md">{managingClass.mataKuliah}</h3>
                 <p className="text-xs text-on-surface-variant">Dosen: {managingClass.dosen.nama}</p>
               </div>
               <button className="p-1 rounded text-outline hover:text-on-surface" onClick={() => setManagingClass(null)}>
@@ -849,10 +864,10 @@ export default function PembukaanKelas() {
       {/* Delete Confirmation Modal */}
       {deletingClass && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md">
-          <div className="relative w-full max-w-md bg-surface-container text-on-surface rounded-xl shadow-2xl p-space-lg flex flex-col gap-3 border border-error/40">
+          <div role="dialog" aria-modal="true" aria-labelledby="modal-delete-class-heading" className="relative w-full max-w-md bg-surface-container text-on-surface rounded-xl shadow-2xl p-space-lg flex flex-col gap-3 border border-error/40">
             <div className="flex items-center gap-2 text-error">
               <span className="material-symbols-outlined text-[24px]">warning</span>
-              <h3 className="font-title-lg text-lg font-bold">Hapus Kelas Perkuliahan?</h3>
+              <h3 id="modal-delete-class-heading" className="font-title-lg text-lg font-bold">Hapus Kelas Perkuliahan?</h3>
             </div>
             <p className="text-sm text-on-surface-variant">
               Apakah Anda yakin ingin menghapus kelas <strong>{deletingClass.rombel} ({deletingClass.kodeKelas})</strong>?

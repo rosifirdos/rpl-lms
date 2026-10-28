@@ -22,13 +22,19 @@ const menuAdmin = [
 ];
 
 function NavItem({ item, isActive, onClick }) {
-  const baseClass = 'flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors font-label-md text-label-md';
+  const baseClass =
+    'flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors font-label-md text-label-md cursor-pointer';
   const activeClass = 'bg-primary-container text-on-primary-container font-bold shadow-md';
   const inactiveClass = 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface';
+  const href = item.path === 'dasbor-mahasiswa' ? '/' : `/?page=${item.path}`;
+
   return (
     <a
-      href="#"
-      onClick={(e) => { e.preventDefault(); onClick(item.path); }}
+      href={href}
+      onClick={(e) => {
+        e.preventDefault();
+        onClick(item.path);
+      }}
       className={baseClass + ' ' + (isActive ? activeClass : inactiveClass)}
     >
       <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
@@ -37,9 +43,18 @@ function NavItem({ item, isActive, onClick }) {
   );
 }
 
-function Sidebar({ isOpen }) {
-  const [activePath, setActivePath] = useState('dasbor-mahasiswa');
-  const asideClass = 'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' + (isOpen ? 'translate-x-0' : '-translate-x-full');
+function Sidebar({ isOpen, currentRoute = 'dasbor-mahasiswa', onNavigate }) {
+  const activePath = currentRoute === '/' ? 'dasbor-mahasiswa' : currentRoute;
+
+  const handleNavClick = (path) => {
+    if (onNavigate) {
+      onNavigate(path);
+    }
+  };
+
+  const asideClass =
+    'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' +
+    (isOpen ? 'translate-x-0' : '-translate-x-full');
 
   const renderGroup = (items) =>
     items.map((item) => (
@@ -47,7 +62,7 @@ function Sidebar({ isOpen }) {
         key={item.path}
         item={item}
         isActive={activePath === item.path}
-        onClick={setActivePath}
+        onClick={handleNavClick}
       />
     ));
 
@@ -75,7 +90,9 @@ function Sidebar({ isOpen }) {
           SPADA UPGRIS v2.4 &bull; Standalone LMS
         </div>
         <a
-          href="#"
+          href="https://upt-ptik.upgris.ac.id"
+          target="_blank"
+          rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-space-xs py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-secondary hover:text-on-surface transition-colors font-label-sm text-label-sm"
         >
           <span className="material-symbols-outlined text-[16px]">support_agent</span>

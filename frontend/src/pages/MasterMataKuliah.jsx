@@ -102,7 +102,7 @@ const initialCoursesData = [
   },
 ];
 
-export default function MasterMataKuliah() {
+export default function MasterMataKuliah({ onNavigate }) {
   const [courses, setCourses] = useState(initialCoursesData);
   const [searchQuery, setSearchQuery] = useState('');
   const [sksFilter, setSksFilter] = useState('all');
@@ -242,6 +242,7 @@ export default function MasterMataKuliah() {
         status: formData.statusAktif ? 'aktif' : 'arsip',
         kurikulum: curriculumFilter === 'all' ? 'kur-2024' : curriculumFilter,
       };
+      // TODO: Integrasikan dengan REST API POST /api/kurikulum/mata-kuliah
       setCourses((prev) => [newCourse, ...prev]);
       showToast(`Mata kuliah ${newCourse.kode} berhasil didaftarkan!`);
     }
@@ -255,6 +256,7 @@ export default function MasterMataKuliah() {
   };
 
   const handleDelete = (course) => {
+    // TODO: Integrasikan dengan REST API DELETE /api/kurikulum/mata-kuliah/:id
     setCourses((prev) => prev.filter((c) => c.id !== course.id));
     setDeleteConfirmCourse(null);
     showToast(`Mata kuliah ${course.kode} dihapus.`);
@@ -265,10 +267,10 @@ export default function MasterMataKuliah() {
       {/* Top Academic Navigation Breadcrumbs & Micro System Health */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-sm mb-space-md">
         <nav aria-label="Breadcrumb" className="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
-          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#">
-            <span className="material-symbols-outlined text-[15px]">home</span>
-            <span>Beranda</span>
-          </a>
+          <a className="hover:text-primary transition-colors flex items-center gap-1 cursor-pointer" href="/" onClick={(e) => { e.preventDefault(); onNavigate?.('dasbor-mahasiswa'); }}>
+              <span className="material-symbols-outlined text-[15px]">home</span>
+              <span>Beranda</span>
+            </a>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
           <span className="text-on-surface-variant">Administrasi SPADA</span>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
@@ -585,24 +587,29 @@ export default function MasterMataKuliah() {
       {/* CRUD Modal Dialog */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl bg-white text-gray-900 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-course-heading"
+            className="relative w-full max-w-xl bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30 animate-in zoom-in-95 duration-200"
+          >
+            <div className="h-1.5 w-full bg-gradient-to-r from-primary to-primary-container"></div>
 
-            <div className="flex items-start justify-between p-space-lg pb-space-sm border-b border-gray-100">
+            <div className="flex items-start justify-between p-space-lg pb-space-sm border-b border-outline-variant/20">
               <div className="flex flex-col">
-                <div className="flex items-center gap-space-xs text-blue-600 font-label-sm text-label-sm font-semibold uppercase">
+                <div className="flex items-center gap-space-xs text-primary font-label-sm text-label-sm font-semibold uppercase">
                   <span className="material-symbols-outlined text-[16px]">school</span>
                   <span>Kurikulum SPADA 2024</span>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight font-title-lg">
+                <h2 id="modal-course-heading" className="text-2xl font-bold text-on-surface tracking-tight font-title-lg">
                   {editingCourse ? `Ubah Mata Kuliah ${editingCourse.kode}` : 'Tambah Mata Kuliah Baru'}
                 </h2>
-                <p className="text-sm text-gray-500 font-body-sm mt-0.5">
+                <p className="text-sm text-on-surface-variant font-body-sm mt-0.5">
                   Daftarkan kurikulum baru ke master data akademik SPADA UPGRIS.
                 </p>
               </div>
               <button
-                className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer"
                 type="button"
                 onClick={() => setIsModalOpen(false)}
               >
@@ -613,12 +620,12 @@ export default function MasterMataKuliah() {
             <form className="p-space-lg pt-space-md flex flex-col gap-space-md" onSubmit={handleFormSubmit}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
                 <div className="sm:col-span-1 flex flex-col gap-1.5">
-                  <label className="font-label-sm text-label-sm text-gray-700 font-semibold flex items-center justify-between" htmlFor="mkKode">
+                  <label className="font-label-sm text-label-sm text-on-surface font-semibold flex items-center justify-between" htmlFor="mkKode">
                     <span>Kode MK *</span>
-                    <span className="text-xs text-blue-600 font-normal">Kapital</span>
+                    <span className="text-xs text-secondary font-normal">Kapital</span>
                   </label>
                   <input
-                    className="w-full uppercase font-mono px-3 py-2 bg-gray-50 rounded-lg text-gray-900 placeholder:text-gray-400 font-body-md text-body-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm border border-gray-200"
+                    className="w-full uppercase font-mono px-3 py-2 bg-surface-container-low rounded-lg text-on-surface placeholder:text-outline font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-1 focus:ring-primary shadow-sm border border-outline-variant/30"
                     id="mkKode"
                     placeholder="TIF-305"
                     required
@@ -628,13 +635,13 @@ export default function MasterMataKuliah() {
                   />
                 </div>
                 <div className="sm:col-span-2 flex flex-col gap-1.5">
-                  <label className="font-label-sm text-label-sm text-gray-700 font-semibold flex items-center justify-between" htmlFor="mkSks">
+                  <label className="font-label-sm text-label-sm text-on-surface font-semibold flex items-center justify-between" htmlFor="mkSks">
                     <span>Beban SKS *</span>
-                    <span className="text-xs text-gray-500 font-normal">1 s.d. 6 SKS</span>
+                    <span className="text-xs text-on-surface-variant font-normal">1 s.d. 6 SKS</span>
                   </label>
                   <div className="relative">
                     <input
-                      className="w-full px-3 py-2 bg-gray-50 rounded-lg text-gray-900 font-body-md text-body-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm border border-gray-200"
+                      className="w-full px-3 py-2 bg-surface-container-low rounded-lg text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-1 focus:ring-primary shadow-sm border border-outline-variant/30"
                       id="mkSks"
                       max="6"
                       min="1"
@@ -643,7 +650,7 @@ export default function MasterMataKuliah() {
                       value={formData.sks}
                       onChange={(e) => setFormData({ ...formData, sks: e.target.value })}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-label-sm text-label-sm pointer-events-none">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-outline font-label-sm text-label-sm pointer-events-none">
                       SKS Bobot
                     </span>
                   </div>
@@ -651,11 +658,11 @@ export default function MasterMataKuliah() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="font-label-sm text-label-sm text-gray-700 font-semibold" htmlFor="mkNama">
+                <label className="font-label-sm text-label-sm text-on-surface font-semibold" htmlFor="mkNama">
                   Nama Mata Kuliah Lengkap *
                 </label>
                 <input
-                  className="w-full px-3 py-2 bg-gray-50 rounded-lg text-gray-900 placeholder:text-gray-400 font-body-md text-body-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm border border-gray-200"
+                  className="w-full px-3 py-2 bg-surface-container-low rounded-lg text-on-surface placeholder:text-outline font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-1 focus:ring-primary shadow-sm border border-outline-variant/30"
                   id="mkNama"
                   placeholder="Masukkan nama mata kuliah lengkap..."
                   required
@@ -667,13 +674,13 @@ export default function MasterMataKuliah() {
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-label-sm text-label-sm text-gray-700 font-semibold" htmlFor="mkDeskripsi">
+                  <label className="font-label-sm text-label-sm text-on-surface font-semibold" htmlFor="mkDeskripsi">
                     Deskripsi Singkat & CPL
                   </label>
-                  <span className="text-xs text-gray-400 font-caption text-caption">Maks 300 karakter</span>
+                  <span className="text-xs text-outline font-caption text-caption">Maks 300 karakter</span>
                 </div>
                 <textarea
-                  className="w-full px-3 py-2 bg-gray-50 rounded-lg text-gray-900 placeholder:text-gray-400 font-body-sm text-body-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm leading-relaxed border border-gray-200"
+                  className="w-full px-3 py-2 bg-surface-container-low rounded-lg text-on-surface placeholder:text-outline font-body-sm text-body-sm focus:bg-surface-container-lowest focus:outline-none focus:ring-1 focus:ring-primary shadow-sm leading-relaxed border border-outline-variant/30"
                   id="mkDeskripsi"
                   placeholder="Deskripsi silabus kompetensi, capaian pembelajaran (CPL), dan ruang lingkup perkuliahan 16 pertemuan..."
                   rows={3}
@@ -682,12 +689,12 @@ export default function MasterMataKuliah() {
                 />
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-200">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant/30">
                 <div className="flex items-center gap-space-sm">
-                  <span className="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
+                  <span className="material-symbols-outlined text-tertiary text-[20px]">check_circle</span>
                   <div className="flex flex-col">
-                    <span className="font-label-sm text-label-sm text-gray-900 font-semibold">Status Kurikulum Aktif</span>
-                    <span className="font-caption text-caption text-gray-500">Mata kuliah ini langsung dapat dialokasikan pada modul Pembukaan Kelas</span>
+                    <span className="font-label-sm text-label-sm text-on-surface font-semibold">Status Kurikulum Aktif</span>
+                    <span className="font-caption text-caption text-on-surface-variant">Mata kuliah ini langsung dapat dialokasikan pada modul Pembukaan Kelas</span>
                   </div>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -697,20 +704,20 @@ export default function MasterMataKuliah() {
                     type="checkbox"
                     onChange={(e) => setFormData({ ...formData, statusAktif: e.target.checked })}
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-space-sm pt-space-sm border-t border-gray-100">
+              <div className="flex items-center justify-end gap-space-sm pt-space-sm border-t border-outline-variant/20">
                 <button
-                  className="px-space-md py-2.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-label-md text-label-md font-medium transition-colors cursor-pointer"
+                  className="px-space-md py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-label-md text-label-md font-medium transition-colors cursor-pointer"
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                 >
                   Batal
                 </button>
                 <button
-                  className="flex items-center gap-space-xs px-space-lg py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-label-md text-label-md font-bold shadow-lg shadow-blue-500/25 active:scale-[0.98] transition-all cursor-pointer"
+                  className="flex items-center gap-space-xs px-space-lg py-2.5 rounded-lg bg-primary-container text-on-primary-container hover:bg-primary font-label-md text-label-md font-bold shadow-md active:scale-[0.98] transition-all cursor-pointer"
                   type="submit"
                 >
                   <span className="material-symbols-outlined text-[18px]">save</span>
@@ -725,12 +732,12 @@ export default function MasterMataKuliah() {
       {/* Syllabus Modal */}
       {viewingSyllabus && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md">
-          <div className="relative w-full max-w-2xl bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30 max-h-[85vh] flex flex-col">
+          <div role="dialog" aria-modal="true" aria-labelledby="modal-syllabus-heading" className="relative w-full max-w-2xl bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30 max-h-[85vh] flex flex-col">
             <div className="h-1.5 w-full bg-gradient-to-r from-tertiary to-secondary"></div>
             <div className="flex items-start justify-between p-space-lg pb-space-sm border-b border-outline-variant/20">
               <div className="flex flex-col">
                 <span className="font-mono text-primary font-bold text-xs">{viewingSyllabus.kode} ({viewingSyllabus.sks} SKS)</span>
-                <h3 className="text-xl font-bold font-title-lg">{viewingSyllabus.nama}</h3>
+                <h3 id="modal-syllabus-heading" className="text-xl font-bold font-title-lg">{viewingSyllabus.nama}</h3>
                 <p className="text-xs text-on-surface-variant">{viewingSyllabus.deskripsi}</p>
               </div>
               <button
@@ -767,10 +774,10 @@ export default function MasterMataKuliah() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmCourse && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md">
-          <div className="relative w-full max-w-md bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-error/40 p-space-lg flex flex-col gap-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="modal-delete-course-heading" className="relative w-full max-w-md bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-error/40 p-space-lg flex flex-col gap-4">
             <div className="flex items-center gap-2 text-error">
               <span className="material-symbols-outlined text-[24px]">warning</span>
-              <h3 className="font-title-lg text-lg font-bold">Konfirmasi Hapus</h3>
+              <h3 id="modal-delete-course-heading" className="font-title-lg text-lg font-bold">Konfirmasi Hapus</h3>
             </div>
             <p className="text-sm text-on-surface-variant">
               Apakah Anda yakin ingin menghapus mata kuliah <strong>{deleteConfirmCourse.kode} - {deleteConfirmCourse.nama}</strong>?

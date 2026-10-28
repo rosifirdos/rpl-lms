@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 
+// TODO: Integrasikan dengan endpoint REST API GET /api/audit-logs
 const initialLogs = [
   {
     id: 'aud-1',
@@ -272,7 +273,7 @@ const initialLogs = [
   },
 ];
 
-export default function JejakAudit() {
+export default function JejakAudit({ onNavigate }) {
   const [logs] = useState(initialLogs);
   const [actionType, setActionType] = useState('GRADE_MUTATION');
   const [entityType, setEntityType] = useState('');
@@ -282,10 +283,25 @@ export default function JejakAudit() {
   const [copyText, setCopyText] = useState('Salin Raw JSON');
   const [toastMessage, setToastMessage] = useState(null);
 
+  const toastTimeoutRef = useRef(null);
+
   const showToast = (msg) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
@@ -316,7 +332,7 @@ export default function JejakAudit() {
       {/* Breadcrumb & Header */}
       <div className="flex flex-col gap-space-sm pt-space-md mb-space-lg">
         <nav aria-label="Breadcrumb" className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
-          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#">
+          <a className="hover:text-primary transition-colors flex items-center gap-1 cursor-pointer" href="/" onClick={(e) => { e.preventDefault(); onNavigate?.('dasbor-mahasiswa'); }}>
             <span className="material-symbols-outlined text-[16px]">home</span>
             Beranda
           </a>
@@ -626,14 +642,14 @@ export default function JejakAudit() {
       {/* JSON Diff Inspector Modal */}
       {selectedLog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-5xl bg-surface-container rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-outline-variant/30">
+          <div role="dialog" aria-modal="true" aria-labelledby="modal-diff-inspector-heading" className="relative w-full max-w-5xl bg-surface-container rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-outline-variant/30">
             <div className="flex items-start justify-between px-space-lg py-space-md bg-surface-container-high border-b border-outline-variant/20">
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-[#D97706]/20 text-[#FBBF24]">
+                <div className="p-2 rounded-lg bg-secondary-container/20 text-secondary">
                   <span className="material-symbols-outlined text-[24px]">difference</span>
                 </div>
                 <div>
-                  <h3 className="font-title-lg text-title-lg font-bold text-on-surface">
+                  <h3 id="modal-diff-inspector-heading" className="font-title-lg text-title-lg font-bold text-on-surface">
                     Inspeksi Perubahan Data: {selectedLog.actionType} pada {selectedLog.entityTarget}
                   </h3>
                   <p className="font-caption text-caption text-on-surface-variant mt-0.5">
@@ -657,22 +673,22 @@ export default function JejakAudit() {
 
             <div className="flex-1 overflow-y-auto p-space-md bg-surface-container-low">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md">
-                <div className="flex flex-col rounded-xl overflow-hidden bg-[#93000a]/10 border border-[#93000a]/30">
-                  <div className="px-space-md py-2 bg-[#93000a]/20 text-[#ffb4ab] font-bold text-xs flex justify-between">
+                <div className="flex flex-col rounded-xl overflow-hidden bg-error-container/10 border border-error-container/30">
+                  <div className="px-space-md py-2 bg-error-container/20 text-error font-bold text-xs flex justify-between">
                     <span>Nilai Lama (Old Values)</span>
                     <span className="font-mono text-[10px]">Snapshot Sebelum Revisi</span>
                   </div>
-                  <pre className="p-space-md font-mono text-xs text-[#ffb4ab] bg-[#020f1e]/80 overflow-x-auto min-h-[160px]">
+                  <pre className="p-space-md font-mono text-xs text-error bg-surface-container-lowest/80 overflow-x-auto min-h-[160px]">
                     <code>{selectedLog.diffData?.oldValues ? JSON.stringify(selectedLog.diffData.oldValues, null, 2) : 'null (Data Baru)'}</code>
                   </pre>
                 </div>
 
-                <div className="flex flex-col rounded-xl overflow-hidden bg-[#00a572]/10 border border-[#00a572]/30">
-                  <div className="px-space-md py-2 bg-[#00a572]/20 text-[#4edea3] font-bold text-xs flex justify-between">
+                <div className="flex flex-col rounded-xl overflow-hidden bg-tertiary-container/10 border border-tertiary-container/30">
+                  <div className="px-space-md py-2 bg-tertiary-container/20 text-tertiary font-bold text-xs flex justify-between">
                     <span>Nilai Baru (New Values)</span>
                     <span className="font-mono text-[10px]">Mutasi Terverifikasi</span>
                   </div>
-                  <pre className="p-space-md font-mono text-xs text-[#4edea3] bg-[#020f1e]/80 overflow-x-auto min-h-[160px]">
+                  <pre className="p-space-md font-mono text-xs text-tertiary bg-surface-container-lowest/80 overflow-x-auto min-h-[160px]">
                     <code>{JSON.stringify(selectedLog.diffData?.newValues || selectedLog, null, 2)}</code>
                   </pre>
                 </div>
