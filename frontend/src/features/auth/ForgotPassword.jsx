@@ -4,25 +4,33 @@ import React, { useState, useEffect } from 'react';
  * ForgotPassword — feature component (auth)
  *
  * Digunakan sebagai komponen inti halaman pemulihan kata sandi SPADA LMS.
- * Dapat dihubungkan ke API nyata:
+ * Mendukung navigasi SPA via props (onNavigate, onBack) serta API nyata:
  *   POST /api/auth/forgot-password  { email }
  *   POST /api/auth/resend-reset     { email }
  */
-export default function ForgotPassword() {
+export default function ForgotPassword({ onNavigate, onBack }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  // Countdown timer untuk cooldown kirim-ulang
+  // Countdown timer untuk cooldown kirim-ulang (presisi & pencegahan memory leak)
   useEffect(() => {
     if (resendCooldown <= 0) return;
-    const timer = setTimeout(() => {
-      setResendCooldown((prev) => prev - 1);
+
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
-    return () => clearTimeout(timer);
-  }, [resendCooldown]);
+
+    return () => clearInterval(timer);
+  }, [resendCooldown > 0, resendCooldown === 60]);
 
   /** Validasi & submit permintaan reset password */
   const handleSubmit = (e) => {
@@ -56,7 +64,7 @@ export default function ForgotPassword() {
 
   /** Kirim ulang tautan setelah cooldown habis */
   const handleResend = () => {
-    if (resendCooldown > 0 || !submittedEmail) return;
+    if (resendCooldown > 0 || !submittedEmail || loading) return;
     setLoading(true);
     // TODO: await apiClient.post('/api/auth/resend-reset', { email: submittedEmail });
     setTimeout(() => {
@@ -153,16 +161,20 @@ export default function ForgotPassword() {
                       <button
                         type="button"
                         onClick={handleResend}
-                        disabled={resendCooldown > 0}
+                        disabled={resendCooldown > 0 || loading}
                         className={`mt-2 text-xs font-semibold underline transition-colors ${
-                          resendCooldown > 0
+                          resendCooldown > 0 || loading
                             ? 'text-[#6EE7B7] cursor-not-allowed'
                             : 'text-[#059669] hover:text-[#047857] cursor-pointer'
                         }`}
                       >
-                        {resendCooldown > 0
-                          ? `Kirim ulang tautan jika belum diterima (${resendCooldown}s)`
-                          : 'Kirim ulang tautan sekarang'}
+                        {loading ? (
+                          'Mengirim ulang tautan...'
+                        ) : resendCooldown > 0 ? (
+                          `Kirim ulang tautan jika belum diterima (${resendCooldown}s)`
+                        ) : (
+                          'Kirim ulang tautan sekarang'
+                        )}
                       </button>
                     </div>
                   </div>
@@ -266,7 +278,16 @@ export default function ForgotPassword() {
               <div className="flex flex-col gap-3 text-center">
                 <a
                   href="/login"
-                  className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors py-1 group"
+                  onClick={(e) => {
+                    if (onBack) {
+                      e.preventDefault();
+                      onBack();
+                    } else if (onNavigate) {
+                      e.preventDefault();
+                      onNavigate('login');
+                    }
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors py-1 group cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px] transition-transform group-hover:-translate-x-1">
                     arrow_back

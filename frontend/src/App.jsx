@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Breadcrumb from './components/Breadcrumb';
@@ -13,13 +13,39 @@ import ForgotPasswordPage from './pages/ForgotPassword';
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Dukungan routing sederhana untuk pratinjau halaman Lupa Password
-  const pathname = window.location.pathname;
-  const searchParams = new URLSearchParams(window.location.search);
-  const isForgotPassword = pathname === '/forgot-password' || searchParams.get('page') === 'forgot-password';
+  // Dukungan routing reaktif untuk pratinjau halaman Lupa Password
+  const [currentRoute, setCurrentRoute] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get('page') || window.location.pathname;
+  });
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      setCurrentRoute(searchParams.get('page') || window.location.pathname);
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  const navigateTo = (route) => {
+    const targetUrl = route.startsWith('/') ? route : `?page=${route}`;
+    window.history.pushState({}, '', targetUrl);
+    setCurrentRoute(route);
+  };
+
+  const isForgotPassword =
+    currentRoute === '/forgot-password' ||
+    currentRoute === 'forgot-password';
 
   if (isForgotPassword) {
-    return <ForgotPasswordPage />;
+    return (
+      <ForgotPasswordPage
+        onNavigate={navigateTo}
+        onBack={() => navigateTo('/')}
+      />
+    );
   }
 
   const mainWrapClass = sidebarOpen
