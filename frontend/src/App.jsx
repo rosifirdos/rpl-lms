@@ -10,6 +10,7 @@ import AssignmentWidget from './components/AssignmentWidget';
 import AttendanceWidget from './components/AttendanceWidget';
 import ForgotPasswordPage from './pages/ForgotPassword';
 import DasborDosenPage from './pages/DasborDosen';
+import ManajemenPenggunaPage from './pages/ManajemenPengguna';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -17,13 +18,37 @@ function App() {
   // Deteksi rute via URL / query param
   const pathname = window.location.pathname;
   const searchParams = new URLSearchParams(window.location.search);
-  const initialRole = searchParams.get('role') || (pathname.includes('/dosen') ? 'dosen' : 'mahasiswa');
+  const initialRole =
+    searchParams.get('role') ||
+    (pathname.includes('/admin') || pathname.includes('/manajemen-pengguna')
+      ? 'admin'
+      : pathname.includes('/dosen')
+      ? 'dosen'
+      : 'mahasiswa');
   const [activeRole, setActiveRole] = useState(initialRole);
 
   const isForgotPassword = pathname === '/forgot-password' || searchParams.get('page') === 'forgot-password';
+  const isManajemenPengguna =
+    pathname === '/manajemen-pengguna' ||
+    searchParams.get('page') === 'manajemen-pengguna' ||
+    activeRole === 'admin';
 
   if (isForgotPassword) {
     return <ForgotPasswordPage />;
+  }
+
+  // Jika rute manajemen pengguna atau role admin aktif
+  if (isManajemenPengguna) {
+    return (
+      <ManajemenPenggunaPage
+        onRoleChange={(newRole) => {
+          setActiveRole(newRole);
+          const url = new URL(window.location.href);
+          url.searchParams.set('role', newRole);
+          window.history.pushState({}, '', url);
+        }}
+      />
+    );
   }
 
   // Jika role Dosen aktif, render Dasbor Dosen terdedikasi
