@@ -373,16 +373,16 @@ describe('Fase 3: Layanan Audit Trail Engine & Keamanan Server', () => {
     test('resetPasswordSchema memvalidasi UUID dan password minimal 8 karakter', async () => {
       const validPayload = {
         params: { id: '550e8400-e29b-41d4-a716-446655440000' },
-        body: { new_password: 'newSecretPassword123' },
+        body: { newPassword: 'NewSecurePassword123!' },
       };
       const parsedParams = await resetPasswordSchema.params.parseAsync(validPayload.params);
       const parsedBody = await resetPasswordSchema.body.parseAsync(validPayload.body);
       assert.equal(parsedParams.id, '550e8400-e29b-41d4-a716-446655440000');
-      assert.equal(parsedBody.new_password, 'newSecretPassword123');
+      assert.equal(parsedBody.newPassword, 'NewSecurePassword123!');
 
       // Password < 8 karakter harus ditolak
       await assert.rejects(async () => {
-        await resetPasswordSchema.body.parseAsync({ new_password: 'short' });
+        await resetPasswordSchema.body.parseAsync({ newPassword: 'short' });
       });
     });
   });
@@ -659,6 +659,9 @@ describe('Fase 3: Layanan Audit Trail Engine & Keamanan Server', () => {
         password: 'password123',
         role: 'mahasiswa',
         full_name: 'Mahasiswa Audit Test',
+        nim: '2099000001',
+        prodi: 'Teknik Informatika',
+        angkatan: 2024,
       };
 
       const res = await fetch(`${baseUrl}/api/admin/users`, {
@@ -748,7 +751,7 @@ describe('Fase 3: Layanan Audit Trail Engine & Keamanan Server', () => {
           Authorization: `Bearer ${adminToken}`,
         },
         body: JSON.stringify({
-          new_password: 'brandNewPassword2026!',
+          newPassword: 'brandNewPassword2026!',
         }),
       });
 
@@ -798,7 +801,7 @@ describe('Fase 3: Layanan Audit Trail Engine & Keamanan Server', () => {
           Authorization: `Bearer ${mahasiswaToken}`,
         },
         body: JSON.stringify({
-          new_password: 'unauthorizedPassword123',
+          newPassword: 'unauthorizedPassword123',
         }),
       });
 

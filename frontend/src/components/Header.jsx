@@ -1,4 +1,4 @@
-function Header({ onToggleSidebar }) {
+function Header({ onToggleSidebar, activeRole = 'mahasiswa', onRoleChange }) {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-surface-container/90 backdrop-blur-xl z-50 shadow-[0_1px_8px_rgba(0,0,0,0.3)]">
       <div className="w-full h-16 px-gutter flex items-center justify-between gap-space-md">
@@ -38,8 +38,34 @@ function Header({ onToggleSidebar }) {
           </div>
         </div>
 
-        {/* Right: Notifications + Profile */}
+        {/* Right: Role Switcher + Notifications + Profile */}
         <div className="flex items-center gap-space-sm">
+          {/* Role Switcher Pill */}
+          <div className="hidden sm:flex items-center bg-surface-container-low p-space-xs rounded-lg gap-space-xs border border-outline-variant/30">
+            <button
+              type="button"
+              onClick={() => onRoleChange && onRoleChange('mahasiswa')}
+              className={`px-space-sm py-space-xs rounded font-label-sm text-label-sm transition-colors ${
+                activeRole === 'mahasiswa'
+                  ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+              }`}
+            >
+              Mahasiswa
+            </button>
+            <button
+              type="button"
+              onClick={() => onRoleChange && onRoleChange('dosen')}
+              className={`px-space-sm py-space-xs rounded font-label-sm text-label-sm transition-colors ${
+                activeRole === 'dosen'
+                  ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+              }`}
+            >
+              Dosen
+            </button>
+          </div>
+
           <button
             aria-label="Notifikasi"
             className="relative p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"

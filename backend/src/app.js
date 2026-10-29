@@ -9,6 +9,8 @@ import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
 import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
+import coursesRoutes from './modules/courses/courses.routes.js';
+import classesRoutes from './modules/classes/classes.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
 import { generalLimiter, authLimiter, publicApiLimiter } from './middlewares/rateLimit.middleware.js';
@@ -73,6 +75,8 @@ app.get('/api', (req, res) => {
         auth: '/api/auth',
         profile: '/api/profile',
         admin_users: '/api/admin/users',
+        admin_courses: '/api/admin/courses',
+        admin_classes: '/api/admin/classes',
         admin_audit_logs: '/api/admin/audit-logs',
       },
     },
@@ -97,6 +101,8 @@ app.get('/health', publicApiLimiter, (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/admin/users', usersRoutes);
+app.use('/api/admin/courses', coursesRoutes);
+app.use('/api/admin/classes', classesRoutes);
 app.use('/api/admin/audit-logs', auditLogRoutes);
 app.use('/api/audit-logs', auditLogRoutes); // Alias kemudahan akses
 

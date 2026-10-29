@@ -1,7 +1,7 @@
-import { } from 'react';
+import { useState, useEffect } from 'react';
 
 const menuMahasiswa = [
-  { icon: 'dashboard', label: 'Dasbor Mahasiswa', path: 'dasbor-mahasiswa', active: true },
+  { icon: 'dashboard', label: 'Dasbor Mahasiswa', path: 'dasbor-mahasiswa' },
   { icon: 'auto_stories', label: 'Mata Kuliah Saya', path: 'mata-kuliah-saya' },
   { icon: 'assignment', label: 'Sentral Penugasan', path: 'sentral-penugasan' },
   { icon: 'calendar_today', label: 'Central Timeline', path: 'central-timeline' },
@@ -9,7 +9,7 @@ const menuMahasiswa = [
 ];
 
 const menuDosen = [
-  { icon: 'co_present', label: 'Kelas Diampu', path: 'dasbor-dosen' },
+  { icon: 'co_present', label: 'Kelas Diampu (Dasbor Dosen)', path: 'dasbor-dosen' },
   { icon: 'assignment_turned_in', label: 'Pemeriksaan Tugas', path: 'pemeriksaan-tugas' },
 ];
 
@@ -37,39 +37,69 @@ function NavItem({ item, isActive, onNavigate }) {
   );
 }
 
-function Sidebar({ isOpen, activeRoute, onNavigate }) {
-  // Gunakan activeRoute prop langsung untuk active state (single source of truth)
-  // activeRoute diperbarui oleh App setelah navigasi berhasil
-  const activePath = activeRoute || 'dasbor-mahasiswa';
+function Sidebar({ isOpen, activeRoute, activeRole = 'mahasiswa', onNavigate, onRoleChange }) {
+  // Sinkronkan activePath saat route/role berubah (single source of truth dari App)
+  const derivePath = (role) => (role === 'dosen' ? 'dasbor-dosen' : activeRoute || 'dasbor-mahasiswa');
+  const [activePath, setActivePath] = useState(() => derivePath(activeRole));
+
+  useEffect(() => {
+    setActivePath(derivePath(activeRole));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRoute, activeRole]);
+
   const asideClass = 'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' + (isOpen ? 'translate-x-0' : '-translate-x-full');
 
-  const renderGroup = (items) =>
-    items.map((item) => (
-      <NavItem
-        key={item.path}
-        item={item}
-        isActive={activePath === item.path}
-        onNavigate={onNavigate}
-      />
-    ));
+  const handleNavClick = (path) => {
+    setActivePath(path);
+    // Klik menu dasbor dosen/mahasiswa memicu ganti peran (kompatibel dgn main)
+    if (path === 'dasbor-dosen' && onRoleChange) {
+      onRoleChange('dosen');
+    } else if (path === 'dasbor-mahasiswa' && onRoleChange) {
+      onRoleChange('mahasiswa');
+    }
+    // Navigasi SPA via query string ?page=...
+    if (onNavigate) {
+      onNavigate(path);
+    }
+  };
+
+  const renderGroup = (items, title) => {
+    if (!items.length) return null;
+    return (
+      <div key={title}>
+        <div className="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
+          {title}
+        </div>
+        {items.map((item) => (
+          <NavItem
+            key={item.path}
+            item={item}
+            isActive={activePath === item.path}
+            onNavigate={handleNavClick}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Filter menu berdasarkan activeRole
+  const getVisibleMenus = () => {
+    const menus = [];
+    if (activeRole === 'mahasiswa' || activeRole === 'dosen') {
+      menus.push({ items: menuMahasiswa, title: 'Menu Mahasiswa' });
+      menus.push({ items: menuDosen, title: 'Menu Dosen' });
+    }
+    // Admin menu selalu tampil (bisa dikembangkan dengan cek role admin)
+    menus.push({ items: menuAdmin, title: 'Administrasi SPADA' });
+    return menus;
+  };
+
+  const visibleMenus = getVisibleMenus();
 
   return (
     <aside className={asideClass}>
       <div className="flex-1 overflow-y-auto py-space-md px-space-sm flex flex-col gap-space-xs">
-        <div className="px-space-sm pt-space-xs pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
-          Menu Mahasiswa
-        </div>
-        {renderGroup(menuMahasiswa)}
-
-        <div className="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
-          Menu Dosen
-        </div>
-        {renderGroup(menuDosen)}
-
-        <div className="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
-          Administrasi SPADA
-        </div>
-        {renderGroup(menuAdmin)}
+        {visibleMenus.map(({ items, title }) => renderGroup(items, title))}
       </div>
 
       <div className="p-space-md bg-surface-container-lowest/80 flex flex-col gap-space-sm">
@@ -77,7 +107,9 @@ function Sidebar({ isOpen, activeRoute, onNavigate }) {
           SPADA UPGRIS v2.4 &bull; Standalone LMS
         </div>
         <a
-          href="#"
+          href="https://upt-ptik.upgris.ac.id"
+          target="_blank"
+          rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-space-xs py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-secondary hover:text-on-surface transition-colors font-label-sm text-label-sm"
         >
           <span className="material-symbols-outlined text-[16px]">support_agent</span>

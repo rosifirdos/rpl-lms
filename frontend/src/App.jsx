@@ -12,6 +12,7 @@ import ForgotPasswordPage from './pages/ForgotPassword';
 import MasterMataKuliah from './pages/MasterMataKuliah';
 import PembukaanKelas from './pages/PembukaanKelas';
 import JejakAudit from './pages/JejakAudit';
+import DasborDosenPage from './pages/DasborDosen';
 
 // Peta rute yang tersedia (routing via query string ?page=...)
 // Keys harus match dengan Sidebar menu paths
@@ -68,6 +69,12 @@ function App() {
     // Strip leading slash if present
     return route.startsWith('/') ? route.slice(1) : route;
   }, []);
+
+  // Deteksi peran aktif via URL / query param (?role=dosen|mahasiswa)
+  const pathname = window.location.pathname;
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialRole = searchParams.get('role') || (pathname.includes('/dosen') ? 'dosen' : 'mahasiswa');
+  const [activeRole, setActiveRole] = useState(initialRole);
 
   // Dukungan routing reaktif untuk pratinjau halaman Lupa Password
   // SSR-safe: gunakan lazy initializer dengan check typeof window
@@ -134,7 +141,7 @@ function App() {
   }, []);
 
   const navigateTo = useCallback((route) => {
-    const targetUrl = resolveTargetUrl(route);
+    let targetUrl = resolveTargetUrl(route);
     const routeKey = normalizeRoute(route);
 
     // Validasi route: hanya izinkan route yang ada di ROUTES atau SPECIAL_ROUTES
@@ -145,6 +152,12 @@ function App() {
       window.history.pushState({}, '', '?page=dasbor-mahasiswa');
       setCurrentRoute('dasbor-mahasiswa');
       return;
+    }
+
+    // Pertahankan param role agar peran aktif tidak hilang saat navigasi
+    const currentRole = new URLSearchParams(window.location.search).get('role');
+    if (currentRole && !targetUrl.includes('role=')) {
+      targetUrl += `${targetUrl.includes('?') ? '&' : '?'}role=${currentRole}`;
     }
 
     // pushState tidak memicu popstate, langsung set state
@@ -164,12 +177,27 @@ function App() {
     }
   }, [navigateTo, currentRoute]);
 
-  // currentRoute tidak pernah memiliki leading slash karena normalizeRoute
-  // dan initial state keduanya strip leading slash - cek cukup satu kondisi
-  // Cek apakah route adalah halaman khusus yang punya komponen sendiri
-  const routeKey = normalizeRoute(currentRoute);
-  const SpecialPage = SPECIAL_ROUTES[routeKey];
+  // Ganti peran (mahasiswa <-> dosen) dan sinkronkan dengan URL ?role=...
+  const handleRoleChange = useCallback((newRole) => {
+    setActiveRole(newRole);
+    const url = new URL(window.location.href);
+    url.searchParams.set('role', newRole);
+    window.history.pushState({}, '', url);
+  }, []);
 
+  // Auth route: halaman Lupa Password selalu tampil standalone
+  const routeKey = normalizeRoute(currentRoute);
+  if (routeKey === 'forgot-password') {
+    return <ForgotPasswordPage onNavigate={navigateTo} onBack={handleBack} />;
+  }
+
+  // Peran Dosen aktif -> render Dasbor Dosen terdedikasi (shell sendiri)
+  if (activeRole === 'dosen') {
+    return <DasborDosenPage onRoleChange={handleRoleChange} />;
+  }
+
+  // Cek apakah route adalah halaman khusus yang punya komponen sendiri
+  const SpecialPage = SPECIAL_ROUTES[routeKey];
   if (SpecialPage) {
     return (
       <SpecialPage
@@ -189,8 +217,18 @@ function App() {
   // Default dashboard view untuk route valid yang bukan halaman khusus
   return (
     <div className="bg-background font-body-md text-on-surface antialiased">
-      <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <Sidebar isOpen={sidebarOpen} activeRoute={routeKey} />
+      <Header
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        activeRole={activeRole}
+        onRoleChange={handleRoleChange}
+      />
+      <Sidebar
+        isOpen={sidebarOpen}
+        activeRoute={routeKey}
+        activeRole={activeRole}
+        onRoleChange={handleRoleChange}
+        onNavigate={navigateTo}
+      />
 
       <div className={mainWrapClass}>
         <main className="w-full pt-16 px-gutter bg-background min-h-screen">
