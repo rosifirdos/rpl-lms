@@ -10,6 +10,7 @@ import AssignmentWidget from './components/AssignmentWidget';
 import AttendanceWidget from './components/AttendanceWidget';
 import ForgotPasswordPage from './pages/ForgotPassword';
 import DasborDosenPage from './pages/DasborDosen';
+import StatusPresensiPage from './pages/StatusPresensi';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -19,11 +20,33 @@ function App() {
   const searchParams = new URLSearchParams(window.location.search);
   const initialRole = searchParams.get('role') || (pathname.includes('/dosen') ? 'dosen' : 'mahasiswa');
   const [activeRole, setActiveRole] = useState(initialRole);
+  const [currentPage, setCurrentPage] = useState(searchParams.get('page') || 'dasbor-mahasiswa');
 
   const isForgotPassword = pathname === '/forgot-password' || searchParams.get('page') === 'forgot-password';
+  const isStatusPresensi = pathname === '/status-presensi' || currentPage === 'status-presensi' || searchParams.get('page') === 'status-presensi';
 
   if (isForgotPassword) {
     return <ForgotPasswordPage />;
+  }
+
+  // Jika halaman Status Presensi dipilih
+  if (isStatusPresensi && activeRole !== 'dosen') {
+    return (
+      <StatusPresensiPage
+        onRoleChange={(newRole) => {
+          setActiveRole(newRole);
+          const url = new URL(window.location.href);
+          url.searchParams.set('role', newRole);
+          window.history.pushState({}, '', url);
+        }}
+        onNavigate={(path) => {
+          setCurrentPage(path);
+          const url = new URL(window.location.href);
+          url.searchParams.set('page', path);
+          window.history.pushState({}, '', url);
+        }}
+      />
+    );
   }
 
   // Jika role Dosen aktif, render Dasbor Dosen terdedikasi
@@ -44,6 +67,13 @@ function App() {
     ? 'pl-64 transition-all duration-300'
     : 'pl-0 transition-all duration-300';
 
+  const handleNavigate = (path) => {
+    setCurrentPage(path);
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', path);
+    window.history.pushState({}, '', url);
+  };
+
   return (
     <div className="bg-background font-body-md text-on-surface antialiased">
       <Header
@@ -60,6 +90,8 @@ function App() {
         isOpen={sidebarOpen}
         activeRole={activeRole}
         onRoleChange={setActiveRole}
+        onNavigate={handleNavigate}
+        currentPath={currentPage}
       />
 
       <div className={mainWrapClass}>
@@ -82,7 +114,7 @@ function App() {
                 className="grid grid-cols-1 lg:grid-cols-3 gap-space-md"
               >
                 <AssignmentWidget />
-                <AttendanceWidget />
+                <AttendanceWidget onNavigate={handleNavigate} />
               </section>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 const menuMahasiswa = [
   { icon: 'dashboard', label: 'Dasbor Mahasiswa', path: 'dasbor-mahasiswa' },
   { icon: 'auto_stories', label: 'Mata Kuliah Saya', path: 'mata-kuliah-saya' },
+  { icon: 'how_to_reg', label: 'Status Presensi', path: 'status-presensi' },
   { icon: 'assignment', label: 'Sentral Penugasan', path: 'sentral-penugasan' },
   { icon: 'calendar_today', label: 'Central Timeline', path: 'central-timeline' },
   { icon: 'check_circle', label: 'Rekap Nilai & Presensi', path: 'rekap-nilai-dan-presensi' },
@@ -37,18 +38,25 @@ function NavItem({ item, isActive, onClick }) {
   );
 }
 
-function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
-  const [activePath, setActivePath] = useState(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
+function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange, onNavigate, currentPath }) {
+  const [activePath, setActivePath] = useState(currentPath || (activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa'));
 
-  // Sync activePath when activeRole changes externally
+  // Sync activePath when currentPath or activeRole changes externally
   useEffect(() => {
-    setActivePath(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
-  }, [activeRole]);
+    if (currentPath) {
+      setActivePath(currentPath);
+    } else {
+      setActivePath(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
+    }
+  }, [currentPath, activeRole]);
 
   const asideClass = 'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' + (isOpen ? 'translate-x-0' : '-translate-x-full');
 
   const handleNavClick = (path) => {
     setActivePath(path);
+    if (onNavigate) {
+      onNavigate(path);
+    }
     if (path === 'dasbor-dosen' && onRoleChange) {
       onRoleChange('dosen');
     } else if (path === 'dasbor-mahasiswa' && onRoleChange) {
