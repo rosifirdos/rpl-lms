@@ -1,25 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const menuMahasiswa = [
-  { icon: 'dashboard', label: 'Dasbor Mahasiswa', path: 'dasbor-mahasiswa' },
-  { icon: 'auto_stories', label: 'Mata Kuliah Saya', path: 'mata-kuliah-saya' },
-  { icon: 'assignment', label: 'Sentral Penugasan', path: 'sentral-penugasan' },
-  { icon: 'calendar_today', label: 'Central Timeline', path: 'central-timeline' },
-  { icon: 'check_circle', label: 'Rekap Nilai & Presensi', path: 'rekap-nilai-dan-presensi' },
-];
-
-const menuDosen = [
-  { icon: 'co_present', label: 'Kelas Diampu (Dasbor Dosen)', path: 'dasbor-dosen' },
-  { icon: 'assignment_turned_in', label: 'Pemeriksaan Tugas', path: 'pemeriksaan-tugas' },
-];
-
-const menuAdmin = [
-  { icon: 'group', label: 'Manajemen Pengguna', path: 'manajemen-pengguna' },
-  { icon: 'local_library', label: 'Master Mata Kuliah', path: 'master-mata-kuliah' },
-  { icon: 'edit_calendar', label: 'Pembukaan Kelas', path: 'pembukaan-kelas' },
-  { icon: 'security', label: 'Jejak Audit', path: 'jejak-audit' },
-  { icon: 'settings', label: 'Konfigurasi Sistem', path: 'konfigurasi-sistem' },
-];
+import { navSections } from '../features/shell/fixtures';
 
 function NavItem({ item, isActive, onClick }) {
   const baseClass = 'flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors font-label-md text-label-md';
@@ -27,75 +7,115 @@ function NavItem({ item, isActive, onClick }) {
   const inactiveClass = 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface';
   return (
     <a
-      href="#"
-      onClick={(e) => { e.preventDefault(); onClick(item.path); }}
-      className={baseClass + ' ' + (isActive ? activeClass : inactiveClass)}
+      href={`#${item.path}`}
+      onClick={(e) => {
+        e.preventDefault();
+        onClick(item.path);
+      }}
+      className={`${baseClass} ${isActive ? activeClass : inactiveClass}`}
     >
       <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-      {item.label}
+      <span>{item.label}</span>
     </a>
   );
 }
 
-function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
-  const [activePath, setActivePath] = useState(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
+function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange, activeNavPath, onNavChange }) {
+  const getDefaultPath = (role) => {
+    if (role === 'dosen') return 'dasbor-dosen';
+    if (role === 'admin') return 'manajemen-pengguna';
+    return 'dasbor-mahasiswa';
+  };
 
-  // Sync activePath when activeRole changes externally
+  const [internalPath, setInternalPath] = useState(() => activeNavPath || getDefaultPath(activeRole));
+
+  // Sync with activeRole and external activeNavPath
   useEffect(() => {
-    setActivePath(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
-  }, [activeRole]);
+    if (activeNavPath) {
+      setInternalPath(activeNavPath);
+    } else {
+      setInternalPath(getDefaultPath(activeRole));
+    }
+  }, [activeRole, activeNavPath]);
 
-  const asideClass = 'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' + (isOpen ? 'translate-x-0' : '-translate-x-full');
+  const asideClass = `fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ${
+    isOpen ? 'translate-x-0' : '-translate-x-full'
+  }`;
 
   const handleNavClick = (path) => {
-    setActivePath(path);
-    if (path === 'dasbor-dosen' && onRoleChange) {
-      onRoleChange('dosen');
-    } else if (path === 'dasbor-mahasiswa' && onRoleChange) {
-      onRoleChange('mahasiswa');
+    setInternalPath(path);
+    if (onNavChange) {
+      onNavChange(path);
+    }
+    // Sinkronisasi peran bila navigasi menuju dasbor terdedikasi
+    if (path === 'dasbor-dosen' && activeRole !== 'dosen') {
+      onRoleChange && onRoleChange('dosen');
+    } else if (path === 'dasbor-mahasiswa' && activeRole !== 'mahasiswa') {
+      onRoleChange && onRoleChange('mahasiswa');
+    } else if (
+      (path === 'manajemen-pengguna' ||
+        path === 'master-mata-kuliah' ||
+        path === 'pembukaan-kelas' ||
+        path === 'jejak-audit' ||
+        path === 'konfigurasi-sistem') &&
+      activeRole !== 'admin'
+    ) {
+      onRoleChange && onRoleChange('admin');
     }
   };
 
-  const renderGroup = (items, title) => {
-    if (!items.length) return null;
-    return (
-      <div key={title}>
-        <div className="px-space-sm pt-space-md pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
-          {title}
-        </div>
-        {items.map((item) => (
-          <NavItem
-            key={item.path}
-            item={item}
-            isActive={activePath === item.path}
-            onClick={handleNavClick}
-          />
-        ))}
-      </div>
-    );
+  // STRICT RBAC FILTERING: Memastikan mahasiswa tidak melihat menu admin/dosen dan sebaliknya
+  const getVisibleSections = () => {
+    return navSections.filter((section) => {
+      if (activeRole === 'mahasiswa') {
+        return section.role === 'mahasiswa' || section.role === 'shared';
+      }
+      if (activeRole === 'dosen') {
+        return section.role === 'dosen' || section.role === 'shared';
+      }
+      if (activeRole === 'admin') {
+        return section.role === 'admin';
+      }
+      return false;
+    });
   };
 
-  // Filter menus based on activeRole
-  const getVisibleMenus = () => {
-    const menus = [];
-    if (activeRole === 'mahasiswa' || activeRole === 'dosen') {
-      menus.push({ items: menuMahasiswa, title: 'Menu Mahasiswa' });
-      menus.push({ items: menuDosen, title: 'Menu Dosen' });
-    }
-    // Admin menu always visible for admin role (could be extended with role check)
-    menus.push({ items: menuAdmin, title: 'Administrasi SPADA' });
-    return menus;
-  };
-
-  const visibleMenus = getVisibleMenus();
+  const visibleSections = getVisibleSections();
 
   return (
     <aside className={asideClass}>
-      <div className="flex-1 overflow-y-auto py-space-md px-space-sm flex flex-col gap-space-xs">
-        {visibleMenus.map(({ items, title }) => renderGroup(items, title))}
+      {/* Brand Sub-header */}
+      <div className="px-space-md py-space-sm bg-surface-container-lowest/50 border-b border-outline-variant/20 flex flex-col gap-0.5">
+        <div className="flex items-center gap-space-xs">
+          <span className="material-symbols-outlined text-primary text-[18px]">security</span>
+          <span className="font-label-md text-label-md text-on-surface font-bold capitalize">
+            Akses: {activeRole}
+          </span>
+        </div>
+        <span className="font-caption text-[11px] text-outline uppercase tracking-wider">
+          SPADA UPGRIS &bull; RBAC Mode
+        </span>
       </div>
 
-      <div className="p-space-md bg-surface-container-lowest/80 flex flex-col gap-space-sm">
+      <nav className="flex-1 overflow-y-auto py-space-sm px-space-sm flex flex-col gap-space-xs">
+        {visibleSections.map((section) => (
+          <div key={section.title}>
+            <div className="px-space-sm pt-space-sm pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
+              {section.title}
+            </div>
+            {section.items.map((item) => (
+              <NavItem
+                key={item.path}
+                item={item}
+                isActive={internalPath === item.path}
+                onClick={handleNavClick}
+              />
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="p-space-md bg-surface-container-lowest/80 flex flex-col gap-space-sm border-t border-outline-variant/20">
         <div className="text-center font-caption text-caption text-outline">
           SPADA UPGRIS v2.4 &bull; Standalone LMS
         </div>
@@ -106,7 +126,7 @@ function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
           className="w-full flex items-center justify-center gap-space-xs py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-secondary hover:text-on-surface transition-colors font-label-sm text-label-sm"
         >
           <span className="material-symbols-outlined text-[16px]">support_agent</span>
-          <span>IT Helpdesk</span>
+          <span>IT Helpdesk PTIK</span>
         </a>
       </div>
     </aside>
