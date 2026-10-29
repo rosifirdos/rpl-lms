@@ -1,32 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * ForgotPassword — feature component (auth)
  *
  * Digunakan sebagai komponen inti halaman pemulihan kata sandi SPADA LMS.
- * Dapat dihubungkan ke API nyata:
+ * Mendukung navigasi SPA via props (onNavigate, onBack) serta API nyata:
  *   POST /api/auth/forgot-password  { email }
  *   POST /api/auth/resend-reset     { email }
  */
-export default function ForgotPassword() {
+export default function ForgotPassword({ onNavigate, onBack }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
+  const cooldownTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
 
-  // Countdown timer untuk cooldown kirim-ulang
+  // Countdown timer menggunakan useRef untuk menyimpan timer ID
+  // Effect dengan dependency [resendCooldown] yang benar: hanya memulai timer saat cooldown > 0
+  // Cleanup di return function memastikan tidak ada setState setelah unmount
   useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const timer = setTimeout(() => {
-      setResendCooldown((prev) => prev - 1);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [resendCooldown]);
+    isMountedRef.current = true;
+
+    // Hentikan timer yang sedang berjalan
+    if (cooldownTimerRef.current) {
+      clearTimeout(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+    }
+
+    // Mulai countdown hanya jika cooldown > 0
+    if (resendCooldown > 0) {
+      cooldownTimerRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          setResendCooldown((prev) => prev - 1);
+        }
+      }, 1000);
+    }
+
+    // Cleanup: hentikan timer saat unmount atau saat resendCooldown berubah
+    return () => {
+      isMountedRef.current = false;
+      if (cooldownTimerRef.current) {
+        clearTimeout(cooldownTimerRef.current);
+        cooldownTimerRef.current = null;
+      }
+    };
+  }, [resendCooldown]); // Dependency: re-run effect saat cooldown berubah (termasuk saat berkurang via setTimeout callback)
+
+  // Guard setState after unmount
+  const safeSetResendCooldown = (value) => {
+    if (isMountedRef.current) {
+      setResendCooldown(value);
+    }
+  };
 
   /** Validasi & submit permintaan reset password */
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Guard: prevent double submission
+    if (loading) return;
     setErrorMessage('');
 
     const trimmedEmail = email.trim();
@@ -50,18 +83,18 @@ export default function ForgotPassword() {
       setLoading(false);
       setSubmittedEmail(trimmedEmail);
       setEmail('');
-      setResendCooldown(60);
+      safeSetResendCooldown(60);
     }, 1100);
   };
 
   /** Kirim ulang tautan setelah cooldown habis */
   const handleResend = () => {
-    if (resendCooldown > 0 || !submittedEmail) return;
+    if (resendCooldown > 0 || !submittedEmail || loading) return;
     setLoading(true);
     // TODO: await apiClient.post('/api/auth/resend-reset', { email: submittedEmail });
     setTimeout(() => {
       setLoading(false);
-      setResendCooldown(60);
+      safeSetResendCooldown(60);
     }, 1000);
   };
 
@@ -153,16 +186,20 @@ export default function ForgotPassword() {
                       <button
                         type="button"
                         onClick={handleResend}
-                        disabled={resendCooldown > 0}
+                        disabled={resendCooldown > 0 || loading}
                         className={`mt-2 text-xs font-semibold underline transition-colors ${
-                          resendCooldown > 0
+                          resendCooldown > 0 || loading
                             ? 'text-[#6EE7B7] cursor-not-allowed'
                             : 'text-[#059669] hover:text-[#047857] cursor-pointer'
                         }`}
                       >
-                        {resendCooldown > 0
-                          ? `Kirim ulang tautan jika belum diterima (${resendCooldown}s)`
-                          : 'Kirim ulang tautan sekarang'}
+                        {loading ? (
+                          'Mengirim ulang tautan...'
+                        ) : resendCooldown > 0 ? (
+                          `Kirim ulang tautan jika belum diterima (${resendCooldown}s)`
+                        ) : (
+                          'Kirim ulang tautan sekarang'
+                        )}
                       </button>
                     </div>
                   </div>
@@ -235,7 +272,7 @@ export default function ForgotPassword() {
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <svg
-                        className="animate-spin h-5 w-5 text-white"
+                        className="animate-spin h-5 w-5 text-on-primary-container"
                         fill="none"
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
@@ -264,15 +301,22 @@ export default function ForgotPassword() {
 
               {/* Link navigasi & helpdesk */}
               <div className="flex flex-col gap-3 text-center">
-                <a
-                  href="/login"
-                  className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors py-1 group"
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    if (onBack) {
+                      onBack();
+                    } else if (onNavigate) {
+                      onNavigate('login');
+                    }
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors py-1 group cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px] transition-transform group-hover:-translate-x-1">
                     arrow_back
                   </span>
                   <span>Kembali ke Halaman Masuk</span>
-                </a>
+                </button>
 
                 <div className="pt-2">
                   <p className="font-body-sm text-xs text-[#64748B]">

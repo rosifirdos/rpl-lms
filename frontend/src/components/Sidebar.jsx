@@ -21,14 +21,14 @@ const menuAdmin = [
   { icon: 'settings', label: 'Konfigurasi Sistem', path: 'konfigurasi-sistem' },
 ];
 
-function NavItem({ item, isActive, onClick }) {
+function NavItem({ item, isActive, onNavigate }) {
   const baseClass = 'flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors font-label-md text-label-md';
   const activeClass = 'bg-primary-container text-on-primary-container font-bold shadow-md';
   const inactiveClass = 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface';
   return (
     <a
       href="#"
-      onClick={(e) => { e.preventDefault(); onClick(item.path); }}
+      onClick={(e) => { e.preventDefault(); onNavigate(item.path); }}
       className={baseClass + ' ' + (isActive ? activeClass : inactiveClass)}
     >
       <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
@@ -37,22 +37,29 @@ function NavItem({ item, isActive, onClick }) {
   );
 }
 
-function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
-  const [activePath, setActivePath] = useState(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
+function Sidebar({ isOpen, activeRoute, activeRole = 'mahasiswa', onNavigate, onRoleChange }) {
+  // Sinkronkan activePath saat route/role berubah (single source of truth dari App)
+  const derivePath = (role) => (role === 'dosen' ? 'dasbor-dosen' : activeRoute || 'dasbor-mahasiswa');
+  const [activePath, setActivePath] = useState(() => derivePath(activeRole));
 
-  // Sync activePath when activeRole changes externally
   useEffect(() => {
-    setActivePath(activeRole === 'dosen' ? 'dasbor-dosen' : 'dasbor-mahasiswa');
-  }, [activeRole]);
+    setActivePath(derivePath(activeRole));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRoute, activeRole]);
 
   const asideClass = 'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' + (isOpen ? 'translate-x-0' : '-translate-x-full');
 
   const handleNavClick = (path) => {
     setActivePath(path);
+    // Klik menu dasbor dosen/mahasiswa memicu ganti peran (kompatibel dgn main)
     if (path === 'dasbor-dosen' && onRoleChange) {
       onRoleChange('dosen');
     } else if (path === 'dasbor-mahasiswa' && onRoleChange) {
       onRoleChange('mahasiswa');
+    }
+    // Navigasi SPA via query string ?page=...
+    if (onNavigate) {
+      onNavigate(path);
     }
   };
 
@@ -68,21 +75,21 @@ function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
             key={item.path}
             item={item}
             isActive={activePath === item.path}
-            onClick={handleNavClick}
+            onNavigate={handleNavClick}
           />
         ))}
       </div>
     );
   };
 
-  // Filter menus based on activeRole
+  // Filter menu berdasarkan activeRole
   const getVisibleMenus = () => {
     const menus = [];
     if (activeRole === 'mahasiswa' || activeRole === 'dosen') {
       menus.push({ items: menuMahasiswa, title: 'Menu Mahasiswa' });
       menus.push({ items: menuDosen, title: 'Menu Dosen' });
     }
-    // Admin menu always visible for admin role (could be extended with role check)
+    // Admin menu selalu tampil (bisa dikembangkan dengan cek role admin)
     menus.push({ items: menuAdmin, title: 'Administrasi SPADA' });
     return menus;
   };
