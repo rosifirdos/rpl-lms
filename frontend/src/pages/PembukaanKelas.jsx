@@ -1,4 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useToast, useKeyboardShortcuts } from '../hooks/useToast';
+import Toast from '../components/Toast';
+import { generatePrefixedId } from '../utils/uuid';
 
 const initialClassesData = [
   {
@@ -172,19 +175,27 @@ const availableRooms = [
   'Ruang Teori 402 (Gedung Utama Lt. 4)',
 ];
 
-export default function PembukaanKelas() {
+export default function PembukaanKelas({ onNavigate }) {
   const [classes, setClasses] = useState(initialClassesData);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [semesterFilter, setSemesterFilter] = useState('all');
   const [prodiFilter, setProdiFilter] = useState('all');
   const [statusKuotaFilter, setStatusKuotaFilter] = useState('all');
+
+  // Debounce search query to avoid excessive filtering on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Modal Dialogs
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
   const [managingClass, setManagingClass] = useState(null);
   const [deletingClass, setDeletingClass] = useState(null);
-  const [toastMessage, setToastMessage] = useState(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -199,32 +210,23 @@ export default function PembukaanKelas() {
 
   const searchInputRef = useRef(null);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-      if (e.key === 'Escape') {
-        setIsModalOpen(false);
-        setManagingClass(null);
-        setDeletingClass(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
+  // Use shared hooks
+  const [toastMessage, showToast] = useToast();
+  const handleEscape = () => {
+    setIsModalOpen(false);
+    setManagingClass(null);
+    setDeletingClass(null);
   };
+  useKeyboardShortcuts({
+    findInputRef: searchInputRef,
+    onEscape: handleEscape,
+  });
 
   // Filter logic
   const filteredClasses = useMemo(() => {
     return classes.filter((c) => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
+      if (debouncedSearchQuery.trim()) {
+        const q = debouncedSearchQuery.toLowerCase().trim();
         const match =
           c.rombel.toLowerCase().includes(q) ||
           c.kodeKelas.toLowerCase().includes(q) ||
@@ -279,8 +281,11 @@ export default function PembukaanKelas() {
     const selectedCourse = availableCourses.find((c) => c.kode === formData.mataKuliahKode) || availableCourses[0];
     const selectedLecturer = availableLecturers.find((l) => l.nidn === formData.dosenNidn) || availableLecturers[0];
     const cleanRombel = formData.rombel.trim().toUpperCase() || 'TI-A';
-    const rombelLetter = cleanRombel.slice(-1);
-    const kodeKelas = `${selectedCourse.kode}-${rombelLetter}`;
+    // Extract rombel suffix: part after last dash or space
+    // 'TI-A' -> 'A', 'TI-10' -> '10', 'TI-A1' -> 'A1', 'TI' -> 'TI'
+    const rombelParts = cleanRombel.split(/[- ]/);
+    const rombelSuffix = rombelParts.length > 1 ? rombelParts.pop() : cleanRombel;
+    const kodeKelas = `${selectedCourse.kode}-${rombelSuffix}`;
 
     if (editingClass) {
       setClasses((prev) =>
@@ -288,7 +293,7 @@ export default function PembukaanKelas() {
           item.id === editingClass.id
             ? {
                 ...item,
-                rombelLetter,
+                rombelLetter: rombelSuffix,
                 rombel: cleanRombel,
                 kodeKelas,
                 mataKuliah: selectedCourse.nama,
@@ -310,8 +315,8 @@ export default function PembukaanKelas() {
       showToast(`Kelas ${kodeKelas} berhasil diperbarui!`);
     } else {
       const newClass = {
-        id: `cls-${Date.now()}`,
-        rombelLetter,
+        id: generatePrefixedId('cls-'),
+        rombelLetter: rombelSuffix,
         rombel: cleanRombel,
         kodeKelas,
         mataKuliah: selectedCourse.nama,
@@ -343,11 +348,11 @@ export default function PembukaanKelas() {
   };
 
   return (
-    <div className="flex flex-col w-full pb-margin">
+    <div className="flex flex-col w-full pb-16">
       {/* Breadcrumbs & Live PDDikti Status */}
       <div className="flex flex-wrap items-center justify-between gap-space-sm mb-space-md">
         <nav aria-label="Breadcrumb" className="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
-          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#">
+          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('dasbor-mahasiswa'); }}>
             <span className="material-symbols-outlined text-[16px]">home</span>
             <span>Beranda</span>
           </a>
@@ -685,15 +690,15 @@ export default function PembukaanKelas() {
 
       {/* Modal Dialog: Buka Kelas Baru / Edit */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md overflow-y-auto animate-in fade-in duration-200">
-          <div className="relative w-full max-w-2xl bg-surface-container rounded-2xl shadow-2xl p-space-xl flex flex-col gap-space-lg my-auto border border-outline-variant/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md overflow-y-auto animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)} role="dialog" aria-modal="true" aria-labelledby="modal-class-heading">
+          <div className="relative w-full max-w-2xl bg-surface-container rounded-2xl shadow-2xl p-space-xl flex flex-col gap-space-lg my-auto border border-outline-variant/30" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-space-xs text-primary font-label-sm text-label-sm">
                   <span className="material-symbols-outlined text-[18px]">post_add</span>
                   <span>Konfigurasi Perkuliahan Baru</span>
                 </div>
-                <h2 className="font-headline-md text-headline-md text-on-surface font-bold">
+                <h2 id="modal-class-heading" className="font-headline-md text-headline-md text-on-surface font-bold">
                   {editingClass ? `Ubah Kelas ${editingClass.kodeKelas}` : 'Buka Kelas Perkuliahan Baru'}
                 </h2>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -704,6 +709,7 @@ export default function PembukaanKelas() {
                 className="p-1.5 rounded-lg bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
                 type="button"
                 onClick={() => setIsModalOpen(false)}
+                aria-label="Tutup modal konfigurasi kelas"
               >
                 <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
@@ -816,15 +822,15 @@ export default function PembukaanKelas() {
 
       {/* Enrollment Drawer / Modal */}
       {managingClass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md">
-          <div className="relative w-full max-w-xl bg-surface-container text-on-surface rounded-2xl shadow-2xl p-space-lg flex flex-col gap-space-md border border-outline-variant/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md" onClick={() => setManagingClass(null)} role="dialog" aria-modal="true" aria-labelledby="modal-enrollment-heading">
+          <div className="relative w-full max-w-xl bg-surface-container text-on-surface rounded-2xl shadow-2xl p-space-lg flex flex-col gap-space-md border border-outline-variant/30" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between border-b border-outline-variant/20 pb-2">
               <div>
                 <span className="text-xs font-mono text-primary font-bold">{managingClass.kodeKelas} (Rombel {managingClass.rombel})</span>
-                <h3 className="text-lg font-bold font-title-md">{managingClass.mataKuliah}</h3>
+                <h3 id="modal-enrollment-heading" className="text-lg font-bold font-title-md">{managingClass.mataKuliah}</h3>
                 <p className="text-xs text-on-surface-variant">Dosen: {managingClass.dosen.nama}</p>
               </div>
-              <button className="p-1 rounded text-outline hover:text-on-surface" onClick={() => setManagingClass(null)}>
+              <button className="p-1 rounded text-outline hover:text-on-surface" onClick={() => setManagingClass(null)} aria-label="Tutup modal enrollment">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -848,11 +854,11 @@ export default function PembukaanKelas() {
 
       {/* Delete Confirmation Modal */}
       {deletingClass && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md">
-          <div className="relative w-full max-w-md bg-surface-container text-on-surface rounded-xl shadow-2xl p-space-lg flex flex-col gap-3 border border-error/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-container-lowest/80 backdrop-blur-md p-space-md" onClick={() => setDeletingClass(null)} role="dialog" aria-modal="true" aria-labelledby="modal-delete-class-heading">
+          <div className="relative w-full max-w-md bg-surface-container text-on-surface rounded-xl shadow-2xl p-space-lg flex flex-col gap-3 border border-error/40" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 text-error">
               <span className="material-symbols-outlined text-[24px]">warning</span>
-              <h3 className="font-title-lg text-lg font-bold">Hapus Kelas Perkuliahan?</h3>
+              <h3 id="modal-delete-class-heading" className="font-title-lg text-lg font-bold">Hapus Kelas Perkuliahan?</h3>
             </div>
             <p className="text-sm text-on-surface-variant">
               Apakah Anda yakin ingin menghapus kelas <strong>{deletingClass.rombel} ({deletingClass.kodeKelas})</strong>?
@@ -870,12 +876,7 @@ export default function PembukaanKelas() {
       )}
 
       {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-surface-container-high border border-tertiary/40 text-on-surface px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-4">
-          <span className="material-symbols-outlined text-tertiary text-[20px]">check_circle</span>
-          <span className="text-sm font-semibold">{toastMessage}</span>
-        </div>
-      )}
+      <Toast message={toastMessage} onClose={() => showToast(null)} />
     </div>
   );
 }

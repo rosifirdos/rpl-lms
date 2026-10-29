@@ -9,15 +9,18 @@ import ForgotPassword from '../features/auth/ForgotPassword';
 
 export default function ForgotPasswordPage({ onNavigate, onBack, ...props }) {
   // Handler navigasi default jika props tidak disertakan
+  // Delegasi ke fungsi shared dari App.jsx via props
   const handleNavigate = (targetRoute) => {
     if (onNavigate) {
       onNavigate(targetRoute);
       return;
     }
+    // Fallback: gunakan query string routing (standalone usage tanpa App shell)
+    // Konsisten dengan App.jsx yang menggunakan ?page= format
     if (typeof window !== 'undefined') {
-      const targetUrl = targetRoute === 'login' || targetRoute === 'dashboard' ? '/' : `/${targetRoute}`;
+      // Jangan remap 'login' ke dashboard - biarkan 'login' sebagai route terpisah
+      const targetUrl = `?page=${targetRoute === 'dashboard' ? 'dasbor-mahasiswa' : targetRoute}`;
       window.history.pushState({}, '', targetUrl);
-      window.dispatchEvent(new PopStateEvent('popstate'));
     }
   };
 
@@ -31,12 +34,10 @@ export default function ForgotPasswordPage({ onNavigate, onBack, ...props }) {
       if (url.searchParams.has('page')) {
         url.searchParams.delete('page');
         const nextUrl = url.pathname + (url.search ? `?${url.searchParams.toString()}` : '');
-        window.history.pushState({}, '', nextUrl || '/');
-        window.dispatchEvent(new PopStateEvent('popstate'));
-      } else if (window.history.length > 1) {
-        window.history.back();
+        window.history.pushState({}, '', nextUrl || '/?page=dasbor-mahasiswa');
       } else {
-        window.location.href = '/';
+        // Fallback ke beranda via direct navigation
+        window.location.href = '/?page=dasbor-mahasiswa';
       }
     }
   };

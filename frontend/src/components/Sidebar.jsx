@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { } from 'react';
 
 const menuMahasiswa = [
   { icon: 'dashboard', label: 'Dasbor Mahasiswa', path: 'dasbor-mahasiswa', active: true },
@@ -21,14 +21,14 @@ const menuAdmin = [
   { icon: 'settings', label: 'Konfigurasi Sistem', path: 'konfigurasi-sistem' },
 ];
 
-function NavItem({ item, isActive, onClick }) {
+function NavItem({ item, isActive, onNavigate }) {
   const baseClass = 'flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors font-label-md text-label-md';
   const activeClass = 'bg-primary-container text-on-primary-container font-bold shadow-md';
   const inactiveClass = 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface';
   return (
     <a
       href="#"
-      onClick={(e) => { e.preventDefault(); onClick(item.path); }}
+      onClick={(e) => { e.preventDefault(); onNavigate(item.path); }}
       className={baseClass + ' ' + (isActive ? activeClass : inactiveClass)}
     >
       <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
@@ -37,8 +37,10 @@ function NavItem({ item, isActive, onClick }) {
   );
 }
 
-function Sidebar({ isOpen }) {
-  const [activePath, setActivePath] = useState('dasbor-mahasiswa');
+function Sidebar({ isOpen, activeRoute, onNavigate }) {
+  // Gunakan activeRoute prop langsung untuk active state (single source of truth)
+  // activeRoute diperbarui oleh App setelah navigasi berhasil
+  const activePath = activeRoute || 'dasbor-mahasiswa';
   const asideClass = 'fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ' + (isOpen ? 'translate-x-0' : '-translate-x-full');
 
   const renderGroup = (items) =>
@@ -47,7 +49,7 @@ function Sidebar({ isOpen }) {
         key={item.path}
         item={item}
         isActive={activePath === item.path}
-        onClick={setActivePath}
+        onNavigate={onNavigate}
       />
     ));
 

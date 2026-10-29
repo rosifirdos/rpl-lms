@@ -1,4 +1,14 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useToast, useKeyboardShortcuts, useCopyFeedback } from '../hooks/useToast';
+import Toast from '../components/Toast';
+
+function getNetworkColorClass(networkType) {
+  const type = networkType.toLowerCase();
+  if (type.includes('vpn')) return 'text-tertiary';
+  if (type.includes('wi-fi') || type.includes('wifi')) return 'text-secondary';
+  if (type.includes('telkomsel') || type.includes('seluler') || type.includes('isp')) return 'text-on-surface-variant';
+  return 'text-tertiary';
+}
 
 const initialLogs = [
   {
@@ -272,51 +282,64 @@ const initialLogs = [
   },
 ];
 
-export default function JejakAudit() {
-  const [logs] = useState(initialLogs);
+export default function JejakAudit({ onNavigate }) {
+  // Gunakan useMemo untuk menghindari referensi array baru setiap render
+  const logs = useMemo(() => initialLogs, []);
   const [actionType, setActionType] = useState('GRADE_MUTATION');
   const [entityType, setEntityType] = useState('');
   const [actorQuery, setActorQuery] = useState('');
+  const [debouncedActorQuery, setDebouncedActorQuery] = useState('');
   const [ipQuery, setIpQuery] = useState('');
+  const [debouncedIpQuery, setDebouncedIpQuery] = useState('');
   const [selectedLog, setSelectedLog] = useState(null);
-  const [copyText, setCopyText] = useState('Salin Raw JSON');
-  const [toastMessage, setToastMessage] = useState(null);
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
+  // Debounce actor query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedActorQuery(actorQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [actorQuery]);
+
+  // Debounce IP query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedIpQuery(ipQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [ipQuery]);
+
+  // Use shared hooks
+  const [toastMessage, showToast] = useToast();
+  const [copyText, handleCopy] = useCopyFeedback('Salin Raw JSON');
+
+  // Escape key handler untuk modal diff
+  const handleEscape = () => setSelectedLog(null);
+  useKeyboardShortcuts({ onEscape: handleEscape });
 
   const filteredLogs = useMemo(() => {
     return logs.filter((log) => {
       if (actionType && log.actionType !== actionType) return false;
       if (entityType && log.entityType !== entityType) return false;
-      if (actorQuery.trim()) {
-        const q = actorQuery.toLowerCase().trim();
+      if (debouncedActorQuery.trim()) {
+        const q = debouncedActorQuery.toLowerCase().trim();
         if (!log.actor.name.toLowerCase().includes(q) && !log.actor.id.toLowerCase().includes(q)) {
           return false;
         }
       }
-      if (ipQuery.trim() && !log.ip.toLowerCase().includes(ipQuery.toLowerCase().trim())) {
+      if (debouncedIpQuery.trim() && !log.ip.toLowerCase().includes(debouncedIpQuery.toLowerCase().trim())) {
         return false;
       }
       return true;
     });
-  }, [logs, actionType, entityType, actorQuery, ipQuery]);
-
-  const handleCopy = (logItem) => {
-    const rawPayload = JSON.stringify(logItem.diffData || logItem, null, 2);
-    navigator.clipboard.writeText(rawPayload);
-    setCopyText('Tersalin!');
-    setTimeout(() => setCopyText('Salin Raw JSON'), 1800);
-  };
+  }, [logs, actionType, entityType, debouncedActorQuery, debouncedIpQuery]);
 
   return (
     <div className="flex flex-col w-full pb-16">
       {/* Breadcrumb & Header */}
       <div className="flex flex-col gap-space-sm pt-space-md mb-space-lg">
         <nav aria-label="Breadcrumb" className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
-          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#">
+          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('dasbor-mahasiswa'); }}>
             <span className="material-symbols-outlined text-[16px]">home</span>
             Beranda
           </a>
@@ -449,7 +472,9 @@ export default function JejakAudit() {
                   setActionType('');
                   setEntityType('');
                   setActorQuery('');
+                  setDebouncedActorQuery('');
                   setIpQuery('');
+                  setDebouncedIpQuery('');
                 }}
               >
                 Reset Filter
@@ -529,7 +554,7 @@ export default function JejakAudit() {
                   <td className="py-3 px-4 whitespace-nowrap font-mono text-caption text-caption">
                     <div className="flex flex-col">
                       <span className="text-on-surface">{log.ip}</span>
-                      <span className={`flex items-center gap-1 font-sans ${log.networkColor}`}>{log.networkType}</span>
+                      <span className={`flex items-center gap-1 font-sans ${getNetworkColorClass(log.networkType)}`}>{log.networkType}</span>
                       <span className="text-outline font-sans">{log.device}</span>
                     </div>
                   </td>
@@ -567,17 +592,13 @@ export default function JejakAudit() {
 
         {/* Pagination Footer */}
         <div className="flex flex-col sm:flex-row items-center justify-between px-space-md py-space-sm bg-surface-container gap-space-sm border-t border-outline-variant/10 text-on-surface-variant font-body-sm text-body-sm">
-          <span>Menampilkan <strong className="text-on-surface">1-{filteredLogs.length}</strong> dari <strong className="text-on-surface">2,840</strong> entri log</span>
+          <span>Menampilkan <strong className="text-on-surface">1-{filteredLogs.length}</strong> dari <strong className="text-on-surface">{logs.length}</strong> entri log</span>
           <div className="flex items-center gap-1 font-label-sm text-label-sm">
             <button className="px-2.5 py-1.5 rounded bg-surface-container-low opacity-50" disabled>
               <span className="material-symbols-outlined text-[16px]">chevron_left</span>
             </button>
             <button className="px-3 py-1.5 rounded bg-primary-container text-on-primary-container font-bold">1</button>
-            <button className="px-3 py-1.5 rounded bg-surface-container-high hover:bg-surface-bright">2</button>
-            <button className="px-3 py-1.5 rounded bg-surface-container-high hover:bg-surface-bright">3</button>
-            <span className="px-2 text-outline">...</span>
-            <button className="px-3 py-1.5 rounded bg-surface-container-high hover:bg-surface-bright">406</button>
-            <button className="px-2.5 py-1.5 rounded bg-surface-container-high hover:bg-surface-bright">
+            <button className="px-2.5 py-1.5 rounded bg-surface-container-high opacity-50" disabled>
               <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             </button>
           </div>
@@ -625,15 +646,15 @@ export default function JejakAudit() {
 
       {/* JSON Diff Inspector Modal */}
       {selectedLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-5xl bg-surface-container rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-outline-variant/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedLog(null)} role="dialog" aria-modal="true" aria-labelledby="modal-diff-inspector-heading">
+          <div className="relative w-full max-w-5xl bg-surface-container rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-outline-variant/30" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between px-space-lg py-space-md bg-surface-container-high border-b border-outline-variant/20">
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-[#D97706]/20 text-[#FBBF24]">
                   <span className="material-symbols-outlined text-[24px]">difference</span>
                 </div>
                 <div>
-                  <h3 className="font-title-lg text-title-lg font-bold text-on-surface">
+                  <h3 id="modal-diff-inspector-heading" className="font-title-lg text-title-lg font-bold text-on-surface">
                     Inspeksi Perubahan Data: {selectedLog.actionType} pada {selectedLog.entityTarget}
                   </h3>
                   <p className="font-caption text-caption text-on-surface-variant mt-0.5">
@@ -644,12 +665,12 @@ export default function JejakAudit() {
               <div className="flex items-center gap-2">
                 <button
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-bright text-xs font-semibold cursor-pointer border border-outline-variant/30"
-                  onClick={() => handleCopy(selectedLog)}
+                  onClick={() => handleCopy(JSON.stringify(selectedLog.diffData || selectedLog, null, 2))}
                 >
                   <span className="material-symbols-outlined text-[16px] text-secondary">content_copy</span>
                   <span>{copyText}</span>
                 </button>
-                <button className="p-1 rounded text-outline hover:text-on-surface" onClick={() => setSelectedLog(null)}>
+                <button className="p-1 rounded text-outline hover:text-on-surface" onClick={() => setSelectedLog(null)} aria-label="Tutup inspektor diff">
                   <span className="material-symbols-outlined text-[22px]">close</span>
                 </button>
               </div>
@@ -698,12 +719,7 @@ export default function JejakAudit() {
       )}
 
       {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-surface-container-high border border-tertiary/40 text-on-surface px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-4">
-          <span className="material-symbols-outlined text-tertiary text-[20px]">check_circle</span>
-          <span className="text-sm font-semibold">{toastMessage}</span>
-        </div>
-      )}
+      <Toast message={toastMessage} onClose={() => showToast(null)} />
     </div>
   );
 }

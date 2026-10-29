@@ -1,4 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useToast, useKeyboardShortcuts } from '../hooks/useToast';
+import Toast from '../components/Toast';
+import { generatePrefixedId } from '../utils/uuid';
 
 // Initial dataset matching SPADA UPGRIS Master Data
 const initialCoursesData = [
@@ -102,19 +105,27 @@ const initialCoursesData = [
   },
 ];
 
-export default function MasterMataKuliah() {
+export default function MasterMataKuliah({ onNavigate }) {
   const [courses, setCourses] = useState(initialCoursesData);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [sksFilter, setSksFilter] = useState('all');
-  const [curriculumFilter, setCurriculumFilter] = useState('kur-2024');
-  const [statusFilter, setStatusFilter] = useState('active');
+  const [curriculumFilter, setCurriculumFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  // Debounce search query to avoid excessive filtering on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Modal Dialog states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [viewingSyllabus, setViewingSyllabus] = useState(null);
   const [deleteConfirmCourse, setDeleteConfirmCourse] = useState(null);
-  const [toastMessage, setToastMessage] = useState(null);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -129,28 +140,23 @@ export default function MasterMataKuliah() {
 
   const searchInputRef = useRef(null);
 
-  // Keyboard shortcut Cmd/Ctrl + F to focus search
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-      if (e.key === 'Escape') {
-        setIsModalOpen(false);
-        setViewingSyllabus(null);
-        setDeleteConfirmCourse(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Use shared hooks
+  const [toastMessage, showToast] = useToast();
+  const handleEscape = () => {
+    setIsModalOpen(false);
+    setViewingSyllabus(null);
+    setDeleteConfirmCourse(null);
+  };
+  useKeyboardShortcuts({
+    findInputRef: searchInputRef,
+    onEscape: handleEscape,
+  });
 
   // Filtered List
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
+      if (debouncedSearchQuery.trim()) {
+        const q = debouncedSearchQuery.toLowerCase().trim();
         const match =
           c.kode.toLowerCase().includes(q) ||
           c.nama.toLowerCase().includes(q) ||
@@ -171,7 +177,7 @@ export default function MasterMataKuliah() {
       }
       return true;
     });
-  }, [courses, searchQuery, sksFilter, curriculumFilter, statusFilter]);
+  }, [courses, debouncedSearchQuery, sksFilter, curriculumFilter, statusFilter]);
 
   // Derived metrics
   const totalAktif = useMemo(() => courses.filter((c) => c.status === 'aktif').length, [courses]);
@@ -230,7 +236,7 @@ export default function MasterMataKuliah() {
       showToast(`Mata kuliah ${formData.kode} berhasil diperbarui!`);
     } else {
       const newCourse = {
-        id: `mk-${Date.now()}`,
+        id: generatePrefixedId('mk-'),
         kode: formData.kode.toUpperCase().trim(),
         nama: formData.nama.trim(),
         sks: Number(formData.sks),
@@ -249,11 +255,6 @@ export default function MasterMataKuliah() {
     setIsModalOpen(false);
   };
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
   const handleDelete = (course) => {
     setCourses((prev) => prev.filter((c) => c.id !== course.id));
     setDeleteConfirmCourse(null);
@@ -265,7 +266,7 @@ export default function MasterMataKuliah() {
       {/* Top Academic Navigation Breadcrumbs & Micro System Health */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-sm mb-space-md">
         <nav aria-label="Breadcrumb" className="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
-          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#">
+          <a className="hover:text-primary transition-colors flex items-center gap-1" href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('dasbor-mahasiswa'); }}>
             <span className="material-symbols-outlined text-[15px]">home</span>
             <span>Beranda</span>
           </a>
@@ -584,8 +585,8 @@ export default function MasterMataKuliah() {
 
       {/* CRUD Modal Dialog */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl bg-white text-gray-900 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md animate-in fade-in duration-200" onClick={() => setIsModalOpen(false)} role="dialog" aria-modal="true" aria-labelledby="modal-course-heading">
+          <div className="relative w-full max-w-xl bg-white text-gray-900 rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
             <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
             <div className="flex items-start justify-between p-space-lg pb-space-sm border-b border-gray-100">
@@ -594,7 +595,7 @@ export default function MasterMataKuliah() {
                   <span className="material-symbols-outlined text-[16px]">school</span>
                   <span>Kurikulum SPADA 2024</span>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 tracking-tight font-title-lg">
+                <h2 id="modal-course-heading" className="text-2xl font-bold text-gray-900 tracking-tight font-title-lg">
                   {editingCourse ? `Ubah Mata Kuliah ${editingCourse.kode}` : 'Tambah Mata Kuliah Baru'}
                 </h2>
                 <p className="text-sm text-gray-500 font-body-sm mt-0.5">
@@ -605,6 +606,7 @@ export default function MasterMataKuliah() {
                 className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
                 type="button"
                 onClick={() => setIsModalOpen(false)}
+                aria-label="Tutup modal mata kuliah"
               >
                 <span className="material-symbols-outlined text-[24px]">close</span>
               </button>
@@ -618,13 +620,15 @@ export default function MasterMataKuliah() {
                     <span className="text-xs text-blue-600 font-normal">Kapital</span>
                   </label>
                   <input
-                    className="w-full uppercase font-mono px-3 py-2 bg-gray-50 rounded-lg text-gray-900 placeholder:text-gray-400 font-body-md text-body-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm border border-gray-200"
+                    className="w-full font-mono px-3 py-2 bg-gray-50 rounded-lg text-gray-900 placeholder:text-gray-400 font-body-md text-body-md focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm border border-gray-200"
                     id="mkKode"
                     placeholder="TIF-305"
                     required
                     type="text"
                     value={formData.kode}
-                    onChange={(e) => setFormData({ ...formData, kode: e.target.value.toUpperCase() })}
+                    onChange={(e) => setFormData({ ...formData, kode: e.target.value })}
+                    onBlur={(e) => setFormData({ ...formData, kode: e.target.value.toUpperCase() })}
+                    style={{ textTransform: 'uppercase' }}
                   />
                 </div>
                 <div className="sm:col-span-2 flex flex-col gap-1.5">
@@ -724,18 +728,19 @@ export default function MasterMataKuliah() {
 
       {/* Syllabus Modal */}
       {viewingSyllabus && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md">
-          <div className="relative w-full max-w-2xl bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md" onClick={() => setViewingSyllabus(null)} role="dialog" aria-modal="true" aria-labelledby="modal-syllabus-heading">
+          <div className="relative w-full max-w-2xl bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30 max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="h-1.5 w-full bg-gradient-to-r from-tertiary to-secondary"></div>
             <div className="flex items-start justify-between p-space-lg pb-space-sm border-b border-outline-variant/20">
               <div className="flex flex-col">
                 <span className="font-mono text-primary font-bold text-xs">{viewingSyllabus.kode} ({viewingSyllabus.sks} SKS)</span>
-                <h3 className="text-xl font-bold font-title-lg">{viewingSyllabus.nama}</h3>
+                <h3 id="modal-syllabus-heading" className="text-xl font-bold font-title-lg">{viewingSyllabus.nama}</h3>
                 <p className="text-xs text-on-surface-variant">{viewingSyllabus.deskripsi}</p>
               </div>
               <button
                 className="p-1 rounded text-on-surface-variant hover:text-on-surface"
                 onClick={() => setViewingSyllabus(null)}
+                aria-label="Tutup modal silabus"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -766,11 +771,11 @@ export default function MasterMataKuliah() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmCourse && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md">
-          <div className="relative w-full max-w-md bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-error/40 p-space-lg flex flex-col gap-4">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex items-center justify-center p-space-md" onClick={() => setDeleteConfirmCourse(null)} role="dialog" aria-modal="true" aria-labelledby="modal-delete-course-heading">
+          <div className="relative w-full max-w-md bg-surface-container text-on-surface rounded-xl shadow-2xl overflow-hidden border border-error/40 p-space-lg flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 text-error">
               <span className="material-symbols-outlined text-[24px]">warning</span>
-              <h3 className="font-title-lg text-lg font-bold">Konfirmasi Hapus</h3>
+              <h3 id="modal-delete-course-heading" className="font-title-lg text-lg font-bold">Konfirmasi Hapus</h3>
             </div>
             <p className="text-sm text-on-surface-variant">
               Apakah Anda yakin ingin menghapus mata kuliah <strong>{deleteConfirmCourse.kode} - {deleteConfirmCourse.nama}</strong>?
@@ -794,12 +799,7 @@ export default function MasterMataKuliah() {
       )}
 
       {/* Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-surface-container-high border border-tertiary/40 text-on-surface px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-in slide-in-from-bottom-4">
-          <span className="material-symbols-outlined text-tertiary text-[20px]">check_circle</span>
-          <span className="text-sm font-semibold">{toastMessage}</span>
-        </div>
-      )}
+      <Toast message={toastMessage} onClose={() => showToast(null)} />
     </div>
   );
 }

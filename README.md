@@ -49,6 +49,85 @@ npx prisma db seed
 npm run dev
 ```
 
+## Cara Menjalankan
+
+### Backend (Server API)
+1. **Persiapan database:**
+   ```bash
+   cd backend
+   cp .env.example .env   # Edit DATABASE_URL sesuai konfigurasi PostgreSQL Anda
+   npm install
+   ```
+
+2. **Setup database:**
+   ```bash
+   npx prisma migrate dev    # Jalankan migrasi database
+   npx prisma db seed        # Seed data awal (opsional)
+   ```
+
+3. **Jalankan server:**
+   ```bash
+   npm run dev              # Mode development dengan nodemon (hot reload)
+   # atau
+   npm start                # Mode production
+   ```
+
+   Server akan berjalan di `http://localhost:3000`
+
+### Frontend (Aplikasi React)
+1. **Instalasi dependensi:**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. **Jalankan development server:**
+   ```bash
+   npm run dev              # Mode development dengan Vite
+   ```
+
+   Aplikasi akan berjalan di `http://localhost:5173`
+
+3. **Build untuk production:**
+   ```bash
+   npm run build            # Build aplikasi untuk production
+   npm run preview          # Preview build production
+   ```
+
+### Menjalankan Keduanya (Backend + Frontend)
+#### Option 1: Terminal terpisah
+- Buka terminal pertama:
+  ```bash
+  cd backend
+  npm run dev
+  ```
+- Buka terminal kedua:
+  ```bash
+  cd frontend
+  npm run dev
+  ```
+
+#### Option 2: Script bersamaan (bash/zsh)
+```bash
+# Di terminal yang sama
+(cd backend && npm run dev) & (cd frontend && npm run dev)
+```
+
+### Script Berguna
+```bash
+# Backend
+npm run dev                # Development server
+npm run test              # Jalankan semua test
+npm run db:migrate        # Jalankan migrasi database
+npm run db:seed           # Seed data awal
+npm run db:studio         # Buka Prisma Studio untuk melihat data
+
+# Frontend
+npm run dev               # Development server dengan hot reload
+npm run build             # Build untuk production
+npm run preview           # Preview build production
+```
+
 ## API Endpoints
 
 Semua endpoint menggunakan path flat `/api/...` (bukan `/api/v1/...`). Lihat `SRS.md` Bab 21 untuk daftar lengkap.

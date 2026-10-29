@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * ForgotPassword — feature component (auth)
@@ -14,27 +14,52 @@ export default function ForgotPassword({ onNavigate, onBack }) {
   const [submittedEmail, setSubmittedEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
+  const cooldownTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
 
-  // Countdown timer untuk cooldown kirim-ulang (presisi & pencegahan memory leak)
+  // Countdown timer menggunakan useRef untuk menyimpan timer ID
+  // Effect dengan dependency [resendCooldown] yang benar: hanya memulai timer saat cooldown > 0
+  // Cleanup di return function memastikan tidak ada setState setelah unmount
   useEffect(() => {
-    if (resendCooldown <= 0) return;
+    isMountedRef.current = true;
 
-    const timer = setInterval(() => {
-      setResendCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
+    // Hentikan timer yang sedang berjalan
+    if (cooldownTimerRef.current) {
+      clearTimeout(cooldownTimerRef.current);
+      cooldownTimerRef.current = null;
+    }
+
+    // Mulai countdown hanya jika cooldown > 0
+    if (resendCooldown > 0) {
+      cooldownTimerRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          setResendCooldown((prev) => prev - 1);
         }
-        return prev - 1;
-      });
-    }, 1000);
+      }, 1000);
+    }
 
-    return () => clearInterval(timer);
-  }, [resendCooldown > 0, resendCooldown === 60]);
+    // Cleanup: hentikan timer saat unmount atau saat resendCooldown berubah
+    return () => {
+      isMountedRef.current = false;
+      if (cooldownTimerRef.current) {
+        clearTimeout(cooldownTimerRef.current);
+        cooldownTimerRef.current = null;
+      }
+    };
+  }, [resendCooldown]); // Dependency: re-run effect saat cooldown berubah (termasuk saat berkurang via setTimeout callback)
+
+  // Guard setState after unmount
+  const safeSetResendCooldown = (value) => {
+    if (isMountedRef.current) {
+      setResendCooldown(value);
+    }
+  };
 
   /** Validasi & submit permintaan reset password */
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Guard: prevent double submission
+    if (loading) return;
     setErrorMessage('');
 
     const trimmedEmail = email.trim();
@@ -58,7 +83,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
       setLoading(false);
       setSubmittedEmail(trimmedEmail);
       setEmail('');
-      setResendCooldown(60);
+      safeSetResendCooldown(60);
     }, 1100);
   };
 
@@ -69,7 +94,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
     // TODO: await apiClient.post('/api/auth/resend-reset', { email: submittedEmail });
     setTimeout(() => {
       setLoading(false);
-      setResendCooldown(60);
+      safeSetResendCooldown(60);
     }, 1000);
   };
 
@@ -247,7 +272,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <svg
-                        className="animate-spin h-5 w-5 text-white"
+                        className="animate-spin h-5 w-5 text-on-primary-container"
                         fill="none"
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
@@ -276,14 +301,12 @@ export default function ForgotPassword({ onNavigate, onBack }) {
 
               {/* Link navigasi & helpdesk */}
               <div className="flex flex-col gap-3 text-center">
-                <a
-                  href="/login"
+                <button
+                  type="button"
                   onClick={(e) => {
                     if (onBack) {
-                      e.preventDefault();
                       onBack();
                     } else if (onNavigate) {
-                      e.preventDefault();
                       onNavigate('login');
                     }
                   }}
@@ -293,7 +316,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                     arrow_back
                   </span>
                   <span>Kembali ke Halaman Masuk</span>
-                </a>
+                </button>
 
                 <div className="pt-2">
                   <p className="font-body-sm text-xs text-[#64748B]">
