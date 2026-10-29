@@ -53,7 +53,8 @@ function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange, activeNavPath
     } else if (path === 'dasbor-mahasiswa' && activeRole !== 'mahasiswa') {
       onRoleChange && onRoleChange('mahasiswa');
     } else if (
-      (path === 'manajemen-pengguna' ||
+      (path === 'direct-enrollment' ||
+        path === 'manajemen-pengguna' ||
         path === 'master-mata-kuliah' ||
         path === 'pembukaan-kelas' ||
         path === 'jejak-audit' ||

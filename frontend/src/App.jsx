@@ -11,6 +11,7 @@ import ForgotPasswordPage from './pages/ForgotPassword';
 import DasborDosenPage from './pages/DasborDosen';
 import DasborAdminPage from './pages/DasborAdmin';
 import AppShellGlobalPage from './pages/AppShellGlobal';
+import DirectEnrollmentPage from './pages/DirectEnrollment';
 
 function App() {
   // Sinkronisasi rute dan peran via URL
@@ -49,9 +50,14 @@ function App() {
 
   const isForgotPassword = pathname === '/forgot-password' || searchParams.get('page') === 'forgot-password';
   const isAppShellGlobal = pathname === '/app-shell' || searchParams.get('page') === 'app-shell';
+  const isDirectEnrollment = pathname === '/direct-enrollment' || searchParams.get('page') === 'direct-enrollment';
 
   if (isForgotPassword) {
     return <ForgotPasswordPage />;
+  }
+
+  if (isDirectEnrollment) {
+    return <DirectEnrollmentPage onRoleChange={handleRoleChange} />;
   }
 
   // Jika diminta rute atau pratinjau App Shell Global secara eksplisit

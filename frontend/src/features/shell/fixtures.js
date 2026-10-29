@@ -35,6 +35,7 @@ export const navSections = [
     title: 'Administrasi SPADA',
     role: 'admin',
     items: [
+      { path: 'direct-enrollment', label: 'Direct Enrollment', icon: 'how_to_reg' },
       { path: 'manajemen-pengguna', label: 'Manajemen Pengguna', icon: 'group' },
       { path: 'master-mata-kuliah', label: 'Master Mata Kuliah', icon: 'local_library' },
       { path: 'pembukaan-kelas', label: 'Pembukaan Kelas', icon: 'edit_calendar' },
