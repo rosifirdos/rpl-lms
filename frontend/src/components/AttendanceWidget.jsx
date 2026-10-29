@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function AttendanceWidget() {
+function AttendanceWidget({ onNavigate }) {
   const [attended, setAttended] = useState(false);
 
   const btnClass = attended
@@ -71,7 +71,14 @@ function AttendanceWidget() {
           Tingkat Presensi:{' '}
           <strong className="text-on-surface font-mono">100%</strong>
         </span>
-        <a href="#" className="text-secondary hover:underline">
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            if (onNavigate) onNavigate('status-presensi');
+          }}
+          className="text-secondary hover:underline cursor-pointer"
+        >
           Riwayat Lengkap
         </a>
       </div>
