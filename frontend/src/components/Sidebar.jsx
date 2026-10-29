@@ -53,6 +53,8 @@ function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange }) {
       onRoleChange('dosen');
     } else if (path === 'dasbor-mahasiswa' && onRoleChange) {
       onRoleChange('mahasiswa');
+    } else if (path === 'manajemen-pengguna' && onRoleChange) {
+      onRoleChange('admin');
     }
   };
 

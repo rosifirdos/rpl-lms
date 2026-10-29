@@ -64,6 +64,17 @@ function Header({ onToggleSidebar, activeRole = 'mahasiswa', onRoleChange }) {
             >
               Dosen
             </button>
+            <button
+              type="button"
+              onClick={() => onRoleChange && onRoleChange('admin')}
+              className={`px-space-sm py-space-xs rounded font-label-sm text-label-sm transition-colors ${
+                activeRole === 'admin'
+                  ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+              }`}
+            >
+              Admin
+            </button>
           </div>
 
           <button
