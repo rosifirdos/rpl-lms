@@ -131,8 +131,14 @@ npm run db:seed         # Isi akun pengguna & master awal
 ```bash
 npm run dev             # Mode development (nodemon)
 npm start               # Mode produksi
-npm test                # Menjalankan seluruh pengujian otomatis (70 test, Fase 2–4)
+npm test                # Menjalankan seluruh pengujian otomatis (Fase 2–6)
 ```
+
+## Dokumentasi API Fase 6
+
+Dokumentasi OpenAPI 3.0 untuk seluruh endpoint MVP 1 tersedia di [docs/openapi.yaml](docs/openapi.yaml). Dokumen tersebut mencakup autentikasi, manajemen pengguna, mata kuliah, kelas, enrollment, dashboard, ruang kelas, dan audit log.
+
+Komitmen pengujian Fase 6 memvalidasi regresi alur utama, RBAC, penolakan akun suspended, kapasitas enrollment, jejak audit, serta kelengkapan artefak OpenAPI.
 
 ### 4. Database Alternatif (Embedded Postgres)
 Tanpa instalasi PostgreSQL manual, `scripts/run-pg.js` menyediakan embedded-postgres di port 5433:
