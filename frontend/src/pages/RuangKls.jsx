@@ -5,6 +5,6 @@
  */
 import RuangKls from '../features/mahasiswa/RuangKls';
 
-export default function RuangKlsPage({ onNavigate, onRoleChange }) {
-  return <RuangKls onNavigate={onNavigate} onRoleChange={onRoleChange} />;
+export default function RuangKlsPage({ onNavigate, onRoleChange, courseId }) {
+  return <RuangKls onNavigate={onNavigate} onRoleChange={onRoleChange} courseId={courseId} />;
 }

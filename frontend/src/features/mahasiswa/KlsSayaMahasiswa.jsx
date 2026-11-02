@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import AppShell from '../../components/AppShell';
+import { courseCatalog } from '../../data/courseCatalog';
 
 /**
  * KlsSayaMahasiswa — Feature Component
@@ -17,88 +18,32 @@ export default function KlsSayaMahasiswa({ onNavigate, onRoleChange }) {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const classes = [
-    {
-      id: 'rpl-ti-a',
-      code: 'TIF-301',
-      className: 'TI-A',
-      title: 'Rekayasa Perangkat Lunak',
-      sks: 3,
-      schedule: 'Senin, 08:00 - 10:30 WIB • Lab Komputasi 3',
-      lecturer: {
-        name: 'Dr. Awan Rosi, M.Kom.',
-        nidn: '0612345601',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-      },
-      currentMeeting: 3,
-      totalMeetings: 16,
-      progressPct: 25,
-      attendanceActive: true,
-      attendanceDeadline: 'Hingga 10:15 WIB',
-      materialsCount: 5,
-      activeTasks: 1,
-    },
-    {
-      id: 'pwl-ti-b',
-      code: 'TIF-302',
-      className: 'TI-B',
-      title: 'Pemrograman Web Lanjut',
-      sks: 3,
-      schedule: 'Selasa, 13:00 - 15:30 WIB • Lab Software 1',
-      lecturer: {
-        name: 'Ir. Siti Aminah, M.T.',
-        nidn: '0628098701',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80',
-      },
-      currentMeeting: 4,
-      totalMeetings: 16,
-      progressPct: 25,
-      attendanceActive: false,
-      attendanceDeadline: 'Sesi berikutnya: Selasa',
-      materialsCount: 4,
-      activeTasks: 0,
-    },
-    {
-      id: 'bdl-ti-c',
-      code: 'TIF-303',
-      className: 'TI-C',
-      title: 'Basis Data Lanjut & Big Data',
-      sks: 3,
-      schedule: 'Rabu, 09:30 - 12:00 WIB • Ruang Teori 402',
-      lecturer: {
-        name: 'Prof. Hadi Wijaya, M.Sc.',
-        nidn: '0615027503',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
-      },
-      currentMeeting: 3,
-      totalMeetings: 16,
-      progressPct: 18.75,
-      attendanceActive: false,
-      attendanceDeadline: 'Selesai Pekan Lalu',
-      materialsCount: 6,
-      activeTasks: 2,
-    },
-    {
-      id: 'jarkom-ti-a',
-      code: 'TIF-304',
-      className: 'TI-A',
-      title: 'Jaringan Komputer & Keamanan Siber',
-      sks: 3,
-      schedule: 'Kamis, 08:00 - 10:30 WIB • Lab Jaringan',
-      lecturer: {
-        name: 'Budi Santoso, M.Kom.',
-        nidn: '0619088102',
-        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
-      },
-      currentMeeting: 3,
-      totalMeetings: 16,
-      progressPct: 18.75,
-      attendanceActive: false,
-      attendanceDeadline: 'Selesai Pekan Lalu',
-      materialsCount: 3,
-      activeTasks: 1,
-    },
-  ];
+  const classes = useMemo(
+    () =>
+      courseCatalog.map((course) => ({
+        id: course.id,
+        code: course.code,
+        className: course.classGroup,
+        title: course.name,
+        sks: course.sks,
+        schedule: course.schedule,
+        lecturer: {
+          name: course.lecturer,
+          nidn: course.nidn,
+          avatar: course.avatar,
+        },
+        currentMeeting: course.currentMeeting,
+        totalMeetings: course.totalMeetings,
+        progressPct: course.meetingProgressPct,
+        attendanceActive: course.attendanceActive,
+        attendanceDeadline: course.attendanceDeadline,
+        materialsCount: course.materialsCount,
+        activeTasks: course.activeTasks,
+      })),
+    []
+  );
+
+  const totalSks = useMemo(() => classes.reduce((sum, cls) => sum + cls.sks, 0), [classes]);
 
   const filteredClasses = useMemo(() => {
     return classes.filter((cls) => {
@@ -160,7 +105,7 @@ export default function KlsSayaMahasiswa({ onNavigate, onRoleChange }) {
                   PORTAL MAHASISWA
                 </span>
                 <span className="font-label-sm text-label-sm bg-surface-container-highest text-secondary px-2.5 py-0.5 rounded">
-                  4 Kelas Aktif (12 SKS)
+                  {classes.length} Kelas Aktif ({totalSks} SKS)
                 </span>
               </div>
               <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
@@ -280,7 +225,7 @@ export default function KlsSayaMahasiswa({ onNavigate, onRoleChange }) {
                   {/* Course Title & Schedule */}
                   <div className="flex flex-col gap-1">
                     <h2
-                      onClick={() => onNavigate && onNavigate('ruang-kelas')}
+                      onClick={() => onNavigate && onNavigate(`ruang-kelas?course=${cls.id}`)}
                       className="font-title-lg text-[18px] font-semibold text-on-surface leading-snug line-clamp-1 group-hover:text-primary cursor-pointer transition-colors"
                     >
                       {cls.title}
@@ -363,7 +308,7 @@ export default function KlsSayaMahasiswa({ onNavigate, onRoleChange }) {
                 <div className="pt-5 mt-2">
                   <button
                     type="button"
-                    onClick={() => onNavigate && onNavigate('ruang-kelas')}
+                    onClick={() => onNavigate && onNavigate(`ruang-kelas?course=${cls.id}`)}
                     className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary text-on-primary font-medium text-sm transition-all duration-200 shadow-md hover:bg-primary-fixed hover:text-on-primary-fixed active:scale-[0.99]"
                   >
                     <span>Buka Ruang Kelas</span>
@@ -414,7 +359,7 @@ export default function KlsSayaMahasiswa({ onNavigate, onRoleChange }) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => onNavigate && onNavigate('ruang-kelas')}
+                    onClick={() => onNavigate && onNavigate(`ruang-kelas?course=${cls.id}`)}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-fixed hover:text-on-primary-fixed transition-colors"
                   >
                     <span>Masuk Kelas</span>

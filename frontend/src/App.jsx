@@ -121,9 +121,13 @@ function App() {
     }
     // Handle full URLs with query strings
     if (route.includes('?')) {
-      const searchParams = new URLSearchParams(route.split('?')[1]);
+      const [pathPart, queryPart] = route.split('?');
+      const searchParams = new URLSearchParams(queryPart);
       const pageParam = searchParams.get('page');
       if (pageParam) return pageParam;
+      // Route like "ruang-kelas?course=rpl-ti-a" -> key "ruang-kelas"
+      const path = pathPart.startsWith('/') ? pathPart.slice(1) : pathPart;
+      return path;
     }
     // Strip leading slash if present
     return route.startsWith('/') ? route.slice(1) : route;
@@ -142,7 +146,10 @@ function App() {
     if (typeof window === 'undefined') return 'dasbor-mahasiswa';
     const searchParams = new URLSearchParams(window.location.search);
     const pageParam = searchParams.get('page');
-    if (pageParam) return pageParam;
+    if (pageParam) {
+      const course = searchParams.get('course');
+      return course ? `${pageParam}?course=${encodeURIComponent(course)}` : pageParam;
+    }
     // Path-based route: strip leading slash
     const path = window.location.pathname.startsWith('/') ? window.location.pathname.slice(1) : window.location.pathname;
     // Handle special path-based routes for backward compatibility
@@ -159,7 +166,9 @@ function App() {
         // Validate route against known routes before setting
         const isKnownRoute = pageParam in ROUTES || pageParam in SPECIAL_ROUTES;
         if (isKnownRoute) {
-          setCurrentRoute(pageParam);
+          // Simpan route lengkap (dengan ?course=...) agar data mata kuliah ikut terbawa
+          const course = searchParams.get('course');
+          setCurrentRoute(course ? `${pageParam}?course=${encodeURIComponent(course)}` : pageParam);
         } else {
           console.warn(`[App] Invalid route in URL: "${pageParam}". Redirecting to dashboard.`);
           window.history.replaceState({}, '', '?page=dasbor-mahasiswa');
@@ -188,11 +197,16 @@ function App() {
     }
     if (route.startsWith('/')) {
       // Path-based route: strip leading slash
-      return `?page=${route.slice(1)}`;
+      route = route.slice(1);
     }
     // Handle full query string (e.g., '?page=foo' or '?page=foo&tab=bar')
     if (route.startsWith('?')) {
       return route;
+    }
+    // Handle route with extra params, e.g. 'ruang-kelas?course=rpl-ti-a'
+    if (route.includes('?')) {
+      const [path, query] = route.split('?');
+      return `?page=${path}&${query}`;
     }
     return `?page=${route}`;
   }, []);
@@ -230,9 +244,12 @@ function App() {
       targetUrl += `${targetUrl.includes('?') ? '&' : '?'}role=${currentRole}`;
     }
 
-    // pushState tidak memicu popstate, langsung set state
+    // pushState tidak memicu popstate, langsung set state.
+    // Simpan route lengkap (termasuk query seperti ?course=...) agar
+    // perpindahan antar mata kuliah di halaman yang sama tetap ter-render.
+    const fullRoute = route.startsWith('?') ? route : route;
     window.history.pushState({}, '', targetUrl);
-    setCurrentRoute(routeKey);
+    setCurrentRoute(fullRoute);
   }, [resolveTargetUrl, normalizeRoute, activeRole]);
 
   const handleBack = useCallback(() => {
@@ -267,6 +284,22 @@ function App() {
   // === RENDERING LOGIC ===
   const routeKey = normalizeRoute(currentRoute);
 
+  // Ambil parameter ?course=... dari route aktif (atau dari URL browser)
+  const extractCourseId = useCallback((route) => {
+    try {
+      if (route && route.includes('?')) {
+        const queryPart = route.split('?')[1];
+        const course = new URLSearchParams(queryPart).get('course');
+        if (course) return course;
+      }
+      return new URL(window.location.href).searchParams.get('course') || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const courseId = routeKey === 'ruang-kelas' ? extractCourseId(currentRoute) : null;
+
   // 1. Auth route: halaman Lupa Password / Login selalu tampil standalone
   if (routeKey === 'forgot-password') {
     return <ForgotPasswordPage onNavigate={navigateTo} onBack={handleBack} />;
@@ -293,6 +326,17 @@ function App() {
         activeNavPath={routeKey}
         onNavChange={navigateTo}
       />;
+    }
+    // Pass courseId to ruang-kelas page (key forces remount when course changes)
+    if (routeKey === 'ruang-kelas') {
+      return (
+        <RoutedPage
+          key={courseId || 'default'}
+          onNavigate={navigateTo}
+          onRoleChange={handleRoleChange}
+          courseId={courseId}
+        />
+      );
     }
     // All other feature pages receive standard props
     return <RoutedPage onNavigate={navigateTo} onRoleChange={handleRoleChange} />;

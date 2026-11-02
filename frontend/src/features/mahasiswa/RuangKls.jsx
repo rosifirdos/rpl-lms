@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import AppShell from '../../components/AppShell';
+import { getCourseById } from '../../data/courseCatalog';
 
 /**
  * RuangKls — Feature Component
  * Ruang Kelas Mahasiswa dengan 16 Pertemuan Terstruktur OBE, distribusi materi,
  * dan presensi digital terpadu.
- * Berdasarkan desain Ruang_kls.html (MVP 2).
+ * Menampilkan mata kuliah sesuai card yang diklik (prop `courseId`).
  */
-export default function RuangKls({ onNavigate, onRoleChange }) {
+export default function RuangKls({ onNavigate, onRoleChange, courseId }) {
+  const course = getCourseById(courseId);
   const [activeTab, setActiveTab] = useState('pertemuan'); // 'pertemuan' | 'presensi' | 'silabus'
-  const [openAccordions, setOpenAccordions] = useState({ p1: false, p2: false, p3: true });
+  const [openAccordions, setOpenAccordions] = useState(() => {
+    const initial = {};
+    course.meetings.forEach((m) => {
+      initial[m.id] = m.status === 'SESI_AKTIF';
+    });
+    return initial;
+  });
   const [toastMessage, setToastMessage] = useState(null);
   const [checkInDone, setCheckInDone] = useState(false);
 
@@ -27,161 +35,28 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
 
   const toggleAllMeetings = (open) => {
     const newState = {};
-    for (let i = 1; i <= 16; i++) {
-      newState[`p${i}`] = open;
-    }
+    course.meetings.forEach((m) => {
+      newState[m.id] = open;
+    });
     setOpenAccordions(newState);
     showToast(open ? 'Semua pertemuan dibuka' : 'Semua pertemuan ditutup');
   };
 
+  const activeSession = course.meetings.find((m) => m.status === 'SESI_AKTIF');
+
   const handleCheckIn = () => {
     setCheckInDone(true);
-    showToast('Presensi Pertemuan 3 berhasil dicatat! Status: HADIR (09:20 WIB)');
+    showToast(
+      `Presensi Pertemuan ${activeSession ? activeSession.number : course.currentMeeting} berhasil dicatat! Status: HADIR (09:20 WIB)`
+    );
   };
 
-  const meetings = [
-    {
-      id: 'p1',
-      number: 1,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '22 Sep 2026',
-      title: 'P1 • Pengenalan Rekayasa Perangkat Lunak & SDLC',
-      description: 'Definisi perangkat lunak, krisis software masa lampau, evolusi SDLC, dan profesionalisme rekayasawan perangkat lunak sesuai ACM/IEEE guidelines.',
-      materialsCount: 2,
-      status: 'HADIR',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-      icon: 'check_circle',
-      materials: [
-        { name: 'Slide 01 — Konsep Dasar & Evolusi RPL.pdf', size: '2.4 MB', type: 'pdf' },
-        { name: 'Silabus & Kontrak Perkuliahan RPL 2026.pdf', size: '850 KB', type: 'pdf' },
-      ],
-    },
-    {
-      id: 'p2',
-      number: 2,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '29 Sep 2026',
-      title: 'P2 • Proses Perangkat Lunak: Waterfall, Agile, Scrum',
-      description: 'Analisis perbandingan metode proses sekuensial vs iterative agile. Penerapan sprint planning dan stand-up meeting.',
-      materialsCount: 3,
-      status: 'HADIR',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-      icon: 'check_circle',
-      materials: [
-        { name: 'Slide 02 — Model Proses Perangkat Lunak.pptx', size: '4.1 MB', type: 'ppt' },
-        { name: 'Studi Kasus Scrum Framework di Startup.pdf', size: '1.2 MB', type: 'pdf' },
-      ],
-    },
-    {
-      id: 'p3',
-      number: 3,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '06 Okt 2026 (Hari Ini)',
-      title: 'P3 • Analisis Kebutuhan Sistem & Spesifikasi SRS IEEE 830',
-      description: 'Teknik elisitasi kebutuhan pengguna (wawancara, kuesioner), pemisahan kebutuhan fungsional & non-fungsional, serta format baku dokumen SRS IEEE 830.',
-      materialsCount: 2,
-      status: checkInDone ? 'HADIR' : 'SESI_AKTIF',
-      statusClass: checkInDone
-        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-        : 'bg-tertiary-container/30 text-tertiary border border-tertiary/40 animate-pulse',
-      icon: checkInDone ? 'check_circle' : 'timer',
-      materials: [
-        { name: 'Modul 03 — Elisitasi & Spesifikasi SRS IEEE 830.pdf', size: '3.1 MB', type: 'pdf' },
-        { name: 'Template Dokumen SRS Standar UPGRIS.docx', size: '540 KB', type: 'doc' },
-      ],
-    },
-    {
-      id: 'p4',
-      number: 4,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '13 Okt 2026',
-      title: 'P4 • Pemodelan Berorientasi Objek: Use Case & Activity Diagram',
-      description: 'Prinsip OOP, pembuatan diagram use case, skenario alur utama/alternatif, dan pemodelan aktivitas bisnis.',
-      materialsCount: 1,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [{ name: 'Slide 04 — Unified Modeling Language (UML).pdf', size: '2.8 MB', type: 'pdf' }],
-    },
-    {
-      id: 'p5',
-      number: 5,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '20 Okt 2026',
-      title: 'P5 • Pemodelan Statis & Dinamis: Class & Sequence Diagram',
-      description: 'Struktur relasi kelas (asosiasi, agregasi, inheritance) dan interaksi pesan antar objek secara kronologis.',
-      materialsCount: 1,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [],
-    },
-    {
-      id: 'p6',
-      number: 6,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '27 Okt 2026',
-      title: 'P6 • Arsitektur Perangkat Lunak: Layered, MVC, Microservices',
-      description: 'Pola arsitektur modular enterprise, pemisahan concern layer tampilan, logika, dan data.',
-      materialsCount: 0,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [],
-    },
-    {
-      id: 'p7',
-      number: 7,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '03 Nov 2026',
-      title: 'P7 • Perancangan Basis Data Relasional & Review Pra-UTS',
-      description: 'ERD ke schema konversi, normalisasi 1NF-3NF, dan persiapan materi evaluasi tengah semester.',
-      materialsCount: 0,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [],
-    },
-    {
-      id: 'p8',
-      number: 8,
-      tag: 'Evaluasi Tengah Semester (UTS)',
-      date: '10 Nov 2026',
-      title: 'P8 • UJIAN TENGAH SEMESTER (UTS)',
-      description: 'Evaluasi tertulis & praktik analisis perancangan perangkat lunak berbasis studi kasus industri.',
-      materialsCount: 0,
-      status: 'EVALUASI_UTS',
-      statusClass: 'bg-secondary-container/30 text-secondary border border-secondary/40 font-bold',
-      icon: 'quiz',
-      materials: [],
-    },
-    {
-      id: 'p9',
-      number: 9,
-      tag: 'Pembelajaran Pasca-UTS',
-      date: '17 Nov 2026',
-      title: 'P9 • User Experience (UX) & Design System LMS',
-      description: 'Prinsip desain antarmuka, aksesibilitas WCAG 2.1 AA, dan standarisasi token UI kit.',
-      materialsCount: 0,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [],
-    },
-    {
-      id: 'p16',
-      number: 16,
-      tag: 'Evaluasi Akhir Semester (UAS)',
-      date: '05 Jan 2027',
-      title: 'P16 • UJIAN AKHIR SEMESTER (UAS) & DEMO PROYEK',
-      description: 'Presentasi dan demonstrasi aplikasi hasil pengembangan tim semester ini.',
-      materialsCount: 0,
-      status: 'EVALUASI_UAS',
-      statusClass: 'bg-error-container/40 text-error border border-error/40 font-bold',
-      icon: 'verified',
-      materials: [],
-    },
-  ];
+  const attended = checkInDone ? course.attendedSessions + 1 : course.attendedSessions;
+  const conducted = course.conductedSessions;
+  const attendancePct = Math.round((attended / conducted) * 100);
+  const attendanceEligible = attendancePct >= 70;
+  const dashOffset = 251.2 - (251.2 * attendancePct) / 100;
+  const progressPct = Math.round((course.currentMeeting / course.totalMeetings) * 100);
 
   return (
     <AppShell
@@ -211,19 +86,19 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
             </button>
             <span>/</span>
             <button
-              onClick={() => onNavigate && onNavigate('kelas-saya')}
+              onClick={() => onNavigate && onNavigate('kelas-saya-mahasiswa')}
               className="text-on-surface-variant hover:text-primary transition-colors"
             >
               Kelas Saya
             </button>
             <span>/</span>
             <span className="text-secondary font-label-sm font-semibold">
-              Rekayasa Perangkat Lunak (TI-A)
+              {course.name} ({course.classGroup})
             </span>
           </nav>
           <div className="flex items-center gap-space-sm bg-surface-container-high/80 px-3 py-1.5 rounded-lg shadow-sm">
             <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
-            <span className="font-caption text-caption text-on-surface-variant">SEMESTER GANJIL 2026/2027</span>
+            <span className="font-caption text-caption text-on-surface-variant">{course.semester}</span>
           </div>
         </div>
 
@@ -236,32 +111,32 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
             <div className="flex-1 space-y-space-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-label-sm text-label-sm bg-primary-container text-on-primary-container px-2.5 py-1 rounded font-bold">
-                  TI-A
+                  {course.classGroup}
                 </span>
                 <span className="font-label-sm text-label-sm bg-surface-container-highest text-secondary px-2.5 py-1 rounded font-medium">
-                  3 SKS • Teori &amp; Praktik
+                  {course.sks} SKS • Teori &amp; Praktik
                 </span>
                 <span className="font-caption text-caption bg-surface-container-lowest text-outline px-2 py-1 rounded font-mono">
-                  Kode MK: TIF-301
+                  Kode MK: {course.code}
                 </span>
               </div>
 
               <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
-                Rekayasa Perangkat Lunak
+                {course.name}
               </h1>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-y-2 gap-x-4 pt-1 font-body-sm text-body-sm text-on-surface-variant">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-secondary">person</span>
-                  <span>Dr. Awan Rosi, M.Kom. (Dosen Pengampu)</span>
+                  <span>{course.lecturer} (Dosen Pengampu)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-tertiary">schedule</span>
-                  <span>Senin, 08:00 - 10:30 WIB • Lab Komputasi 3</span>
+                  <span>{course.schedule}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-primary">auto_stories</span>
-                  <span>16 Pertemuan Terstruktur (OBE)</span>
+                  <span>{course.totalMeetings} Pertemuan Terstruktur (OBE)</span>
                 </div>
               </div>
             </div>
@@ -279,25 +154,31 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
                     r="40"
                     stroke="#38BDF8"
                     strokeDasharray="251.2"
-                    strokeDashoffset={checkInDone ? '0' : '62.8'}
+                    strokeDashoffset={dashOffset}
                     strokeLinecap="round"
                     strokeWidth="8"
                   ></circle>
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center">
                   <span className="text-xl font-bold font-headline-md text-on-surface leading-none">
-                    {checkInDone ? '100%' : '75%'}
+                    {attendancePct}%
                   </span>
                   <span className="text-[10px] text-on-surface-variant font-medium mt-0.5">
-                    {checkInDone ? '4/4 Sesi' : '3/4 Sesi'}
+                    {attended}/{conducted} Sesi
                   </span>
                 </div>
               </div>
               <div className="text-left sm:text-center">
                 <h3 className="text-sm font-bold text-on-surface">Kehadiran Saya</h3>
-                <p className="text-xs text-tertiary font-semibold flex items-center sm:justify-center gap-1 mt-0.5">
-                  <span className="material-symbols-outlined text-[14px]">verified</span>
-                  <span>Memenuhi Syarat UTS</span>
+                <p
+                  className={`text-xs font-semibold flex items-center sm:justify-center gap-1 mt-0.5 ${
+                    attendanceEligible ? 'text-tertiary' : 'text-error'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">
+                    {attendanceEligible ? 'verified' : 'error'}
+                  </span>
+                  <span>{attendanceEligible ? 'Memenuhi Syarat UTS' : 'Belum Memenuhi Syarat UTS'}</span>
                 </p>
                 <p className="text-[11px] text-outline mt-1 max-w-[170px]">
                   Batas minimum kehadiran 70% untuk akses evaluasi ujian.
@@ -310,12 +191,19 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
           <div className="mt-6 pt-5 border-t border-outline-variant/20 flex flex-col gap-2">
             <div className="flex items-center justify-between text-xs text-on-surface-variant">
               <span>
-                Progres Kelas: <strong className="text-primary font-bold">3 / 16 Pertemuan</strong> Terlaksana
+                Progres Kelas:{' '}
+                <strong className="text-primary font-bold">
+                  {course.currentMeeting} / {course.totalMeetings} Pertemuan
+                </strong>{' '}
+                Terlaksana
               </span>
-              <span className="font-mono text-outline font-semibold">18.75% Selesai</span>
+              <span className="font-mono text-outline font-semibold">{progressPct}% Selesai</span>
             </div>
             <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
-              <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: '18.75%' }}></div>
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-500"
+                style={{ width: `${progressPct}%` }}
+              ></div>
             </div>
           </div>
 
@@ -331,7 +219,7 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">calendar_view_week</span>
-              <span>Pertemuan (16 Sesi)</span>
+              <span>Pertemuan ({course.totalMeetings} Sesi)</span>
             </button>
             <button
               type="button"
@@ -370,7 +258,7 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
                   Daftar Pertemuan Perkuliahan
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface">
-                  16 Sesi
+                  {course.totalMeetings} Sesi
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs">
@@ -393,8 +281,18 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
 
             {/* Accordion Stack */}
             <div className="space-y-3">
-              {meetings.map((m) => {
+              {course.meetings.map((m) => {
                 const isOpen = openAccordions[m.id];
+                const isCheckedIn = checkInDone && m.status === 'SESI_AKTIF';
+                const statusClass = isCheckedIn
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : m.statusClass;
+                const statusIcon = isCheckedIn ? 'check_circle' : m.icon;
+                const statusLabel = isCheckedIn
+                  ? 'HADIR'
+                  : m.status === 'SESI_AKTIF'
+                    ? 'SESI AKTIF'
+                    : m.status;
                 return (
                   <div
                     key={m.id}
@@ -428,12 +326,10 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
 
                       <div className="flex items-center gap-3 shrink-0">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${m.statusClass}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${statusClass}`}
                         >
-                          <span className="material-symbols-outlined text-[16px]">{m.icon}</span>
-                          <span className="hidden sm:inline">
-                            {m.status === 'SESI_AKTIF' ? 'SESI AKTIF' : m.status}
-                          </span>
+                          <span className="material-symbols-outlined text-[16px]">{statusIcon}</span>
+                          <span className="hidden sm:inline">{statusLabel}</span>
                         </span>
                         <span
                           className={`material-symbols-outlined text-outline transition-transform duration-200 ${
@@ -453,7 +349,7 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
                         </p>
 
                         {/* Attendance Action if session active */}
-                        {m.status === 'SESI_AKTIF' && (
+                        {m.status === 'SESI_AKTIF' && !checkInDone && (
                           <div className="p-4 rounded-xl bg-tertiary-container/20 border border-tertiary/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-tertiary/20 text-tertiary flex items-center justify-center shrink-0">
@@ -461,7 +357,7 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
                               </div>
                               <div>
                                 <h4 className="text-sm font-bold text-on-surface">
-                                  Presensi Digital Pertemuan 3 Sedang Dibuka
+                                  Presensi Digital Pertemuan {m.number} Sedang Dibuka
                                 </h4>
                                 <p className="text-xs text-on-surface-variant">
                                   Batas toleransi kehadiran hingga 10:15 WIB. Klik tombol untuk check-in mandiri.
@@ -536,7 +432,7 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
                   Histori Presensi Perkuliahan Saya
                 </h3>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  Rekapitulasi kehadiran personal mahasiswa pada mata kuliah Rekayasa Perangkat Lunak.
+                  Rekapitulasi kehadiran personal mahasiswa pada mata kuliah {course.name}.
                 </p>
               </div>
               <button
@@ -551,11 +447,11 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/20 text-center">
                 <span className="text-caption text-outline font-medium block">Total Sesi Terlaksana</span>
-                <span className="text-headline-md font-bold text-on-surface">4 Sesi</span>
+                <span className="text-headline-md font-bold text-on-surface">{conducted} Sesi</span>
               </div>
               <div className="p-3 bg-tertiary-container/20 rounded-lg border border-tertiary/30 text-center text-tertiary">
                 <span className="text-caption font-medium block">Hadir</span>
-                <span className="text-headline-md font-bold">{checkInDone ? '4' : '3'} Sesi</span>
+                <span className="text-headline-md font-bold">{attended} Sesi</span>
               </div>
               <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/20 text-center text-secondary">
                 <span className="text-caption font-medium block">Izin / Sakit</span>
@@ -563,7 +459,7 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
               </div>
               <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/20 text-center text-error">
                 <span className="text-caption font-medium block">Alpa</span>
-                <span className="text-headline-md font-bold">{checkInDone ? '0' : '1'} Sesi</span>
+                <span className="text-headline-md font-bold">{conducted - attended} Sesi</span>
               </div>
             </div>
           </div>
@@ -576,16 +472,14 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
               Rencana Pembelajaran Semester (RPS) — OBE SN-Dikti
             </h3>
             <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-              Mata kuliah Rekayasa Perangkat Lunak bertujuan membekali mahasiswa dengan kemampuan merancang,
-              menganalisis, membangun, dan menguji sistem perangkat lunak berskala industri menggunakan metodologi
-              modern (Agile, Scrum, CI/CD, dan Standar IEEE 830).
+              {course.description}
             </p>
             <div className="p-4 rounded-xl bg-surface-container border border-outline-variant/20 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary text-[28px]">picture_as_pdf</span>
                 <div>
                   <h4 className="font-title-md text-sm font-semibold text-on-surface">
-                    Dokumen RPS Resmi — Rekayasa Perangkat Lunak 2026.pdf
+                    Dokumen RPS Resmi — {course.name} 2026.pdf
                   </h4>
                   <span className="text-xs text-outline font-mono">1.8 MB • Disahkan Tim Kurikulum PTIK</span>
                 </div>
