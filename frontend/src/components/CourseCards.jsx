@@ -49,7 +49,7 @@ const coursesData = [
   },
 ];
 
-function CourseCard({ course }) {
+function CourseCard({ course, onNavigate }) {
   return (
     <article className="flex flex-col justify-between rounded-xl bg-surface-container p-space-md shadow-lg transition-all duration-300 hover:shadow-2xl hover:bg-surface-container-high group">
       <div className="flex flex-col gap-space-sm">
@@ -91,21 +91,22 @@ function CourseCard({ course }) {
       </div>
 
       <div className="pt-space-md mt-space-sm">
-        <a
-          href="#"
-          className="w-full inline-flex items-center justify-center gap-space-xs py-2.5 px-space-md rounded-lg bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-md text-label-md font-bold transition-all shadow-md group-hover:shadow-lg"
+        <button
+          type="button"
+          onClick={() => onNavigate && onNavigate('ruang-kelas')}
+          className="w-full inline-flex items-center justify-center gap-space-xs py-2.5 px-space-md rounded-lg bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-md text-label-md font-bold transition-all shadow-md hover:shadow-lg"
         >
           <span>Buka Ruang Kelas</span>
           <span className="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover:translate-x-1">
             arrow_forward
           </span>
-        </a>
+        </button>
       </div>
     </article>
   );
 }
 
-function CourseCards() {
+function CourseCards({ onNavigate }) {
   return (
     <section aria-label="Kelas Aktif Semester Ini" className="mb-space-lg">
       <div className="flex items-center justify-between mb-space-md">
@@ -133,7 +134,7 @@ function CourseCards() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
         {coursesData.map((course, idx) => (
-          <CourseCard key={idx} course={course} />
+          <CourseCard key={idx} course={course} onNavigate={onNavigate} />
         ))}
       </div>
     </section>

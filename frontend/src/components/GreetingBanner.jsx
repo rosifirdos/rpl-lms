@@ -1,6 +1,15 @@
+import { useAuthStore } from '../stores/authStore';
+import { userFixtures } from '../features/shell/fixtures';
+
 function GreetingBanner() {
+  const storeUser = useAuthStore((s) => s.user);
+  const fallback = userFixtures.mahasiswa;
+
+  const displayName = storeUser?.name || fallback.name;
+  const displayIdentifier = storeUser?.identifier || fallback.identifier;
+
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-surface-container-high via-surface-container to-surface-container-low p-space-lg shadow-xl mb-space-lg">
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-surface-container-high via-surface-container to-surface-container-low p-space-lg shadow-xl mb-space-lg border border-outline-variant/20">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md relative z-10">
         <div className="flex flex-col gap-space-xs max-w-3xl">
           {/* Tags */}
@@ -18,7 +27,7 @@ function GreetingBanner() {
           <h1 className="font-display-hero text-display-hero text-on-surface tracking-tight">
             Selamat Datang,{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-              Ahmad Fauzi!
+              {displayName}!
             </span>
           </h1>
 
@@ -26,7 +35,7 @@ function GreetingBanner() {
           <div className="flex flex-wrap items-center gap-x-space-md gap-y-1 text-on-surface-variant font-body-md text-body-md">
             <span className="flex items-center gap-1 text-on-surface font-semibold">
               <span className="material-symbols-outlined text-[18px] text-secondary">badge</span>
-              NIM: 24670001
+              {displayIdentifier}
             </span>
             <span className="text-outline">&bull;</span>
             <span className="flex items-center gap-1">
@@ -36,36 +45,31 @@ function GreetingBanner() {
             <span className="text-outline">&bull;</span>
             <span className="flex items-center gap-1">
               <span className="material-symbols-outlined text-[18px] text-tertiary">pace</span>
-              Waktu Server:{' '}
-              <span className="text-on-surface font-mono font-medium">08:30 WIB</span>
+              Status:{' '}
+              <span className="text-on-surface font-mono font-medium">Aktif Enrolled</span>
             </span>
           </div>
         </div>
 
         {/* Academic Date Capsule */}
-        <div className="flex items-center gap-space-md bg-surface-container-lowest/70 backdrop-blur-md px-space-md py-space-sm rounded-lg self-start lg:self-center shadow-sm">
+        <div className="flex items-center gap-space-md bg-surface-container-lowest/70 backdrop-blur-md px-space-md py-space-sm rounded-lg self-start lg:self-center shadow-sm border border-outline-variant/30">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined text-[22px]">calendar_month</span>
           </div>
           <div className="flex flex-col text-left">
-            <span className="font-caption text-caption text-outline uppercase tracking-wider">
-              Kalender Akademik
+            <span className="font-label-md text-label-md text-on-surface font-semibold">
+              Minggu Perkuliahan ke-4
             </span>
-            <span className="font-title-md text-title-md text-on-surface font-bold">
-              Senin, 13 Oktober 2026
+            <span className="font-caption text-caption text-on-surface-variant">
+              Tahun Ajaran 2026/2027
             </span>
           </div>
         </div>
       </div>
 
-      {/* Subtle Geometric Corner Accent SVG */}
-      <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none">
-        <svg fill="none" height="120" viewBox="0 0 240 120" width="240" xmlns="http://www.w3.org/2000/svg">
-          <circle className="text-primary" cx="200" cy="120" r="100" stroke="currentColor" strokeWidth="2" />
-          <circle className="text-secondary" cx="200" cy="120" r="60" stroke="currentColor" strokeWidth="2" />
-          <path className="text-outline" d="M120 120L200 40" stroke="currentColor" strokeWidth="2" />
-        </svg>
-      </div>
+      {/* Decorative Glow Elements */}
+      <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-primary-container/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -left-10 -top-10 w-48 h-48 bg-secondary-container/20 rounded-full blur-2xl pointer-events-none" />
     </div>
   );
 }

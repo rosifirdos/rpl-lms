@@ -11,6 +11,26 @@
 
 ---
 
+## ✅ Status Pengerjaan: SELESAI (Delivered)
+
+Seluruh **6 fase** perancangan UI/UX MVP 1 telah **selesai dieksekusi dan diserahkan** melalui Google Stitch:
+
+| Fase | Lingkup Pengerjaan | Status | Deliverable Utama |
+|---|---|:---:|---|
+| **Fase 1** | Setup proyek Stitch, Master Context, Sitemap & batasan rilis | ✅ Selesai | Project `SPADA-LMS-UPGRIS-MVP1`, sitemap tree ber-*role badge* |
+| **Fase 2** | Design tokens & UI Kit primitives (atoms + molecules) | ✅ Selesai | Katalog komponen Button, Input, Badge, Stat Card, Filter Bar, Pagination, Toast |
+| **Fase 3** | Autentikasi (Dark Navy), App Shell & Profil mandiri | ✅ Selesai | `/login`, `/forgot-password`, App Shell (Topbar + Sidebar 3 role), `/profile` |
+| **Fase 4** | Dasbor kontekstual 3 peran + adaptasi mobile 375px | ✅ Selesai | Dasbor Mahasiswa, Dasbor Dosen, Dasbor Admin, drawer navigation mobile |
+| **Fase 5** | Master data, Direct Enrollment (split-view) & Audit Trail | ✅ Selesai | `/admin/users`, `/admin/courses`, `/admin/classes`, `/admin/enrollments`, `/admin/audit-logs` + JSON Diff Inspector |
+| **Fase 6** | States/edge cases, uji WCAG 2.1 AA & handoff kode | ✅ Selesai | Skeleton shimmer, empty states, error 401/403/404/500, ekspor Tailwind + React JSX |
+
+**Catatan Serah Terima MVP 1:**
+- Seluruh *Quality Gates* pada **Bab 7** dokumen ini telah terpenuhi dan diverifikasi.
+- Komponen hasil ekspor Google Stitch dipecah ke dalam struktur `src/components/ui/`, `src/features/auth/`, `src/features/dashboard/`, dan `src/features/admin/`.
+- Batas lingkup yang dulu tertunda (Ruang Kelas 16 Pertemuan, Materi, Presensi Digital) kini dilanjutkan pada dokumen terpisah: **[DESIGN_INSTRUCTIONS_MVP2_UIUX.md](DESIGN_INSTRUCTIONS_MVP2_UIUX.md)**.
+
+---
+
 ## 1. Tujuan & Metodologi Perancangan (100% Google Stitch Prompt-Driven)
 
 ### 1.1 Paradigma Pengerjaan Desain
@@ -44,7 +64,7 @@ Sesuai **SRS Bab 27** dan **PRD Bab 7**, ruang lingkup antarmuka MVP 1 mencakup:
 
 ### 1.3 Batasan Rilis (Out of Scope untuk MVP 1)
 Fitur-fitur berikut **tidak** dimasukkan ke dalam pengerjaan desain MVP 1:
-- Ruang kelas 16 pertemuan, distribusi materi pembelajaran, dan presensi digital (dialokasikan ke **MVP 2**).
+- Ruang kelas 16 pertemuan, distribusi materi pembelajaran, dan presensi digital (dialokasikan ke **MVP 2** → lihat [DESIGN_INSTRUCTIONS_MVP2_UIUX.md](DESIGN_INSTRUCTIONS_MVP2_UIUX.md)).
 - Modul tugas, validasi berkas keamanan (.pdf/.docx/.xlsx/.zip & 5MB–10MB), pengumpulan jawaban, dan penilaian skor SPADA 0–100 (dialokasikan ke **MVP 3**).
 - Central Timeline kronologis, kuis interaktif, dan notifikasi internal (dialokasikan ke **MVP 4**).
 - Evaluasi ujian (UTS P-8 & UAS P-16), gatekeeping kehadiran $\ge 70\%$, rekapitulasi nilai akhir kelas, dan ekspor data (dialokasikan ke **MVP 5**).

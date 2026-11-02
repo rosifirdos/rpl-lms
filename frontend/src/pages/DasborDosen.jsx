@@ -6,6 +6,6 @@
  */
 import DasborDosen from '../features/dosen/DasborDosen';
 
-export default function DasborDosenPage({ onRoleChange }) {
-  return <DasborDosen onRoleChange={onRoleChange} />;
+export default function DasborDosenPage({ onRoleChange, onNavigate }) {
+  return <DasborDosen onRoleChange={onRoleChange} onNavigate={onNavigate} />;
 }
