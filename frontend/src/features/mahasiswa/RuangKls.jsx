@@ -1,21 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AppShell from '../../components/AppShell';
+import { getCourseById } from '../../data/courseCatalog';
 
 /**
  * RuangKls — Feature Component
+ *
  * Ruang Kelas Mahasiswa dengan 16 Pertemuan Terstruktur OBE, distribusi materi,
- * dan presensi digital terpadu.
- * Berdasarkan desain Ruang_kls.html (MVP 2).
+ * presensi digital terpadu, dan silabus RPS.
+ * Terintegrasi penuh dengan AppShell, RBAC, dan CourseCatalog dinamis.
  */
-export default function RuangKls({ onNavigate, onRoleChange }) {
+export default function RuangKls({ onNavigate, onRoleChange, courseId }) {
+  const course = getCourseById(courseId);
   const [activeTab, setActiveTab] = useState('pertemuan'); // 'pertemuan' | 'presensi' | 'silabus'
-  const [openAccordions, setOpenAccordions] = useState({ p1: false, p2: false, p3: true });
+
+  // Accordion states for meetings
+  const [openAccordions, setOpenAccordions] = useState(() => {
+    const initial = {};
+    course.meetings.forEach((m) => {
+      initial[m.id] = m.status === 'SESI_AKTIF';
+    });
+    return initial;
+  });
+
+  // Toast notification with cleanup ref
   const [toastMessage, setToastMessage] = useState(null);
+  const toastTimeoutRef = useRef(null);
+
+  // Check-in and attendance states
   const [checkInDone, setCheckInDone] = useState(false);
+  const [attendanceTime, setAttendanceTime] = useState('09:20 WIB');
+  const [isSubmittingPresence, setIsSubmittingPresence] = useState(false);
+
+  // Modal Tugas
+  const [modalTugasOpen, setModalTugasOpen] = useState(false);
+  const [selectedTugas, setSelectedTugas] = useState(null);
+
+  // Countdown timer for active session (~28m 14s)
+  const [remainingSeconds, setRemainingSeconds] = useState(1694);
+
+  // Cleanup toast timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Countdown timer with proper cleanup
+  useEffect(() => {
+    if (remainingSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setRemainingSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatCountdown = (secs) => {
+    const mins = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${mins} menit ${s < 10 ? '0' : ''}${s} detik`;
+  };
 
   const showToast = (msg) => {
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+      toastTimeoutRef.current = null;
+    }, 3500);
   };
 
   const toggleAccordion = (id) => {
@@ -27,203 +82,99 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
 
   const toggleAllMeetings = (open) => {
     const newState = {};
-    for (let i = 1; i <= 16; i++) {
-      newState[`p${i}`] = open;
-    }
+    course.meetings.forEach((m) => {
+      newState[m.id] = open;
+    });
     setOpenAccordions(newState);
     showToast(open ? 'Semua pertemuan dibuka' : 'Semua pertemuan ditutup');
   };
 
+  const activeSession = course.meetings.find((m) => m.status === 'SESI_AKTIF');
+
   const handleCheckIn = () => {
-    setCheckInDone(true);
-    showToast('Presensi Pertemuan 3 berhasil dicatat! Status: HADIR (09:20 WIB)');
+    setIsSubmittingPresence(true);
+    setTimeout(() => {
+      setIsSubmittingPresence(false);
+      setCheckInDone(true);
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+      setAttendanceTime(timeStr);
+      showToast(
+        `Presensi Pertemuan ${activeSession ? activeSession.number : course.currentMeeting} berhasil dicatat! Status: HADIR (${timeStr})`
+      );
+    }, 600);
   };
 
-  const meetings = [
-    {
-      id: 'p1',
-      number: 1,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '22 Sep 2026',
-      title: 'P1 • Pengenalan Rekayasa Perangkat Lunak & SDLC',
-      description: 'Definisi perangkat lunak, krisis software masa lampau, evolusi SDLC, dan profesionalisme rekayasawan perangkat lunak sesuai ACM/IEEE guidelines.',
-      materialsCount: 2,
-      status: 'HADIR',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-      icon: 'check_circle',
-      materials: [
-        { name: 'Slide 01 — Konsep Dasar & Evolusi RPL.pdf', size: '2.4 MB', type: 'pdf' },
-        { name: 'Silabus & Kontrak Perkuliahan RPL 2026.pdf', size: '850 KB', type: 'pdf' },
-      ],
-    },
-    {
-      id: 'p2',
-      number: 2,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '29 Sep 2026',
-      title: 'P2 • Proses Perangkat Lunak: Waterfall, Agile, Scrum',
-      description: 'Analisis perbandingan metode proses sekuensial vs iterative agile. Penerapan sprint planning dan stand-up meeting.',
-      materialsCount: 3,
-      status: 'HADIR',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-      icon: 'check_circle',
-      materials: [
-        { name: 'Slide 02 — Model Proses Perangkat Lunak.pptx', size: '4.1 MB', type: 'ppt' },
-        { name: 'Studi Kasus Scrum Framework di Startup.pdf', size: '1.2 MB', type: 'pdf' },
-      ],
-    },
-    {
-      id: 'p3',
-      number: 3,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '06 Okt 2026 (Hari Ini)',
-      title: 'P3 • Analisis Kebutuhan Sistem & Spesifikasi SRS IEEE 830',
-      description: 'Teknik elisitasi kebutuhan pengguna (wawancara, kuesioner), pemisahan kebutuhan fungsional & non-fungsional, serta format baku dokumen SRS IEEE 830.',
-      materialsCount: 2,
-      status: checkInDone ? 'HADIR' : 'SESI_AKTIF',
-      statusClass: checkInDone
-        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-        : 'bg-tertiary-container/30 text-tertiary border border-tertiary/40 animate-pulse',
-      icon: checkInDone ? 'check_circle' : 'timer',
-      materials: [
-        { name: 'Modul 03 — Elisitasi & Spesifikasi SRS IEEE 830.pdf', size: '3.1 MB', type: 'pdf' },
-        { name: 'Template Dokumen SRS Standar UPGRIS.docx', size: '540 KB', type: 'doc' },
-      ],
-    },
-    {
-      id: 'p4',
-      number: 4,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '13 Okt 2026',
-      title: 'P4 • Pemodelan Berorientasi Objek: Use Case & Activity Diagram',
-      description: 'Prinsip OOP, pembuatan diagram use case, skenario alur utama/alternatif, dan pemodelan aktivitas bisnis.',
-      materialsCount: 1,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [{ name: 'Slide 04 — Unified Modeling Language (UML).pdf', size: '2.8 MB', type: 'pdf' }],
-    },
-    {
-      id: 'p5',
-      number: 5,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '20 Okt 2026',
-      title: 'P5 • Pemodelan Statis & Dinamis: Class & Sequence Diagram',
-      description: 'Struktur relasi kelas (asosiasi, agregasi, inheritance) dan interaksi pesan antar objek secara kronologis.',
-      materialsCount: 1,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [],
-    },
-    {
-      id: 'p6',
-      number: 6,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '27 Okt 2026',
-      title: 'P6 • Arsitektur Perangkat Lunak: Layered, MVC, Microservices',
-      description: 'Pola arsitektur modular enterprise, pemisahan concern layer tampilan, logika, dan data.',
-      materialsCount: 0,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [],
-    },
-    {
-      id: 'p7',
-      number: 7,
-      tag: 'Pembelajaran Pra-UTS',
-      date: '03 Nov 2026',
-      title: 'P7 • Perancangan Basis Data Relasional & Review Pra-UTS',
-      description: 'ERD ke schema konversi, normalisasi 1NF-3NF, dan persiapan materi evaluasi tengah semester.',
-      materialsCount: 0,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [],
-    },
-    {
-      id: 'p8',
-      number: 8,
-      tag: 'Evaluasi Tengah Semester (UTS)',
-      date: '10 Nov 2026',
-      title: 'P8 • UJIAN TENGAH SEMESTER (UTS)',
-      description: 'Evaluasi tertulis & praktik analisis perancangan perangkat lunak berbasis studi kasus industri.',
-      materialsCount: 0,
-      status: 'EVALUASI_UTS',
-      statusClass: 'bg-secondary-container/30 text-secondary border border-secondary/40 font-bold',
-      icon: 'quiz',
-      materials: [],
-    },
-    {
-      id: 'p9',
-      number: 9,
-      tag: 'Pembelajaran Pasca-UTS',
-      date: '17 Nov 2026',
-      title: 'P9 • User Experience (UX) & Design System LMS',
-      description: 'Prinsip desain antarmuka, aksesibilitas WCAG 2.1 AA, dan standarisasi token UI kit.',
-      materialsCount: 0,
-      status: 'TERKUNCI',
-      statusClass: 'bg-surface-container text-outline',
-      icon: 'lock',
-      materials: [],
-    },
-    {
-      id: 'p16',
-      number: 16,
-      tag: 'Evaluasi Akhir Semester (UAS)',
-      date: '05 Jan 2027',
-      title: 'P16 • UJIAN AKHIR SEMESTER (UAS) & DEMO PROYEK',
-      description: 'Presentasi dan demonstrasi aplikasi hasil pengembangan tim semester ini.',
-      materialsCount: 0,
-      status: 'EVALUASI_UAS',
-      statusClass: 'bg-error-container/40 text-error border border-error/40 font-bold',
-      icon: 'verified',
-      materials: [],
-    },
-  ];
+  const handleDownloadFile = (fileName) => {
+    showToast(`Mengunduh berkas: ${fileName}`);
+  };
+
+  const handlePrintAttendance = () => {
+    showToast('Menyiapkan Berita Acara Presensi untuk dicetak...');
+    setTimeout(() => {
+      window.print();
+    }, 400);
+  };
+
+  const openDetailTugas = (tugas) => {
+    setSelectedTugas(tugas);
+    setModalTugasOpen(true);
+  };
+
+  const attended = checkInDone ? course.attendedSessions + 1 : course.attendedSessions;
+  const conducted = course.conductedSessions;
+  const attendancePct = Math.round((attended / conducted) * 100);
+  const attendanceEligible = attendancePct >= 70;
+  const dashOffset = 251.2 - (251.2 * attendancePct) / 100;
+  const progressPct = Math.round((course.currentMeeting / course.totalMeetings) * 100);
 
   return (
     <AppShell
       activeRole="mahasiswa"
       onRoleChange={onRoleChange}
-      activeNavPath="kelas-saya"
+      activeNavPath="ruang-kelas"
       onNavChange={onNavigate}
     >
-      {/* Toast */}
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-surface-container-highest text-on-surface px-4 py-3 rounded-xl shadow-2xl border border-primary/30">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-surface-container-highest text-on-surface px-4 py-3 rounded-xl shadow-2xl border border-primary/30 animate-fade-in">
           <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
           <span className="font-label-md text-sm">{toastMessage}</span>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="p-1 hover:opacity-75 cursor-pointer ml-2"
+          >
+            <span className="material-symbols-outlined text-[16px]">close</span>
+          </button>
         </div>
       )}
 
-      <div className="flex flex-col w-full space-y-space-md">
-        {/* Breadcrumb */}
+      <div className="flex flex-col w-full space-y-space-md max-w-7xl mx-auto">
+        {/* Breadcrumb Navigation */}
         <div className="flex flex-wrap items-center justify-between gap-space-sm">
-          <nav className="flex items-center gap-2 font-body-sm text-body-sm text-outline">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 font-body-sm text-body-sm text-outline">
             <button
               onClick={() => onNavigate && onNavigate('dasbor-mahasiswa')}
-              className="hover:text-primary transition-colors flex items-center gap-1"
+              className="hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">home</span>
               Dasbor
             </button>
             <span>/</span>
             <button
-              onClick={() => onNavigate && onNavigate('kelas-saya')}
-              className="text-on-surface-variant hover:text-primary transition-colors"
+              onClick={() => onNavigate && onNavigate('kelas-saya-mahasiswa')}
+              className="text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
             >
               Kelas Saya
             </button>
             <span>/</span>
-            <span className="text-secondary font-label-sm font-semibold">
-              Rekayasa Perangkat Lunak (TI-A)
+            <span className="text-secondary font-label-sm font-semibold truncate max-w-xs sm:max-w-none">
+              {course.name} ({course.classGroup})
             </span>
           </nav>
           <div className="flex items-center gap-space-sm bg-surface-container-high/80 px-3 py-1.5 rounded-lg shadow-sm">
             <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
-            <span className="font-caption text-caption text-on-surface-variant">SEMESTER GANJIL 2026/2027</span>
+            <span className="font-caption text-caption text-on-surface-variant">{course.semester}</span>
           </div>
         </div>
 
@@ -236,32 +187,32 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
             <div className="flex-1 space-y-space-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-label-sm text-label-sm bg-primary-container text-on-primary-container px-2.5 py-1 rounded font-bold">
-                  TI-A
+                  {course.classGroup}
                 </span>
                 <span className="font-label-sm text-label-sm bg-surface-container-highest text-secondary px-2.5 py-1 rounded font-medium">
-                  3 SKS • Teori &amp; Praktik
+                  {course.sks} SKS • Teori &amp; Praktik
                 </span>
                 <span className="font-caption text-caption bg-surface-container-lowest text-outline px-2 py-1 rounded font-mono">
-                  Kode MK: TIF-301
+                  Kode MK: {course.code}
                 </span>
               </div>
 
               <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
-                Rekayasa Perangkat Lunak
+                {course.name}
               </h1>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-y-2 gap-x-4 pt-1 font-body-sm text-body-sm text-on-surface-variant">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-secondary">person</span>
-                  <span>Dr. Awan Rosi, M.Kom. (Dosen Pengampu)</span>
+                  <span>{course.lecturer} (Dosen Pengampu)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-tertiary">schedule</span>
-                  <span>Senin, 08:00 - 10:30 WIB • Lab Komputasi 3</span>
+                  <span>{course.schedule}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-[18px] text-primary">auto_stories</span>
-                  <span>16 Pertemuan Terstruktur (OBE)</span>
+                  <span>{course.totalMeetings} Pertemuan Terstruktur (OBE)</span>
                 </div>
               </div>
             </div>
@@ -279,25 +230,31 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
                     r="40"
                     stroke="#38BDF8"
                     strokeDasharray="251.2"
-                    strokeDashoffset={checkInDone ? '0' : '62.8'}
+                    strokeDashoffset={dashOffset}
                     strokeLinecap="round"
                     strokeWidth="8"
                   ></circle>
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center">
                   <span className="text-xl font-bold font-headline-md text-on-surface leading-none">
-                    {checkInDone ? '100%' : '75%'}
+                    {attendancePct}%
                   </span>
                   <span className="text-[10px] text-on-surface-variant font-medium mt-0.5">
-                    {checkInDone ? '4/4 Sesi' : '3/4 Sesi'}
+                    {attended}/{conducted} Sesi
                   </span>
                 </div>
               </div>
               <div className="text-left sm:text-center">
                 <h3 className="text-sm font-bold text-on-surface">Kehadiran Saya</h3>
-                <p className="text-xs text-tertiary font-semibold flex items-center sm:justify-center gap-1 mt-0.5">
-                  <span className="material-symbols-outlined text-[14px]">verified</span>
-                  <span>Memenuhi Syarat UTS</span>
+                <p
+                  className={`text-xs font-semibold flex items-center sm:justify-center gap-1 mt-0.5 ${
+                    attendanceEligible ? 'text-tertiary' : 'text-error'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[14px]">
+                    {attendanceEligible ? 'verified' : 'error'}
+                  </span>
+                  <span>{attendanceEligible ? 'Memenuhi Syarat UTS' : 'Belum Memenuhi Syarat UTS'}</span>
                 </p>
                 <p className="text-[11px] text-outline mt-1 max-w-[170px]">
                   Batas minimum kehadiran 70% untuk akses evaluasi ujian.
@@ -310,33 +267,40 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
           <div className="mt-6 pt-5 border-t border-outline-variant/20 flex flex-col gap-2">
             <div className="flex items-center justify-between text-xs text-on-surface-variant">
               <span>
-                Progres Kelas: <strong className="text-primary font-bold">3 / 16 Pertemuan</strong> Terlaksana
+                Progres Kelas:{' '}
+                <strong className="text-primary font-bold">
+                  {course.currentMeeting} / {course.totalMeetings} Pertemuan
+                </strong>{' '}
+                Terlaksana
               </span>
-              <span className="font-mono text-outline font-semibold">18.75% Selesai</span>
+              <span className="font-mono text-outline font-semibold">{progressPct}% Selesai</span>
             </div>
             <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
-              <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: '18.75%' }}></div>
+              <div
+                className="bg-primary h-2 rounded-full transition-all duration-500"
+                style={{ width: `${progressPct}%` }}
+              ></div>
             </div>
           </div>
 
-          {/* Tabs */}
+          {/* Navigation Tabs */}
           <div className="flex items-center gap-6 mt-6 border-b border-outline-variant/20 overflow-x-auto">
             <button
               type="button"
               onClick={() => setActiveTab('pertemuan')}
-              className={`pb-3 text-sm font-bold flex items-center gap-1.5 transition-colors border-b-2 whitespace-nowrap ${
+              className={`pb-3 text-sm font-bold flex items-center gap-1.5 transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
                 activeTab === 'pertemuan'
                   ? 'text-primary border-primary'
                   : 'text-on-surface-variant border-transparent hover:text-on-surface'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">calendar_view_week</span>
-              <span>Pertemuan (16 Sesi)</span>
+              <span>Pertemuan ({course.totalMeetings} Sesi)</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('presensi')}
-              className={`pb-3 text-sm font-bold flex items-center gap-1.5 transition-colors border-b-2 whitespace-nowrap ${
+              className={`pb-3 text-sm font-bold flex items-center gap-1.5 transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
                 activeTab === 'presensi'
                   ? 'text-primary border-primary'
                   : 'text-on-surface-variant border-transparent hover:text-on-surface'
@@ -348,19 +312,19 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
             <button
               type="button"
               onClick={() => setActiveTab('silabus')}
-              className={`pb-3 text-sm font-bold flex items-center gap-1.5 transition-colors border-b-2 whitespace-nowrap ${
+              className={`pb-3 text-sm font-bold flex items-center gap-1.5 transition-colors border-b-2 whitespace-nowrap cursor-pointer ${
                 activeTab === 'silabus'
                   ? 'text-primary border-primary'
                   : 'text-on-surface-variant border-transparent hover:text-on-surface'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">article</span>
-              <span>Silabus &amp; Kontrak Kuliah</span>
+              <span>Silabus &amp; RPS</span>
             </button>
           </div>
         </section>
 
-        {/* TAB 1: ACCORDION MEETINGS */}
+        {/* TAB 1: PERTEMUAN (ACCORDION MEETINGS) */}
         {activeTab === 'pertemuan' && (
           <div className="space-y-3">
             {/* Filter & Expand Controls */}
@@ -370,21 +334,21 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
                   Daftar Pertemuan Perkuliahan
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface">
-                  16 Sesi
+                  {course.totalMeetings} Sesi
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => toggleAllMeetings(true)}
-                  className="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-medium border border-outline-variant/30"
+                  className="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-medium border border-outline-variant/30 cursor-pointer"
                 >
                   Buka Semua
                 </button>
                 <button
                   type="button"
                   onClick={() => toggleAllMeetings(false)}
-                  className="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-medium border border-outline-variant/30"
+                  className="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-medium border border-outline-variant/30 cursor-pointer"
                 >
                   Tutup Semua
                 </button>
@@ -393,8 +357,19 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
 
             {/* Accordion Stack */}
             <div className="space-y-3">
-              {meetings.map((m) => {
+              {course.meetings.map((m) => {
                 const isOpen = openAccordions[m.id];
+                const isCheckedIn = checkInDone && m.status === 'SESI_AKTIF';
+                const statusClass = isCheckedIn
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : m.statusClass;
+                const statusIcon = isCheckedIn ? 'check_circle' : m.icon;
+                const statusLabel = isCheckedIn
+                  ? 'HADIR'
+                  : m.status === 'SESI_AKTIF'
+                    ? 'SESI AKTIF'
+                    : m.status;
+
                 return (
                   <div
                     key={m.id}
@@ -404,7 +379,7 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
                     <button
                       type="button"
                       onClick={() => toggleAccordion(m.id)}
-                      className="w-full text-left p-4 md:p-5 flex items-center justify-between gap-4 hover:bg-surface-container transition-colors"
+                      className="w-full text-left p-4 md:p-5 flex items-center justify-between gap-4 hover:bg-surface-container transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         <div className="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center font-mono font-bold text-secondary text-sm shrink-0">
@@ -428,12 +403,10 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
 
                       <div className="flex items-center gap-3 shrink-0">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${m.statusClass}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${statusClass}`}
                         >
-                          <span className="material-symbols-outlined text-[16px]">{m.icon}</span>
-                          <span className="hidden sm:inline">
-                            {m.status === 'SESI_AKTIF' ? 'SESI AKTIF' : m.status}
-                          </span>
+                          <span className="material-symbols-outlined text-[16px]">{statusIcon}</span>
+                          <span className="hidden sm:inline">{statusLabel}</span>
                         </span>
                         <span
                           className={`material-symbols-outlined text-outline transition-transform duration-200 ${
@@ -447,76 +420,165 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
 
                     {/* Accordion Body */}
                     {isOpen && (
-                      <div className="px-5 pb-5 pt-2 border-t border-outline-variant/20 bg-surface-container/50 space-y-4">
-                        <p className="text-xs text-on-surface-variant leading-relaxed">
+                      <div className="px-5 pb-5 pt-3 border-t border-outline-variant/20 bg-surface-container/40 space-y-4">
+                        <div className="p-3.5 rounded-lg bg-surface-container-low text-on-surface-variant font-body-sm text-body-sm leading-relaxed border-l-2 border-primary">
                           {m.description}
-                        </p>
+                        </div>
 
-                        {/* Attendance Action if session active */}
+                        {/* Interactive Attendance Action for active session */}
                         {m.status === 'SESI_AKTIF' && (
-                          <div className="p-4 rounded-xl bg-tertiary-container/20 border border-tertiary/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-tertiary/20 text-tertiary flex items-center justify-center shrink-0">
-                                <span className="material-symbols-outlined text-[24px]">how_to_reg</span>
-                              </div>
-                              <div>
-                                <h4 className="text-sm font-bold text-on-surface">
-                                  Presensi Digital Pertemuan 3 Sedang Dibuka
+                          <div className="rounded-xl bg-gradient-to-br from-primary-container/20 to-secondary-container/10 p-4 sm:p-5 border border-primary/30 shadow-sm">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="relative flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                  </span>
+                                  <span className="text-xs font-bold tracking-wider text-emerald-400 uppercase">
+                                    SESI PRESENSI AKTIF
+                                  </span>
+                                  <span className="text-xs text-outline">• Presensi Mandiri Mahasiswa</span>
+                                </div>
+                                <h4 className="text-base font-bold text-on-surface">
+                                  Konfirmasi Kehadiran Kuliah Sesi P{m.number}
                                 </h4>
                                 <p className="text-xs text-on-surface-variant">
-                                  Batas toleransi kehadiran hingga 10:15 WIB. Klik tombol untuk check-in mandiri.
+                                  Dibuka pukul 09:15 WIB oleh <strong>{course.lecturer}</strong> • Batas toleransi{' '}
+                                  <span className="text-secondary font-semibold">
+                                    (Tersisa {formatCountdown(remainingSeconds)})
+                                  </span>
+                                  .
                                 </p>
                               </div>
+                              <div className="shrink-0">
+                                {isCheckedIn ? (
+                                  <div className="px-4 py-2.5 rounded-lg bg-emerald-600 text-white font-label-md text-label-md font-bold shadow-md flex items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                                    <span>Kehadiran Berhasil Dicatat ({attendanceTime})</span>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={handleCheckIn}
+                                    disabled={isSubmittingPresence}
+                                    className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-primary hover:opacity-90 active:opacity-100 text-on-primary font-label-md text-label-md font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                                  >
+                                    <span className={`material-symbols-outlined text-[20px] ${isSubmittingPresence ? 'animate-spin' : ''}`}>
+                                      {isSubmittingPresence ? 'refresh' : 'how_to_reg'}
+                                    </span>
+                                    <span>{isSubmittingPresence ? 'Mencatat Kehadiran...' : 'Isi Presensi Sekarang'}</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={handleCheckIn}
-                              className="px-4 py-2 rounded-lg bg-tertiary text-on-tertiary hover:opacity-90 font-label-md text-label-md font-bold shadow-md transition-all shrink-0"
-                            >
-                              Isi Presensi Sekarang
-                            </button>
                           </div>
                         )}
 
                         {/* Materials Section */}
                         {m.materials.length > 0 ? (
                           <div className="space-y-2">
-                            <span className="text-xs font-bold text-outline uppercase tracking-wider block">
-                              Berkas Materi Pembelajaran:
-                            </span>
-                            {m.materials.map((file, idx) => (
-                              <div
-                                key={idx}
-                                className="p-3 bg-surface-container rounded-lg flex items-center justify-between gap-2 border border-outline-variant/20 hover:border-primary/40 transition-colors"
-                              >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <span className="material-symbols-outlined text-primary text-[20px]">
-                                    {file.type === 'pdf' ? 'picture_as_pdf' : 'description'}
-                                  </span>
-                                  <div className="min-w-0">
-                                    <span className="text-xs font-medium text-on-surface truncate block">
-                                      {file.name}
-                                    </span>
-                                    <span className="text-[11px] text-outline font-mono">
-                                      Ukuran: {file.size}
-                                    </span>
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => showToast(`Mengunduh berkas: ${file.name}`)}
-                                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary-container text-on-primary-container hover:bg-primary font-label-sm text-label-sm shadow-sm transition-all shrink-0"
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-outline uppercase tracking-wider flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[16px] text-primary">folder_open</span>
+                                <span>Berkas Materi Pembelajaran ({m.materials.length}):</span>
+                              </span>
+                              <span className="text-[11px] text-outline">Format PDF &amp; Bahan Tayang</span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                              {m.materials.map((file, idx) => (
+                                <div
+                                  key={idx}
+                                  className="p-3 bg-surface-container rounded-xl flex items-center justify-between gap-3 border border-outline-variant/20 hover:border-primary/40 transition-colors"
                                 >
-                                  <span className="material-symbols-outlined text-[16px]">download</span>
-                                  <span>Unduh</span>
-                                </button>
-                              </div>
-                            ))}
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="w-9 h-9 rounded-lg bg-primary-container/20 text-primary flex items-center justify-center shrink-0">
+                                      <span className="material-symbols-outlined text-[20px]">
+                                        {file.type === 'pdf' ? 'picture_as_pdf' : 'description'}
+                                      </span>
+                                    </div>
+                                    <div className="min-w-0">
+                                      <span className="text-xs font-bold text-on-surface truncate block">
+                                        {file.name}
+                                      </span>
+                                      <span className="text-[11px] text-outline font-mono">
+                                        {file.size} • Diunggah Dosen
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadFile(file.name)}
+                                    className="p-2 rounded-lg bg-surface-container-high hover:bg-primary-container text-on-surface hover:text-on-primary-container transition-colors shrink-0 cursor-pointer"
+                                    title={`Unduh ${file.name}`}
+                                  >
+                                    <span className="material-symbols-outlined text-[18px]">download</span>
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         ) : (
                           <p className="text-xs text-outline italic">
-                            Belum ada materi pembelajaran yang diunggah dosen untuk pertemuan ini.
+                            Belum ada materi pembelajaran yang diunggah untuk sesi ini.
                           </p>
+                        )}
+
+                        {/* Assignment Section if applicable */}
+                        {(m.number === 3 || m.number === 8 || m.number === 16) && (
+                          <div className="p-4 rounded-xl bg-surface-container border border-outline-variant/30 space-y-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                                  <span className="material-symbols-outlined text-[20px]">assignment</span>
+                                </div>
+                                <div>
+                                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
+                                    Penugasan Terstruktur OBE
+                                  </span>
+                                  <h5 className="text-sm font-bold text-on-surface">
+                                    {m.number === 3
+                                      ? 'Tugas 01: Analisis Kebutuhan & Dokumen SRS'
+                                      : m.number === 8
+                                        ? 'Evaluasi Tengah Semester (UTS): Studi Kasus'
+                                        : 'Evaluasi Akhir Semester (UAS): Portofolio Proyek'}
+                                  </h5>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface text-xs font-semibold">
+                                  Bobot: {m.number === 3 ? '15%' : '30%'}
+                                </span>
+                                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                  <span>Tenggat Aktif</span>
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-on-surface-variant pt-2 border-t border-outline-variant/20">
+                              <span className="flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[16px] text-outline">schedule</span>
+                                <span>Batas Waktu: <strong>Jumat, 23:59 WIB</strong></span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openDetailTugas({
+                                    title: m.number === 3
+                                      ? 'Tugas 01: Analisis Kebutuhan & Dokumen SRS'
+                                      : 'Evaluasi Sesi Perkuliahan',
+                                    bobot: m.number === 3 ? '15%' : '30%',
+                                    deadline: 'Jumat, 23:59 WIB',
+                                    format: 'PDF (Maks. 10 MB)',
+                                  })
+                                }
+                                className="px-3.5 py-1.5 rounded-lg bg-surface-container-highest hover:bg-primary hover:text-on-primary text-on-surface font-label-sm text-label-sm font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                <span>Lihat Detail Tugas &amp; Upload</span>
+                                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                              </button>
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
@@ -529,78 +591,202 @@ export default function RuangKls({ onNavigate, onRoleChange }) {
 
         {/* TAB 2: REKAP KEHADIRAN MAHASISWA */}
         {activeTab === 'presensi' && (
-          <div className="bg-surface-container-low rounded-xl p-space-md border border-outline-variant/20 space-y-space-md">
-            <div className="flex items-center justify-between">
+          <div className="bg-surface-container-low rounded-xl p-space-lg border border-outline-variant/20 space-y-space-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="font-title-md text-title-md text-on-surface font-bold">
-                  Histori Presensi Perkuliahan Saya
+                <h3 className="font-title-lg text-title-lg text-on-surface font-bold">
+                  Rekapitulasi Kehadiran Personal
                 </h3>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
-                  Rekapitulasi kehadiran personal mahasiswa pada mata kuliah Rekayasa Perangkat Lunak.
+                  Histori kehadiran digital Anda pada mata kuliah {course.name} ({course.classGroup}).
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => onNavigate && onNavigate('status-presensi')}
-                className="px-3 py-1.5 rounded-lg bg-primary-container text-on-primary-container hover:bg-primary font-label-sm text-label-sm transition-colors"
-              >
-                Buka Modul Status Presensi
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrintAttendance}
+                  className="px-3.5 py-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">print</span>
+                  <span>Cetak Berita Acara</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate && onNavigate('status-presensi')}
+                  className="px-3.5 py-2 rounded-lg bg-primary text-on-primary hover:opacity-90 font-label-sm text-label-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
+                  <span>Status Presensi</span>
+                </button>
+              </div>
             </div>
 
+            {/* Attendance Stat Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/20 text-center">
+              <div className="p-4 bg-surface-container rounded-xl border border-outline-variant/20 text-center">
                 <span className="text-caption text-outline font-medium block">Total Sesi Terlaksana</span>
-                <span className="text-headline-md font-bold text-on-surface">4 Sesi</span>
+                <span className="text-headline-md font-bold text-on-surface">{conducted} Sesi</span>
               </div>
-              <div className="p-3 bg-tertiary-container/20 rounded-lg border border-tertiary/30 text-center text-tertiary">
-                <span className="text-caption font-medium block">Hadir</span>
-                <span className="text-headline-md font-bold">{checkInDone ? '4' : '3'} Sesi</span>
+              <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/30 text-center text-emerald-400">
+                <span className="text-caption font-medium block">Hadir Tervalidasi</span>
+                <span className="text-headline-md font-bold">{attended} Sesi</span>
               </div>
-              <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/20 text-center text-secondary">
+              <div className="p-4 bg-surface-container rounded-xl border border-outline-variant/20 text-center text-secondary">
                 <span className="text-caption font-medium block">Izin / Sakit</span>
                 <span className="text-headline-md font-bold">0 Sesi</span>
               </div>
-              <div className="p-3 bg-surface-container rounded-lg border border-outline-variant/20 text-center text-error">
-                <span className="text-caption font-medium block">Alpa</span>
-                <span className="text-headline-md font-bold">{checkInDone ? '0' : '1'} Sesi</span>
+              <div className="p-4 bg-surface-container rounded-xl border border-outline-variant/20 text-center text-error">
+                <span className="text-caption font-medium block">Alpa / Absen</span>
+                <span className="text-headline-md font-bold">{conducted - attended} Sesi</span>
               </div>
+            </div>
+
+            {/* Validation Banner */}
+            <div className="p-4 rounded-xl bg-surface-container border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[22px]">verified_user</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-on-surface">Validasi IP Jaringan Kampus UPGRIS</h4>
+                  <p className="text-xs text-on-surface-variant">
+                    Presensi otomatis mencatat geo-location dan IP subnet kampus untuk mencegah titip presensi.
+                  </p>
+                </div>
+              </div>
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0 self-start sm:self-auto">
+                IP: 10.20.14.88 (Terverifikasi)
+              </span>
             </div>
           </div>
         )}
 
-        {/* TAB 3: SILABUS */}
+        {/* TAB 3: SILABUS & RPS */}
         {activeTab === 'silabus' && (
-          <div className="bg-surface-container-low rounded-xl p-space-lg border border-outline-variant/20 space-y-4">
-            <h3 className="font-title-lg text-title-lg text-on-surface font-bold">
-              Rencana Pembelajaran Semester (RPS) — OBE SN-Dikti
-            </h3>
-            <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-              Mata kuliah Rekayasa Perangkat Lunak bertujuan membekali mahasiswa dengan kemampuan merancang,
-              menganalisis, membangun, dan menguji sistem perangkat lunak berskala industri menggunakan metodologi
-              modern (Agile, Scrum, CI/CD, dan Standar IEEE 830).
-            </p>
-            <div className="p-4 rounded-xl bg-surface-container border border-outline-variant/20 flex items-center justify-between">
+          <div className="bg-surface-container-low rounded-xl p-space-lg border border-outline-variant/20 space-y-space-md">
+            <div>
+              <h3 className="font-title-lg text-title-lg text-on-surface font-bold">
+                Rencana Pembelajaran Semester (RPS) — OBE SN-Dikti
+              </h3>
+              <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-1">
+                {course.description}
+              </p>
+            </div>
+
+            {/* Assessment Component Weights */}
+            <div className="p-4 rounded-xl bg-surface-container border border-outline-variant/20 space-y-3">
+              <h4 className="font-title-sm text-sm font-bold text-on-surface flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[18px]">balance</span>
+                <span>Komponen &amp; Bobot Penilaian Semester</span>
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/10">
+                  <span className="text-xs text-outline block">Kehadiran &amp; Sikap</span>
+                  <span className="text-lg font-bold text-primary">15%</span>
+                </div>
+                <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/10">
+                  <span className="text-xs text-outline block">Tugas Terstruktur</span>
+                  <span className="text-lg font-bold text-secondary">25%</span>
+                </div>
+                <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/10">
+                  <span className="text-xs text-outline block">Evaluasi UTS</span>
+                  <span className="text-lg font-bold text-tertiary">30%</span>
+                </div>
+                <div className="p-3 bg-surface-container-low rounded-lg border border-outline-variant/10">
+                  <span className="text-xs text-outline block">Evaluasi UAS</span>
+                  <span className="text-lg font-bold text-on-surface">30%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Official RPS Download Card */}
+            <div className="p-4 rounded-xl bg-surface-container border border-outline-variant/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary text-[28px]">picture_as_pdf</span>
+                <div className="w-11 h-11 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[28px]">picture_as_pdf</span>
+                </div>
                 <div>
                   <h4 className="font-title-md text-sm font-semibold text-on-surface">
-                    Dokumen RPS Resmi — Rekayasa Perangkat Lunak 2026.pdf
+                    Dokumen RPS Resmi — {course.name} 2026.pdf
                   </h4>
                   <span className="text-xs text-outline font-mono">1.8 MB • Disahkan Tim Kurikulum PTIK</span>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => showToast('Mengunduh dokumen RPS')}
-                className="px-3.5 py-2 rounded-lg bg-primary-container text-on-primary-container hover:bg-primary font-label-md text-label-md transition-colors"
+                onClick={() => handleDownloadFile(`Dokumen RPS ${course.name}.pdf`)}
+                className="px-4 py-2 rounded-lg bg-primary text-on-primary hover:opacity-90 font-label-md text-label-md transition-colors flex items-center justify-center gap-2 cursor-pointer shrink-0"
               >
-                Unduh RPS
+                <span className="material-symbols-outlined text-[18px]">download</span>
+                <span>Unduh Dokumen RPS</span>
               </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* ── MODAL: Detail Tugas & Upload ── */}
+      {modalTugasOpen && selectedTugas && (
+        <div className="fixed inset-0 z-[100] bg-surface-dim/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-lg w-full p-6 shadow-2xl animate-scale-in space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-outline-variant/15">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400 text-[24px]">assignment</span>
+                <h3 className="font-title-lg text-title-lg text-on-surface font-bold">
+                  {selectedTugas.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setModalTugasOpen(false)}
+                className="p-1 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-3 font-body-sm text-body-sm text-on-surface-variant">
+              <div className="p-3.5 rounded-xl bg-surface-container space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-outline">Batas Pengumpulan:</span>
+                  <span className="font-semibold text-on-surface">{selectedTugas.deadline}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-outline">Bobot Nilai:</span>
+                  <span className="font-semibold text-tertiary">{selectedTugas.bobot} dari Total Nilai</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-outline">Format Berkas:</span>
+                  <span className="font-semibold text-on-surface">{selectedTugas.format}</span>
+                </div>
+              </div>
+              <p className="leading-relaxed">
+                Unggah dokumen berkas laporan penugasan kelompok Anda mengacu pada format standar RPS yang telah diinstruksikan oleh dosen pengampu.
+              </p>
+            </div>
+
+            <div className="pt-2 flex justify-end gap-2 border-t border-outline-variant/15">
+              <button
+                type="button"
+                onClick={() => setModalTugasOpen(false)}
+                className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface font-label-md hover:bg-surface-container-highest transition-colors cursor-pointer"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  showToast('Berkas penugasan berhasil diunggah!');
+                  setModalTugasOpen(false);
+                }}
+                className="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md font-semibold hover:opacity-90 transition-opacity flex items-center gap-1.5 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+                <span>Unggah Berkas</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

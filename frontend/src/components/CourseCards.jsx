@@ -1,53 +1,4 @@
-const coursesData = [
-  {
-    code: 'TIF-301',
-    classGroup: 'TI-A',
-    sks: 3,
-    name: 'Rekayasa Perangkat Lunak',
-    lecturer: 'Dr. Awan Rosi, M.Kom.',
-    meeting: 4,
-    totalMeetings: 16,
-    progress: 75,
-    accentColor: 'primary',
-    badgeBg: 'bg-primary-container',
-    badgeText: 'text-on-primary-container',
-    hoverText: 'group-hover:text-primary',
-    iconColor: 'text-primary',
-    progressGradient: 'bg-gradient-to-r from-primary-container to-primary',
-  },
-  {
-    code: 'TIF-305',
-    classGroup: 'TI-A',
-    sks: 3,
-    name: 'Pemrograman Web Lanjut',
-    lecturer: 'Ir. Siti Aminah, M.T.',
-    meeting: 4,
-    totalMeetings: 16,
-    progress: 82,
-    accentColor: 'secondary',
-    badgeBg: 'bg-secondary-container',
-    badgeText: 'text-on-secondary-container',
-    hoverText: 'group-hover:text-secondary',
-    iconColor: 'text-secondary',
-    progressGradient: 'bg-gradient-to-r from-secondary-container to-secondary',
-  },
-  {
-    code: 'TIF-309',
-    classGroup: 'TI-A',
-    sks: 2,
-    name: 'Basis Data Terdistribusi',
-    lecturer: 'Budi Santoso, M.Cs.',
-    meeting: 3,
-    totalMeetings: 16,
-    progress: 54,
-    accentColor: 'tertiary',
-    badgeBg: 'bg-tertiary-container',
-    badgeText: 'text-on-tertiary-container',
-    hoverText: 'group-hover:text-tertiary',
-    iconColor: 'text-tertiary',
-    progressGradient: 'bg-gradient-to-r from-tertiary-container to-tertiary',
-  },
-];
+import { dashboardCourses } from '../data/courseCatalog';
 
 function CourseCard({ course, onNavigate }) {
   return (
@@ -74,14 +25,14 @@ function CourseCard({ course, onNavigate }) {
           <div className="flex items-center justify-between font-label-sm text-label-sm">
             <span className="text-on-surface font-medium flex items-center gap-1">
               <span className={'material-symbols-outlined text-[16px] ' + course.iconColor}>event_available</span>
-              Pertemuan {course.meeting} dari {course.totalMeetings}
+              Pertemuan {course.currentMeeting} dari {course.totalMeetings}
             </span>
-            <span className={course.iconColor + ' font-bold'}>{course.progress}%</span>
+            <span className={course.iconColor + ' font-bold'}>{course.meetingProgressPct}%</span>
           </div>
           <div className="w-full bg-surface-container-highest rounded-full h-2 overflow-hidden">
             <div
               className={course.progressGradient + ' h-2 rounded-full transition-all duration-500'}
-              style={{ width: course.progress + '%' }}
+              style={{ width: course.meetingProgressPct + '%' }}
             />
           </div>
           <span className="font-caption text-caption text-outline">
@@ -93,7 +44,7 @@ function CourseCard({ course, onNavigate }) {
       <div className="pt-space-md mt-space-sm">
         <button
           type="button"
-          onClick={() => onNavigate && onNavigate('ruang-kelas')}
+          onClick={() => onNavigate && onNavigate(`ruang-kelas?course=${course.id}`)}
           className="w-full inline-flex items-center justify-center gap-space-xs py-2.5 px-space-md rounded-lg bg-primary-container hover:bg-primary text-on-primary-container hover:text-on-primary font-label-md text-label-md font-bold transition-all shadow-md hover:shadow-lg"
         >
           <span>Buka Ruang Kelas</span>
@@ -119,12 +70,16 @@ function CourseCards({ onNavigate }) {
               Kelas Aktif Semester Ini
             </h2>
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Semester Ganjil 2026/2027 &mdash; 3 Mata Kuliah Terdaftar
+              Semester Ganjil 2026/2027 &mdash; {dashboardCourses.length} Mata Kuliah Terdaftar
             </p>
           </div>
         </div>
         <a
           href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate && onNavigate('kelas-saya-mahasiswa');
+          }}
           className="hidden sm:inline-flex items-center gap-1 px-space-md py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-sm text-label-sm font-medium transition-colors"
         >
           Lihat Semua Kelas
@@ -133,8 +88,8 @@ function CourseCards({ onNavigate }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
-        {coursesData.map((course, idx) => (
-          <CourseCard key={idx} course={course} onNavigate={onNavigate} />
+        {dashboardCourses.map((course) => (
+          <CourseCard key={course.id} course={course} onNavigate={onNavigate} />
         ))}
       </div>
     </section>
