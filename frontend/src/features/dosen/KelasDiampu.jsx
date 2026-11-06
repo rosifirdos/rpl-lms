@@ -225,6 +225,33 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
     showToast('Data kelas berhasil diekspor ke CSV', 'success');
   };
 
+  const handleDownloadAttendanceCSV = (course) => {
+    const headers = ['NIM', 'Nama Mahasiswa', 'Kelas', 'Kehadiran (%)', 'Status Presensi Terakhir'];
+    const dummyRows = [
+      ['23670001', '"Ahmad Fauzi"', course.code, '100%', '"Hadir Tepat Waktu"'],
+      ['23670002', '"Budi Santoso"', course.code, '93.3%', '"Hadir Tepat Waktu"'],
+      ['23670003', '"Citra Dewi"', course.code, '86.7%', '"Izin Sakit"'],
+      ['23670004', '"Dimas Pratama"', course.code, '100%', '"Hadir Tepat Waktu"'],
+      ['23670005', '"Eka Nur"', course.code, '80.0%', '"Hadir Mandiri"'],
+    ];
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...dummyRows.map((e) => e.join(','))].join('\n');
+    const link = document.createElement('a');
+    link.setAttribute('href', encodeURI(csvContent));
+    link.setAttribute(
+      'download',
+      `Berita_Acara_Presensi_${course.code}_${course.courseName.replace(/\s+/g, '_')}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(
+      `Berita acara presensi ${course.courseName} (${course.code}) berhasil diunduh`,
+      'success'
+    );
+  };
+
   const handleSyncSimAkad = () => {
     setIsSyncing(true);
     clearTimeout(syncTimeoutRef.current);
@@ -235,7 +262,12 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
     }, 1200);
   };
 
-  const handleEnterRoom = (cls) => {
+  const handleEnterManageClass = (cls) => {
+    setModalManageClass(null);
+    if (onNavigate) onNavigate(`kelola-kelas?course=${cls.courseId}`);
+  };
+
+  const handleEnterStudentRoom = (cls) => {
     setModalManageClass(null);
     if (onNavigate) onNavigate(`ruang-kelas?course=${cls.courseId}`);
   };
@@ -539,17 +571,28 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                         </button>
 
                         {openMenuId === item.id && (
-                          <div className="absolute right-0 top-8 w-48 rounded-lg bg-surface-container-high shadow-xl py-1 z-30 font-label-sm text-label-sm text-on-surface border border-outline/20">
+                          <div className="absolute right-0 top-8 w-52 rounded-lg bg-surface-container-high shadow-xl py-1 z-30 font-label-sm text-label-sm text-on-surface border border-outline/20">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                if (onNavigate) onNavigate(`kelola-kelas?course=${item.courseId}`);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left cursor-pointer"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">settings</span>
+                              <span>Kelola Silabus & Sesi</span>
+                            </button>
                             <button
                               type="button"
                               onClick={() => {
                                 setModalManageClass(item);
                                 setOpenMenuId(null);
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left"
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left cursor-pointer"
                             >
                               <span className="material-symbols-outlined text-[16px]">tune</span>
-                              <span>Pengaturan Kelas</span>
+                              <span>Ringkasan & Opsi Cepat</span>
                             </button>
                             <button
                               type="button"
@@ -557,7 +600,7 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                                 setOpenMenuId(null);
                                 if (onNavigate) onNavigate('manajemen-materi');
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left"
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left cursor-pointer"
                             >
                               <span className="material-symbols-outlined text-[16px]">
                                 folder_managed
@@ -567,19 +610,30 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                             <button
                               type="button"
                               onClick={() => {
-                                showToast(`Mengunduh berita acara presensi ${item.code}...`);
                                 setOpenMenuId(null);
+                                if (onNavigate) onNavigate('daftar-hadir-koreksi');
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left"
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left cursor-pointer"
                             >
-                              <span className="material-symbols-outlined text-[16px]">group</span>
-                              <span>Unduh Absensi</span>
+                              <span className="material-symbols-outlined text-[16px]">fact_check</span>
+                              <span>Koreksi Presensi</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                handleDownloadAttendanceCSV(item);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left cursor-pointer"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">file_download</span>
+                              <span>Unduh Rekap Absensi (.csv)</span>
                             </button>
                             <div className="my-1 border-t border-outline/20" />
                             <button
                               type="button"
                               onClick={() => handleTogglePresensi(item.id)}
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left text-tertiary"
+                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-bright text-left text-tertiary cursor-pointer"
                             >
                               <span className="material-symbols-outlined text-[16px]">
                                 {item.attendanceStatus === 'active' ? 'lock' : 'how_to_reg'}
@@ -598,7 +652,10 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                     {/* Subject Title & Schedule */}
                     <div>
                       <h2
-                        onClick={() => setModalManageClass(item)}
+                        onClick={() => {
+                          if (onNavigate) onNavigate(`kelola-kelas?course=${item.courseId}`);
+                        }}
+                        title={`Buka kelola kelas ${item.courseName}`}
                         className="font-title-lg text-title-lg text-on-surface font-semibold hover:text-primary cursor-pointer transition-colors leading-snug"
                       >
                         {item.courseName}
@@ -653,7 +710,12 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                     {/* Operational Status Badges */}
                     <div className="flex flex-col gap-2 pt-1">
                       {item.attendanceStatus === 'active' ? (
-                        <div className="inline-flex items-center justify-between px-3 py-1.5 rounded-lg bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm">
+                        <button
+                          type="button"
+                          onClick={() => onNavigate && onNavigate(`kelola-kelas?course=${item.courseId}`)}
+                          title="Presensi aktif — klik untuk menuju sesi perkuliahan"
+                          className="w-full text-left inline-flex items-center justify-between px-3 py-1.5 rounded-lg bg-tertiary-container/20 hover:bg-tertiary-container/30 text-tertiary font-label-sm text-label-sm transition-colors cursor-pointer"
+                        >
                           <div className="flex items-center gap-2">
                             <span className="relative flex h-2 w-2">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75" />
@@ -664,7 +726,7 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                           <span className="font-caption text-caption font-semibold">
                             {item.attendanceNote}
                           </span>
-                        </div>
+                        </button>
                       ) : (
                         <div className="inline-flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
                           <div className="flex items-center gap-1.5">
@@ -680,15 +742,22 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                       )}
 
                       {item.pendingGradingCount > 0 ? (
-                        <div className="inline-flex items-center justify-between px-3 py-1.5 rounded-lg bg-error-container/30 text-error font-label-sm text-label-sm">
+                        <button
+                          type="button"
+                          onClick={() => onNavigate && onNavigate('pemeriksaan-tugas')}
+                          title="Buka Pemeriksaan Tugas Dosen"
+                          className="w-full text-left inline-flex items-center justify-between px-3 py-1.5 rounded-lg bg-error-container/30 hover:bg-error-container/45 text-error font-label-sm text-label-sm transition-colors cursor-pointer"
+                        >
                           <div className="flex items-center gap-1.5">
                             <span className="material-symbols-outlined text-[16px]">
                               pending_actions
                             </span>
                             <span>{item.pendingGradingCount} Butuh Dinilai</span>
                           </div>
-                          <span className="font-caption text-caption">{item.pendingGradingTask}</span>
-                        </div>
+                          <span className="font-caption text-caption underline decoration-dotted font-medium">
+                            {item.pendingGradingTask}
+                          </span>
+                        </button>
                       ) : (
                         <div className="inline-flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-container-high text-outline font-label-sm text-label-sm">
                           <div className="flex items-center gap-1.5">
@@ -709,7 +778,9 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                   <div className="mt-5 pt-3 flex items-center gap-2 border-t border-outline-variant/10">
                     <button
                       type="button"
-                      onClick={() => setModalManageClass(item)}
+                      onClick={() => {
+                        if (onNavigate) onNavigate(`kelola-kelas?course=${item.courseId}`);
+                      }}
                       className="flex-1 py-2.5 px-4 rounded-lg bg-primary text-on-primary hover:bg-primary-fixed transition-colors font-label-md text-label-md text-center inline-flex items-center justify-center gap-1.5 shadow-sm font-semibold cursor-pointer"
                     >
                       <span>Kelola Ruang Kelas</span>
@@ -717,11 +788,12 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
-                      aria-label="Tindakan lanjutan"
+                      onClick={() => setModalManageClass(item)}
+                      title={`Ringkasan Cepat Kelas ${item.courseName}`}
+                      aria-label={`Ringkasan Cepat Kelas ${item.courseName}`}
                       className="p-2.5 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface transition-colors cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-[18px]">more_horiz</span>
+                      <span className="material-symbols-outlined text-[18px]">info</span>
                     </button>
                   </div>
                 </article>
@@ -781,7 +853,14 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                 </button>
               </div>
               <div className="py-4 space-y-3 font-body-sm text-body-sm text-on-surface-variant">
-                <div className="p-3 rounded-lg bg-surface-container border-l-4 border-primary">
+                <div
+                  onClick={() => {
+                    setModalAgendaOpen(false);
+                    if (onNavigate) onNavigate('kelola-kelas?course=rpl-ti-a');
+                  }}
+                  className="p-3 rounded-lg bg-surface-container border-l-4 border-primary hover:bg-surface-bright cursor-pointer transition-colors"
+                  title="Buka kelola perkuliahan Rekayasa Perangkat Lunak (TI-A)"
+                >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] font-bold text-primary">
                       TI-A • SENIN
@@ -797,7 +876,14 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                     08:00 - 10:30 WIB • Lab Komputasi 3 (Gedung B Lt. 3)
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-surface-container-high opacity-75">
+                <div
+                  onClick={() => {
+                    setModalAgendaOpen(false);
+                    if (onNavigate) onNavigate('kelola-kelas?course=pwl-ti-b');
+                  }}
+                  className="p-3 rounded-lg bg-surface-container-high hover:bg-surface-bright opacity-85 hover:opacity-100 cursor-pointer transition-all"
+                  title="Buka kelola perkuliahan Pemrograman Web Lanjut (TI-B)"
+                >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] text-outline">TI-B • RABU</span>
                     <span className="font-caption text-outline">Mendatang</span>
@@ -812,7 +898,7 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                 <button
                   type="button"
                   onClick={() => setModalAgendaOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md"
+                  className="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md cursor-pointer"
                 >
                   Tutup
                 </button>
@@ -888,7 +974,7 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                         handleTogglePresensi(modalManageClass.id);
                         setModalManageClass(null);
                       }}
-                      className="p-3 rounded-lg bg-surface-container-high hover:bg-surface-bright flex items-center gap-2.5 text-left transition-colors"
+                      className="p-3 rounded-lg bg-surface-container-high hover:bg-surface-bright flex items-center gap-2.5 text-left transition-colors cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-tertiary">how_to_reg</span>
                       <div>
@@ -903,10 +989,27 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                     <button
                       type="button"
                       onClick={() => {
+                        const targetId = modalManageClass.courseId;
+                        setModalManageClass(null);
+                        if (onNavigate) onNavigate(`kelola-kelas?course=${targetId}`);
+                      }}
+                      className="p-3 rounded-lg bg-surface-container-high hover:bg-surface-bright flex items-center gap-2.5 text-left transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-primary">fact_check</span>
+                      <div>
+                        <div className="font-label-sm text-on-surface font-medium">
+                          Kelola 16 Pertemuan
+                        </div>
+                        <div className="font-caption text-outline">Silabus OBE & Presensi Sesi</div>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
                         setModalManageClass(null);
                         if (onNavigate) onNavigate('unggah-materi');
                       }}
-                      className="p-3 rounded-lg bg-surface-container-high hover:bg-surface-bright flex items-center gap-2.5 text-left transition-colors"
+                      className="p-3 rounded-lg bg-surface-container-high hover:bg-surface-bright flex items-center gap-2.5 text-left transition-colors cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-primary">upload_file</span>
                       <div>
@@ -916,24 +1019,50 @@ export default function KelasDiampu({ onNavigate, onRoleChange }) {
                         <div className="font-caption text-outline">Modul, PPT, & Silabus RPS</div>
                       </div>
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalManageClass(null);
+                        if (onNavigate) onNavigate('pemeriksaan-tugas');
+                      }}
+                      className="p-3 rounded-lg bg-surface-container-high hover:bg-surface-bright flex items-center gap-2.5 text-left transition-colors cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-secondary">assignment_turned_in</span>
+                      <div>
+                        <div className="font-label-sm text-on-surface font-medium">
+                          Pemeriksaan Tugas
+                        </div>
+                        <div className="font-caption text-outline">Penilaian tugas & kuis</div>
+                      </div>
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2 border-t border-outline-variant/15">
+              <div className="pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-outline-variant/15">
                 <button
                   type="button"
                   onClick={() => setModalManageClass(null)}
-                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface font-label-md"
+                  className="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface font-label-md cursor-pointer"
                 >
-                  Batal
+                  Tutup
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleEnterRoom(modalManageClass)}
-                  className="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md font-semibold"
+                  onClick={() => handleEnterStudentRoom(modalManageClass)}
+                  className="px-3.5 py-2 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Lihat modul dan materi dari sudut pandang mahasiswa"
                 >
-                  Masuk Ruang Kelas
+                  <span className="material-symbols-outlined text-[18px]">visibility</span>
+                  <span>Tinjau Mahasiswa</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleEnterManageClass(modalManageClass)}
+                  className="px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-fixed font-label-md font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">settings</span>
+                  <span>Kelola Ruang Kelas</span>
                 </button>
               </div>
             </div>
