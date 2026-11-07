@@ -2,6 +2,291 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * ============================================================================
+ * SPADA Theme Tokens (dual-mode)
+ * ============================================================================
+ * Setiap token disimpan sebagai TRIPLET CHANNEL (mis. `15 23 42`), BUKAN
+ * `rgb(15 23 42)`. Ini wajib agar modifier opasitas Tailwind (`bg-primary/20`,
+ * `border-outline-variant/30`) tetap bekerja — Tailwind menyisipkan
+ * `<alpha-value>` tepat setelah fungsi rgb().
+ *
+ * Mode default adalah CERAH (:root). Mode gelap ditandai dengan class `.dark`
+ * pada <html>, dan nilainya mereproduksi desain gelap yang sudah ada.
+ *
+ * Jangan menambahkan warna literal baru di komponen; tambahkan token di sini
+ * agar kedua mode ikut menyesuaikan.
+ * ============================================================================
+ */
+
+:root,
+.light {
+  color-scheme: light;
+
+  /* --- Surface --- */
+  --surface: 255 255 255;
+  --surface-bright: 255 255 255;
+  --surface-dim: 233 238 245;
+  --surface-container-lowest: 255 255 255;
+  --surface-container-low: 255 255 255;
+  --surface-container: 241 245 249;
+  --surface-container-high: 226 232 240;
+  --surface-container-highest: 203 213 225;
+  --surface-variant: 226 232 240;
+  --background: 248 250 252;
+  --scrim: 15 23 42;
+  /* Overlay modal: gelap di kedua mode, lebih ringan di mode cerah. */
+  --overlay: 15 23 42;
+  --overlay-alpha: 0.45;
+
+  /* --- Text di atas surface --- */
+  --on-surface: 15 23 42;
+  --on-surface-variant: 71 85 105;
+  --on-background: 15 23 42;
+  --outline: 90 100 120;
+  /*
+   * Token ini hampir selalu dipakai dengan modifier opasitas (/20–/30).
+   * Nilainya dipilih agar `border-outline-variant/30` menghasilkan ±#E2E8F0
+   * di atas putih (garis tipis yang khas), sementara versi opasitas penuh
+   * masih cukup tegas untuk batas kontrol form.
+   */
+  --outline-variant: 158 163 173;
+
+  /* --- Primary --- */
+  --primary: 29 78 216;
+  /* Hover/active untuk tombol `bg-primary text-on-primary`. Nilainya harus
+     lebih gelap dari --primary di mode cerah, dan lebih terang di mode gelap,
+     supaya label tetap kontras di kedua mode. */
+  --primary-hover: 30 64 175;
+  --primary-active: 30 58 138;
+  --on-primary: 255 255 255;
+  --primary-container: 219 234 254;
+  --on-primary-container: 30 58 138;
+  --primary-fixed: 30 58 138;
+  --primary-fixed-dim: 23 37 84;
+  --on-primary-fixed: 255 255 255;
+  --on-primary-fixed-variant: 30 64 175;
+  --surface-tint: 29 78 216;
+  --inverse-primary: 191 219 254;
+
+  /* --- Secondary --- */
+  --secondary: 7 89 133;
+  --on-secondary: 255 255 255;
+  --secondary-container: 224 242 254;
+  --on-secondary-container: 7 89 133;
+  --secondary-fixed: 12 74 110;
+  --secondary-fixed-dim: 7 89 133;
+  --on-secondary-fixed: 255 255 255;
+  --on-secondary-fixed-variant: 3 105 161;
+
+  /* --- Tertiary --- */
+  --tertiary: 4 120 87;
+  --tertiary-hover: 6 95 70;
+  --on-tertiary: 255 255 255;
+  --tertiary-container: 209 250 229;
+  --on-tertiary-container: 6 78 59;
+  --tertiary-fixed: 6 95 70;
+  --tertiary-fixed-dim: 4 120 87;
+  --on-tertiary-fixed: 255 255 255;
+  --on-tertiary-fixed-variant: 6 95 70;
+
+  /* --- Error --- */
+  --error: 185 28 28;
+  --on-error: 255 255 255;
+  --error-container: 254 226 226;
+  --on-error-container: 153 27 27;
+
+  /* --- Inverse --- */
+  --inverse-surface: 15 23 42;
+  --inverse-on-surface: 248 250 252;
+
+  /* --- MVP2 (kelas, materi, presensi, rekap) --- */
+  --mvp-page: 248 250 252;
+  --mvp-card: 255 255 255;
+  --mvp-subtle: 241 245 249;
+  --mvp-line: 226 232 240;
+  --mvp-ink: 15 23 42;
+  --mvp-body: 51 65 85;
+  --mvp-muted: 90 100 120;
+  --mvp-primary: 29 78 216;
+  --mvp-primary-hover: 30 64 175;
+  --mvp-primary-strong: 30 64 175;
+  --mvp-primary-soft: 239 246 255;
+  --mvp-primary-tint: 219 234 254;
+  --mvp-success: 4 120 87;
+  --mvp-success-strong: 6 95 70;
+  --mvp-success-ink: 6 95 70;
+  --mvp-success-soft: 236 253 245;
+  --mvp-success-tint: 209 250 229;
+  --mvp-warning: 180 83 9;
+  --mvp-warning-ink: 180 83 9;
+  --mvp-warning-base: 245 158 11;
+  --mvp-warning-soft: 255 251 235;
+  --mvp-warning-tint: 254 243 199;
+  --mvp-danger: 220 38 38;
+  --mvp-danger-strong: 190 18 60;
+  --mvp-danger-ink: 185 28 28;
+  --mvp-danger-soft: 254 242 242;
+  --mvp-danger-tint: 254 226 226;
+
+  /*
+   * Status semantik (sukses / peringatan / info / bahaya).
+   * `-ink` = teks & ikon di atas latar tipis `-soft`.
+   * `-solid` = latar tombol penuh, dipakai bersama `text-white`.
+   */
+  --success-ink: 4 120 87;
+  --success-soft: 236 253 245;
+  --success-border: 167 243 208;
+  --success-solid: 4 120 87;
+  --warning-ink: 180 83 9;
+  --warning-soft: 255 251 235;
+  --warning-border: 253 230 138;
+  --warning-solid: 217 119 6;
+  --info-ink: 7 89 133;
+  --info-soft: 240 249 255;
+  --info-border: 186 230 253;
+  --info-solid: 3 105 161;
+  --danger-ink: 185 28 28;
+  --danger-soft: 254 242 242;
+  --danger-border: 254 202 202;
+  --danger-solid: 220 38 38;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* --- Surface --- */
+  --surface: 6 20 35;
+  --surface-bright: 45 58 74;
+  --surface-dim: 6 20 35;
+  --surface-container-lowest: 2 15 30;
+  --surface-container-low: 15 28 44;
+  --surface-container: 19 32 48;
+  --surface-container-high: 30 43 59;
+  --surface-container-highest: 40 54 70;
+  --surface-variant: 40 54 70;
+  --background: 6 20 35;
+  /* Warna *bayangan*, bukan warna halaman — hitam murni agar elevasi tetap
+     terbaca di atas permukaan gelap (dulu sama dengan --background sehingga
+     bayangan tak terlihat). */
+  --scrim: 0 0 0;
+  --overlay: 0 0 0;
+  --overlay-alpha: 0.7;
+
+  /* --- Text di atas surface --- */
+  --on-surface: 214 228 249;
+  --on-surface-variant: 194 198 214;
+  --on-background: 214 228 249;
+  --outline: 140 144 159;
+  --outline-variant: 66 71 84;
+
+  /* --- Primary --- */
+  --primary: 173 198 255;
+  --primary-hover: 147 197 253;
+  --primary-active: 125 180 252;
+  --on-primary: 0 46 106;
+  --primary-container: 77 142 255;
+  --on-primary-container: 0 40 93;
+  --primary-fixed: 216 226 255;
+  --primary-fixed-dim: 173 198 255;
+  --on-primary-fixed: 0 26 66;
+  --on-primary-fixed-variant: 0 67 149;
+  --surface-tint: 173 198 255;
+  --inverse-primary: 0 90 194;
+
+  /* --- Secondary --- */
+  --secondary: 123 208 255;
+  --on-secondary: 0 53 74;
+  --secondary-container: 0 166 224;
+  --on-secondary-container: 0 55 77;
+  --secondary-fixed: 196 231 255;
+  --secondary-fixed-dim: 123 208 255;
+  --on-secondary-fixed: 0 30 44;
+  --on-secondary-fixed-variant: 0 76 105;
+
+  /* --- Tertiary --- */
+  --tertiary: 78 222 163;
+  --tertiary-hover: 110 231 183;
+  --on-tertiary: 0 56 36;
+  --tertiary-container: 0 165 114;
+  --on-tertiary-container: 0 49 31;
+  --tertiary-fixed: 111 251 190;
+  --tertiary-fixed-dim: 78 222 163;
+  --on-tertiary-fixed: 0 33 19;
+  --on-tertiary-fixed-variant: 0 82 54;
+
+  /* --- Error --- */
+  --error: 255 180 171;
+  --on-error: 105 0 5;
+  --error-container: 147 0 10;
+  --on-error-container: 255 218 214;
+
+  /* --- Inverse --- */
+  --inverse-surface: 214 228 249;
+  --inverse-on-surface: 36 49 65;
+
+  /* --- MVP2 ---
+   * Di mode gelap, keluarga ini dipertemukan dengan token M3 di atas agar
+   * halaman kelas/materi/presensi/rekap ikut bertema. `mvp-primary` tetap
+   * nilai fill (dipakai bersama `text-white`), sedangkan `mvp-primary-strong`
+   * berperan sebagai teks aksen sehingga harus terang. */
+  --mvp-page: 15 28 44;
+  --mvp-card: 19 32 48;
+  --mvp-subtle: 30 43 59;
+  --mvp-line: 66 71 84;
+  --mvp-ink: 214 228 249;
+  --mvp-body: 194 198 214;
+  --mvp-muted: 140 144 159;
+  --mvp-primary: 37 99 235;
+  --mvp-primary-hover: 29 78 216;
+  --mvp-primary-strong: 147 197 253;
+  --mvp-primary-soft: 21 42 69;
+  --mvp-primary-tint: 30 58 95;
+  --mvp-success: 4 120 87;
+  --mvp-success-strong: 134 239 172;
+  --mvp-success-ink: 134 239 172;
+  --mvp-success-soft: 11 46 34;
+  --mvp-success-tint: 11 59 43;
+  --mvp-warning: 251 191 36;
+  --mvp-warning-ink: 253 224 71;
+  --mvp-warning-base: 245 158 11;
+  --mvp-warning-soft: 51 37 1;
+  --mvp-warning-tint: 69 51 17;
+  --mvp-danger: 220 38 38;
+  --mvp-danger-strong: 253 164 164;
+  --mvp-danger-ink: 253 164 164;
+  --mvp-danger-soft: 58 20 20;
+  --mvp-danger-tint: 74 22 22;
+
+  /* Status semantik — versi terang agar terbaca di permukaan gelap. */
+  --success-ink: 134 239 172;
+  --success-soft: 11 46 34;
+  --success-border: 6 78 59;
+  --success-solid: 4 120 87;
+  --warning-ink: 252 211 77;
+  --warning-soft: 51 37 1;
+  --warning-border: 120 53 15;
+  --warning-solid: 180 83 9;
+  --info-ink: 125 211 252;
+  --info-soft: 8 47 73;
+  --info-border: 3 105 161;
+  --info-solid: 3 105 161;
+  --danger-ink: 253 164 164;
+  --danger-soft: 58 20 20;
+  --danger-border: 153 27 27;
+  --danger-solid: 220 38 38;
+}
+
+@layer utilities {
+  /*
+   * Latar overlay modal. Digunakan sebagai `bg-overlay` (tanpa modifier /xx);
+   * gelap di kedua mode, lebih pekat di mode gelap (lihat --overlay-alpha).
+   */
+  .bg-overlay {
+    background-color: rgb(var(--overlay) / var(--overlay-alpha, 0.5));
+  }
+}
+
 @layer base {
   html, body {
     margin: 0;

@@ -218,7 +218,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-sm"
           onClick={(e) => {
             if (e.target === e.currentTarget) setModalOpen(false);
           }}
@@ -417,7 +417,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
                   setModalOpen(false);
                   showToast('Operasi master berhasil diproses dan dicatat di Jejak Audit!');
                 }}
-                className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-fixed text-on-primary text-sm font-semibold transition-colors shadow-md"
+                className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-hover text-on-primary text-sm font-semibold transition-colors shadow-md"
               >
                 Simpan &amp; Terapkan
               </button>
@@ -465,7 +465,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
                 setModalType('USER');
                 setModalOpen(true);
               }}
-              className="inline-flex items-center gap-space-xs px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-md hover:bg-primary-fixed hover:shadow-lg transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-space-xs px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-md hover:bg-primary-hover hover:shadow-lg transition-all active:scale-[0.98]"
               type="button"
             >
               <span className="material-symbols-outlined text-[18px]">add_circle</span>
@@ -597,7 +597,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
             </div>
 
             <a
-              className="font-label-sm text-label-sm text-primary hover:text-primary-fixed flex items-center gap-1"
+              className="font-label-sm text-label-sm text-primary hover:text-primary-hover flex items-center gap-1"
               href="#audit-all"
               onClick={(e) => { e.preventDefault(); if (onNavChange) onNavChange('jejak-audit'); else showToast('Membuka audit trail lengkap (2,840 entri)'); }}
             >

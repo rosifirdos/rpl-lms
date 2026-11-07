@@ -956,7 +956,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
 
       {/* MODAL: TAMBAH / UBAH PENGGUNA */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-space-md">
+        <div className="fixed inset-0 bg-overlay backdrop-blur-sm z-50 flex items-center justify-center p-space-md">
           <div className="bg-surface-container-low border border-outline-variant/30 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-scale-up">
             <div className="flex items-center justify-between px-space-xl py-space-md border-b border-outline-variant/20 bg-surface-container">
               <div className="flex items-center gap-space-sm">
@@ -1259,7 +1259,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
 
       {/* MODAL: KONFIRMASI HAPUS PENGGUNA */}
       {deleteModalUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-dim/80 backdrop-blur-md p-space-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-md p-space-md">
           <div className="w-full max-w-md bg-surface-container rounded-xl shadow-2xl overflow-hidden animate-scale-up border border-outline-variant/30">
             <div className="p-space-md bg-surface-container-high flex items-start gap-space-sm border-b border-outline-variant/20">
               <div className="w-12 h-12 rounded-xl bg-error-container text-error flex items-center justify-center shrink-0 shadow-inner">

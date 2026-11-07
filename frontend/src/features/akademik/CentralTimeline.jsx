@@ -17,7 +17,7 @@ export default function CentralTimeline({ onRoleChange, onNavigate, activeRole =
       time: '08:00 - 10:30 WIB',
       type: 'presensi',
       typeLabel: 'Sesi Presensi Terbuka',
-      badgeBg: 'bg-tertiary-container text-tertiary',
+      badgeBg: 'bg-tertiary-container text-on-tertiary-container',
       courseName: 'TI-A • Rekayasa Perangkat Lunak',
       title: 'Pertemuan 4: Analisis Kebutuhan Perangkat Lunak & Siklus Hidup SRS',
       lecturer: 'Dr. Bayu Pratama, M.Kom.',
@@ -50,7 +50,7 @@ export default function CentralTimeline({ onRoleChange, onNavigate, activeRole =
       time: '13:00 - 15:30 WIB',
       type: 'presensi',
       typeLabel: 'Kuliah Terjadwal',
-      badgeBg: 'bg-secondary-container text-secondary',
+      badgeBg: 'bg-secondary-container text-on-secondary-container',
       courseName: 'TI-B • Pemrograman Web Berbasis Komponen',
       title: 'Pertemuan 4: Modularisasi State Management & Lifecycle Hooks',
       lecturer: 'Ir. Nina Kartika, M.T.',
@@ -66,7 +66,7 @@ export default function CentralTimeline({ onRoleChange, onNavigate, activeRole =
       time: '09:00 - 10:00 WIB',
       type: 'kuis',
       typeLabel: 'Kuis Singkat Online',
-      badgeBg: 'bg-primary-container text-primary',
+      badgeBg: 'bg-primary-container text-on-primary-container',
       courseName: 'TI-A • Basis Data Terdistribusi',
       title: 'Kuis Evaluasi CPMK-1: Sharding & Replikasi Horizontal Database',
       lecturer: 'Dr. Supriyono, M.Kom.',
@@ -194,7 +194,7 @@ export default function CentralTimeline({ onRoleChange, onNavigate, activeRole =
             onClick={() => setFilterType('presensi')}
             className={`px-3 py-1.5 rounded-lg text-label-sm font-semibold transition-all flex items-center gap-1 ${
               filterType === 'presensi'
-                ? 'bg-tertiary-container text-tertiary font-bold shadow-sm'
+                ? 'bg-tertiary-container text-on-tertiary-container font-bold shadow-sm'
                 : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant'
             }`}
           >
@@ -218,7 +218,7 @@ export default function CentralTimeline({ onRoleChange, onNavigate, activeRole =
             onClick={() => setFilterType('kuis')}
             className={`px-3 py-1.5 rounded-lg text-label-sm font-semibold transition-all flex items-center gap-1 ${
               filterType === 'kuis'
-                ? 'bg-secondary-container text-secondary font-bold shadow-sm'
+                ? 'bg-secondary-container text-on-secondary-container font-bold shadow-sm'
                 : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant'
             }`}
           >

@@ -380,7 +380,7 @@ export default function KlsSayaMahasiswa({ onNavigate, onRoleChange }) {
                     <div className="pt-5 mt-2">
                       <button
                         onClick={() => handleOpenRoom(item.id)}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-fixed hover:text-on-primary-fixed text-on-primary font-medium text-sm transition-all duration-200 shadow-md cursor-pointer active:scale-[0.99]"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-medium text-sm transition-all duration-200 shadow-md cursor-pointer active:scale-[0.99]"
                         type="button"
                       >
                         <span>Buka Ruang Kelas</span>
@@ -441,7 +441,7 @@ export default function KlsSayaMahasiswa({ onNavigate, onRoleChange }) {
                       <button
                         onClick={() => handleOpenRoom(item.id)}
                         type="button"
-                        className="flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl bg-primary hover:bg-primary-fixed hover:text-on-primary-fixed text-on-primary font-medium text-sm transition-all shadow-sm cursor-pointer"
+                        className="flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-medium text-sm transition-all shadow-sm cursor-pointer"
                       >
                         <span>Buka Ruang Kelas</span>
                         <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

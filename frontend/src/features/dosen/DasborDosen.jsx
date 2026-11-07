@@ -359,7 +359,7 @@ export default function DasborDosen({ onRoleChange, onNavigate }) {
                   <button
                     type="button"
                     onClick={() => showToast(`Mengakses presensi: ${cls.title}`)}
-                    className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-fixed text-on-primary text-xs font-semibold transition-colors flex items-center gap-1 shadow-sm"
+                    className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-on-primary text-xs font-semibold transition-colors flex items-center gap-1 shadow-sm"
                   >
                     <span className="material-symbols-outlined text-[16px]">{cls.btnPresensiIcon}</span>
                     <span>{cls.btnPresensiText}</span>

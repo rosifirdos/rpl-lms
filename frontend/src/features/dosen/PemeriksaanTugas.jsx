@@ -469,7 +469,7 @@ export default function PemeriksaanTugas({ onRoleChange, onNavigate }) {
 
       {/* Interactive Rubric Grading Modal */}
       {gradingModalOpen && currentSubmission && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-sm animate-fadeIn">
           <div className="w-full max-w-2xl bg-surface-container-low rounded-2xl shadow-2xl border border-outline-variant/30 p-space-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-space-sm border-b border-outline-variant/20 mb-space-md">
               <div>

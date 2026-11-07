@@ -83,7 +83,7 @@ export default function ChangePasswordModal({ isOpen, onClose, onSuccess }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="change-password-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-sm animate-fadeIn"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -199,7 +199,7 @@ export default function ChangePasswordModal({ isOpen, onClose, onSuccess }) {
             <button
               type="submit"
               disabled={loading}
-              className="px-space-md py-2 rounded-lg bg-primary hover:bg-primary-fixed text-on-primary font-label-md text-label-md font-bold transition-colors shadow-md disabled:opacity-50 flex items-center gap-1.5"
+              className="px-space-md py-2 rounded-lg bg-primary hover:bg-primary-hover text-on-primary font-label-md text-label-md font-bold transition-colors shadow-md disabled:opacity-50 flex items-center gap-1.5"
             >
               {loading ? (
                 <>

@@ -34,7 +34,7 @@ const BADGE_BY_STATUS = {
     label: 'TERKUNCI',
   },
   EVALUASI_UTS: {
-    className: 'bg-mvp-warning-tint text-mvp-warning',
+    className: 'bg-mvp-warning-tint text-mvp-warning-ink',
     icon: 'fact_check',
     label: 'UTS',
   },
@@ -150,7 +150,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
   const tabClass = (tab) =>
     `pb-3 text-sm whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer border-b-2 ${
       activeTab === tab
-        ? 'text-mvp-primary font-bold border-mvp-primary'
+        ? 'text-mvp-primary-strong font-bold border-mvp-primary'
         : 'text-mvp-muted hover:text-mvp-ink font-medium border-transparent'
     }`;
 
@@ -278,7 +278,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-mvp-primary-soft flex items-center justify-center text-mvp-primary shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-mvp-primary-soft flex items-center justify-center text-mvp-primary-strong shrink-0">
                     <span className="material-symbols-outlined text-[20px]">menu_book</span>
                   </div>
                   <div className="min-w-0">
@@ -296,14 +296,13 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
             <div className="flex flex-row sm:flex-col items-center justify-center lg:pl-8 lg:border-l lg:border-mvp-line gap-4 shrink-0 bg-mvp-page p-4 rounded-xl lg:bg-transparent lg:p-0">
               <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
                 <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 96 96" aria-hidden="true">
-                  <circle cx="48" cy="48" fill="none" r="40" stroke="#E2E8F0" strokeWidth="8" />
+                  <circle cx="48" cy="48" fill="none" r="40" className="stroke-mvp-line" strokeWidth="8" />
                   <circle
-                    className="transition-all duration-700 ease-out"
+                    className="transition-all duration-700 ease-out stroke-mvp-primary"
                     cx="48"
                     cy="48"
                     fill="none"
                     r="40"
-                    stroke="#2563EB"
                     strokeDasharray="251.2"
                     strokeDashoffset={251.2 - (251.2 * attendancePct) / 100}
                     strokeLinecap="round"
@@ -516,7 +515,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                                   type="button"
                                   onClick={() => handleConfirmPresence(meeting)}
                                   disabled={isSubmitting || remainingSeconds === 0}
-                                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-mvp-primary hover:bg-mvp-primary-strong text-white font-label-md text-label-md font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-mvp-primary hover:bg-mvp-primary-hover text-white font-label-md text-label-md font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                   <span
                                     className={`material-symbols-outlined text-[20px] ${
@@ -539,7 +538,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                       {meeting.materials.length > 0 && (
                         <div className="space-y-2">
                           <h4 className="text-sm font-bold text-mvp-ink flex items-center gap-2">
-                            <span className="material-symbols-outlined text-mvp-primary text-[18px]">
+                            <span className="material-symbols-outlined text-mvp-primary-strong text-[18px]">
                               folder_open
                             </span>
                             <span>Materi Pembelajaran ({meeting.materials.length} Berkas)</span>
@@ -551,7 +550,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                                 className="p-3.5 rounded-xl bg-mvp-subtle flex items-start justify-between gap-3"
                               >
                                 <div className="flex items-start gap-3 min-w-0">
-                                  <div className="w-10 h-10 rounded-lg bg-mvp-card text-mvp-danger flex items-center justify-center shrink-0">
+                                  <div className="w-10 h-10 rounded-lg bg-mvp-card text-mvp-danger-ink flex items-center justify-center shrink-0">
                                     <span className="material-symbols-outlined text-[22px]">
                                       {material.type === 'pdf' ? 'picture_as_pdf' : 'description'}
                                     </span>
@@ -586,13 +585,13 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                         <div className="p-4 rounded-xl bg-mvp-subtle space-y-3">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-9 h-9 rounded-lg bg-mvp-warning-tint text-mvp-warning flex items-center justify-center shrink-0">
+                              <div className="w-9 h-9 rounded-lg bg-mvp-warning-tint text-mvp-warning-ink flex items-center justify-center shrink-0">
                                 <span className="material-symbols-outlined text-[20px]">
                                   assignment
                                 </span>
                               </div>
                               <div>
-                                <span className="text-xs font-bold text-mvp-warning uppercase tracking-wider">
+                                <span className="text-xs font-bold text-mvp-warning-ink uppercase tracking-wider">
                                   Tugas Kelompok Terstruktur
                                 </span>
                                 <h5 className="text-sm font-bold text-mvp-ink">
@@ -600,7 +599,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                                 </h5>
                               </div>
                             </div>
-                            <span className="px-2.5 py-1 rounded-full bg-mvp-warning-soft text-mvp-warning text-xs font-bold flex items-center gap-1 self-start sm:self-auto">
+                            <span className="px-2.5 py-1 rounded-full bg-mvp-warning-soft text-mvp-warning-ink text-xs font-bold flex items-center gap-1 self-start sm:self-auto">
                               <span className="w-2 h-2 rounded-full bg-mvp-warning-base" />
                               <span>Belum Dikumpulkan</span>
                             </span>
@@ -615,7 +614,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                             <button
                               type="button"
                               onClick={() => setModalTugasOpen(true)}
-                              className="px-3.5 py-1.5 rounded-lg bg-mvp-ink hover:opacity-90 text-white font-label-sm text-label-sm font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                              className="px-3.5 py-1.5 rounded-lg bg-mvp-primary hover:bg-mvp-primary-hover text-white font-label-sm text-label-sm font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                               <span>Lihat Detail Tugas &amp; Upload</span>
                               <span className="material-symbols-outlined text-[16px]">
@@ -726,7 +725,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                 <button
                   type="button"
                   onClick={() => handleDownloadFile(`Silabus_RPS_${course.code}.pdf`)}
-                  className="px-3.5 py-1.5 rounded-lg bg-mvp-primary hover:bg-mvp-primary-strong text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-lg bg-mvp-primary hover:bg-mvp-primary-hover text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[16px]">file_download</span>
                   <span>Unduh Silabus Lengkap (PDF)</span>
@@ -842,7 +841,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
         {/* MODAL: Detail Tugas */}
         {modalTugasOpen && (
           <div
-            className="fixed inset-0 z-[100] bg-mvp-ink/70 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-overlay backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setModalTugasOpen(false)}
           >
             <div
@@ -854,7 +853,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
             >
               <div className="flex items-center justify-between pb-4 border-b border-mvp-line">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-mvp-warning text-[24px]">
+                  <span className="material-symbols-outlined text-mvp-warning-ink text-[24px]">
                     assignment
                   </span>
                   <h3

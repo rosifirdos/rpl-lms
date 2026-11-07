@@ -5,6 +5,14 @@ import ChangePasswordModal from '../features/auth/ChangePasswordModal';
 import { useAuthStore } from '../stores/authStore';
 import { apiClient } from '../services/api';
 
+// Di bawah `lg` sidebar tampil sebagai drawer overlay, bukan kolom permanen.
+const MOBILE_QUERY = '(max-width: 1023px)';
+
+const getIsMobile = () =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia(MOBILE_QUERY).matches;
+
 /**
  * AppShell — Central Single-Source-of-Truth Layout Shell
  *
@@ -18,7 +26,9 @@ export default function AppShell({
   activeNavPath,
   onNavChange,
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Di mobile drawer mulai tertutup agar konten tidak tertutup overlay.
+  const [sidebarOpen, setSidebarOpen] = useState(() => !getIsMobile());
+  const [isMobile, setIsMobile] = useState(getIsMobile);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
   const toastTimeoutRef = useRef(null);
@@ -30,6 +40,19 @@ export default function AppShell({
         clearTimeout(toastTimeoutRef.current);
       }
     };
+  }, []);
+
+  // Lacak breakpoint: saat masuk/keluar mobile, sidebar kembali ke kondisi
+  // netral sehingga tidak "nyangkut" terbuka atau tertutup antar-layout.
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const mql = window.matchMedia(MOBILE_QUERY);
+    const handleChange = (e) => {
+      setIsMobile(e.matches);
+      setSidebarOpen(!e.matches);
+    };
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
   }, []);
 
   const showToast = (message) => {
@@ -64,9 +87,23 @@ export default function AppShell({
     }
   };
 
-  const mainWrapClass = sidebarOpen
-    ? 'pl-64 transition-all duration-300'
-    : 'pl-0 transition-all duration-300';
+  // Di mobile sidebar berupa overlay, jadi konten tidak pernah diberi padding.
+  const mainWrapClass =
+    sidebarOpen && !isMobile
+      ? 'lg:pl-64 transition-all duration-300'
+      : 'pl-0 transition-all duration-300';
+
+  // Tutup drawer mobile setiap kali menu dipilih. Di desktop sidebar tetap
+  // sebagai kolom permanen sehingga tidak ikut tertutup.
+  const handleSidebarNav = (path) => {
+    if (isMobile) setSidebarOpen(false);
+    if (onNavChange) onNavChange(path);
+  };
+
+  // Klik area gelap di luar drawer juga menutupnya (khusus mobile).
+  const handleScrimClick = () => {
+    if (isMobile) setSidebarOpen(false);
+  };
 
   return (
     <div className="bg-background font-body-md text-on-surface antialiased min-h-screen flex flex-col">
@@ -99,13 +136,22 @@ export default function AppShell({
         onNavigate={onNavChange}
       />
 
+      {/* Scrim drawer mobile: tutup saat area gelap diklik */}
+      {isMobile && sidebarOpen && (
+        <div
+          aria-hidden="true"
+          onClick={handleScrimClick}
+          className="fixed inset-0 top-16 z-30 bg-overlay backdrop-blur-sm lg:hidden"
+        />
+      )}
+
       {/* RBAC Filtered Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
         activeRole={activeRole}
         onRoleChange={onRoleChange}
         activeNavPath={activeNavPath}
-        onNavChange={onNavChange}
+        onNavChange={handleSidebarNav}
       />
 
       {/* Modal Ubah Kata Sandi */}

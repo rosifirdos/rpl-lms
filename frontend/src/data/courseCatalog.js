@@ -22,7 +22,7 @@ const SEMESTER_DATES = buildWeeklyDates('2026-09-22', 16);
 
 const STATUS_STYLES = {
   HADIR: {
-    statusClass: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+    statusClass: 'bg-success-solid/20 text-success-ink border border-success-solid/30',
     icon: 'check_circle',
   },
   SESI_AKTIF: {

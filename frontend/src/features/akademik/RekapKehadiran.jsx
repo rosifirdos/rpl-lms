@@ -28,7 +28,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
       ratio: '100%',
       isSafe: true,
       statusLabel: 'Memenuhi Syarat',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      statusClass: 'bg-success-soft text-success-ink border border-success-border',
     },
     {
       id: 2,
@@ -41,7 +41,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
       ratio: '91.7%',
       isSafe: true,
       statusLabel: 'Memenuhi Syarat',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      statusClass: 'bg-success-soft text-success-ink border border-success-border',
     },
     {
       id: 3,
@@ -54,7 +54,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
       ratio: '58.3%',
       isSafe: false,
       statusLabel: 'Beresiko (<70%)',
-      statusClass: 'bg-rose-500/20 text-rose-400 border-rose-500/30 font-bold',
+      statusClass: 'bg-danger-soft text-danger-ink border-danger-border font-bold',
     },
     {
       id: 4,
@@ -67,7 +67,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
       ratio: '91.7%',
       isSafe: true,
       statusLabel: 'Memenuhi Syarat',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      statusClass: 'bg-success-soft text-success-ink border border-success-border',
     },
     {
       id: 5,
@@ -80,7 +80,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
       ratio: '66.7%',
       isSafe: false,
       statusLabel: 'Beresiko (<70%)',
-      statusClass: 'bg-rose-500/20 text-rose-400 border-rose-500/30 font-bold',
+      statusClass: 'bg-danger-soft text-danger-ink border-danger-border font-bold',
     },
     {
       id: 6,
@@ -93,7 +93,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
       ratio: '100%',
       isSafe: true,
       statusLabel: 'Memenuhi Syarat',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      statusClass: 'bg-success-soft text-success-ink border border-success-border',
     },
     {
       id: 7,
@@ -106,7 +106,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
       ratio: '83.3%',
       isSafe: true,
       statusLabel: 'Memenuhi Syarat',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      statusClass: 'bg-success-soft text-success-ink border border-success-border',
     },
     {
       id: 8,
@@ -119,7 +119,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
       ratio: '100%',
       isSafe: true,
       statusLabel: 'Memenuhi Syarat',
-      statusClass: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+      statusClass: 'bg-success-soft text-success-ink border border-success-border',
     },
   ];
 
@@ -241,17 +241,17 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
               <span className="font-label-sm text-xs uppercase tracking-wider text-on-surface-variant">
                 Butuh Perhatian (&lt;70%)
               </span>
-              <div className="w-9 h-9 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-lg bg-danger-soft text-danger-ink flex items-center justify-center">
                 <span className="material-symbols-outlined text-[20px]">warning</span>
               </div>
             </div>
             <div className="mt-2">
-              <div className="text-headline-lg font-bold text-rose-400">4 / 38</div>
-              <div className="text-xs text-rose-400 mt-0.5">Beresiko terkunci pada ujian</div>
+              <div className="text-headline-lg font-bold text-danger-ink">4 / 38</div>
+              <div className="text-xs text-danger-ink mt-0.5">Beresiko terkunci pada ujian</div>
             </div>
             <div className="mt-2 pt-1">
               <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
-                <div className="bg-rose-500 h-2 rounded-full" style={{ width: '10.5%' }}></div>
+                <div className="bg-danger-solid h-2 rounded-full" style={{ width: '10.5%' }}></div>
               </div>
             </div>
           </div>
@@ -311,7 +311,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
               onClick={() => setFilterType('safe')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 filterType === 'safe'
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                  ? 'bg-success-soft text-success-ink border border-success-border'
                   : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
               }`}
             >
@@ -322,7 +322,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
               onClick={() => setFilterType('risk')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 filterType === 'risk'
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                  ? 'bg-danger-soft text-danger-ink border border-danger-border'
                   : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
               }`}
             >
@@ -376,7 +376,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
                     </th>
                   ))}
                   {/* P16 UAS */}
-                  <th className="p-2 text-center w-12 bg-rose-500/20 text-rose-300 font-bold font-mono">
+                  <th className="p-2 text-center w-12 bg-danger-soft text-danger-ink font-bold font-mono">
                     P16 (UAS)
                   </th>
                   <th className="py-3 px-3 text-center">Hadir</th>
@@ -399,20 +399,20 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
                           idx === 7
                             ? 'bg-secondary-container/10'
                             : idx === 15
-                            ? 'bg-rose-500/10'
+                            ? 'bg-danger-soft/60'
                             : ''
                         }`}
                       >
                         <span
                           className={`inline-block w-6 h-6 leading-6 rounded ${
                             val === 'H'
-                              ? 'bg-emerald-500/20 text-emerald-400'
+                              ? 'bg-success-soft text-success-ink'
                               : val === 'S'
-                              ? 'bg-sky-500/20 text-sky-400'
+                              ? 'bg-info-soft text-info-ink'
                               : val === 'I'
-                              ? 'bg-amber-500/20 text-amber-400'
+                              ? 'bg-warning-soft text-warning-ink'
                               : val === 'A'
-                              ? 'bg-rose-500/20 text-rose-400'
+                              ? 'bg-danger-soft text-danger-ink'
                               : 'text-outline'
                           }`}
                         >

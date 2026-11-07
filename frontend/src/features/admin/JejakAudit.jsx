@@ -25,7 +25,7 @@ const initialLogs = [
       initialBg: 'bg-primary-container text-on-primary-container',
     },
     actionType: 'ENROLL',
-    actionBadgeClass: 'bg-[#2563EB]/20 text-[#60A5FA]',
+    actionBadgeClass: 'bg-info-soft text-info-ink',
     entityType: 'Enrollment',
     entityTarget: 'Enrollment: ENR-2026-881',
     entitySubtitle: 'Class: TI-A • Rekayasa Perangkat Lunak',
@@ -38,7 +38,7 @@ const initialLogs = [
     diffData: {
       title: 'Inspeksi Perubahan Data: ENROLL pada Enrollment ENR-2026-881',
       badge: 'Enrollment Massal',
-      badgeBg: 'bg-blue-600',
+      badgeBg: 'bg-info-solid',
       entity: 'class_enrollments',
       targetId: 'ENR-2026-881',
       actorName: 'Admin Utama',
@@ -72,7 +72,7 @@ const initialLogs = [
       initialBg: 'bg-secondary-container text-on-secondary-container',
     },
     actionType: 'GRADE_MUTATION',
-    actionBadgeClass: 'bg-[#D97706]/20 text-[#FBBF24]',
+    actionBadgeClass: 'bg-warning-soft text-warning-ink',
     entityType: 'Submission',
     entityTarget: 'Submission: SUB-9041',
     entitySubtitle: 'Tugas 01 DFD • NIM 24670001',
@@ -86,7 +86,7 @@ const initialLogs = [
     diffData: {
       title: 'Inspeksi Perubahan Data: GRADE_MUTATION pada Submission SUB-9041',
       badge: 'Mutasi Skor',
-      badgeBg: 'bg-[#D97706]',
+      badgeBg: 'bg-warning-solid',
       entity: 'assignments_submissions',
       targetId: '9041',
       actorName: 'Dr. Bayu Pratama, M.Kom.',
@@ -138,7 +138,7 @@ const initialLogs = [
       initialBg: 'bg-primary-container text-on-primary-container',
     },
     actionType: 'CONFIG_CHANGE',
-    actionBadgeClass: 'bg-[#0284C7]/20 text-[#38BDF8]',
+    actionBadgeClass: 'bg-info-soft text-info-ink',
     entityType: 'Config',
     entityTarget: 'Config: security.upload_policy',
     entitySubtitle: 'Scope: System-Wide Global',
@@ -151,7 +151,7 @@ const initialLogs = [
     diffData: {
       title: 'Inspeksi Perubahan Data: CONFIG_CHANGE pada security.upload_policy',
       badge: 'Konfigurasi Sistem',
-      badgeBg: 'bg-sky-600',
+      badgeBg: 'bg-info-solid',
       entity: 'system_configurations',
       targetId: 'security.upload_policy',
       actorName: 'Admin Utama',
@@ -192,7 +192,7 @@ const initialLogs = [
       initialBg: 'bg-primary-container text-on-primary-container',
     },
     actionType: 'UNENROLL',
-    actionBadgeClass: 'bg-[#E11D48]/20 text-[#FB7185]',
+    actionBadgeClass: 'bg-danger-soft text-danger-ink',
     entityType: 'Enrollment',
     entityTarget: 'Enrollment: ENR-2026-773',
     entitySubtitle: 'NIM: 23670019 (Cuti Akademik)',
@@ -218,7 +218,7 @@ const initialLogs = [
     },
     actionType: 'DELETE',
     actionBadgeLabel: 'DELETE / SUSPEND',
-    actionBadgeClass: 'bg-[#DC2626]/20 text-[#F87171]',
+    actionBadgeClass: 'bg-danger-soft text-danger-ink',
     entityType: 'User',
     entityTarget: 'User: Kevin Sanjaya',
     entitySubtitle: 'NIM: 23670019',
@@ -269,7 +269,7 @@ const initialLogs = [
       initialBg: 'bg-primary-container text-on-primary-container',
     },
     actionType: 'CREATE',
-    actionBadgeClass: 'bg-[#059669]/20 text-[#34D399]',
+    actionBadgeClass: 'bg-success-soft text-success-ink',
     entityType: 'Class',
     entityTarget: 'Class: TIF-402 TI-A',
     entitySubtitle: 'Course: Arsitektur PL Enterprise',
@@ -646,11 +646,11 @@ export default function JejakAudit({ onNavigate }) {
 
       {/* JSON Diff Inspector Modal */}
       {selectedLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedLog(null)} role="dialog" aria-modal="true" aria-labelledby="modal-diff-inspector-heading">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setSelectedLog(null)} role="dialog" aria-modal="true" aria-labelledby="modal-diff-inspector-heading">
           <div className="relative w-full max-w-5xl bg-surface-container rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden border border-outline-variant/30" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between px-space-lg py-space-md bg-surface-container-high border-b border-outline-variant/20">
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-[#D97706]/20 text-[#FBBF24]">
+                <div className="p-2 rounded-lg bg-warning-soft text-warning-ink">
                   <span className="material-symbols-outlined text-[24px]">difference</span>
                 </div>
                 <div>
@@ -678,22 +678,22 @@ export default function JejakAudit({ onNavigate }) {
 
             <div className="flex-1 overflow-y-auto p-space-md bg-surface-container-low">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md">
-                <div className="flex flex-col rounded-xl overflow-hidden bg-[#93000a]/10 border border-[#93000a]/30">
-                  <div className="px-space-md py-2 bg-[#93000a]/20 text-[#ffb4ab] font-bold text-xs flex justify-between">
+                <div className="flex flex-col rounded-xl overflow-hidden bg-danger-soft border border-danger-border">
+                  <div className="px-space-md py-2 bg-danger-solid/15 text-danger-ink font-bold text-xs flex justify-between">
                     <span>Nilai Lama (Old Values)</span>
                     <span className="font-mono text-[10px]">Snapshot Sebelum Revisi</span>
                   </div>
-                  <pre className="p-space-md font-mono text-xs text-[#ffb4ab] bg-[#020f1e]/80 overflow-x-auto min-h-[160px]">
+                  <pre className="p-space-md font-mono text-xs text-danger-ink bg-surface-container-low overflow-x-auto min-h-[160px]">
                     <code>{selectedLog.diffData?.oldValues ? JSON.stringify(selectedLog.diffData.oldValues, null, 2) : 'null (Data Baru)'}</code>
                   </pre>
                 </div>
 
-                <div className="flex flex-col rounded-xl overflow-hidden bg-[#00a572]/10 border border-[#00a572]/30">
-                  <div className="px-space-md py-2 bg-[#00a572]/20 text-[#4edea3] font-bold text-xs flex justify-between">
+                <div className="flex flex-col rounded-xl overflow-hidden bg-success-soft border border-success-border">
+                  <div className="px-space-md py-2 bg-success-solid/15 text-success-ink font-bold text-xs flex justify-between">
                     <span>Nilai Baru (New Values)</span>
                     <span className="font-mono text-[10px]">Mutasi Terverifikasi</span>
                   </div>
-                  <pre className="p-space-md font-mono text-xs text-[#4edea3] bg-[#020f1e]/80 overflow-x-auto min-h-[160px]">
+                  <pre className="p-space-md font-mono text-xs text-success-ink bg-surface-container-low overflow-x-auto min-h-[160px]">
                     <code>{JSON.stringify(selectedLog.diffData?.newValues || selectedLog, null, 2)}</code>
                   </pre>
                 </div>

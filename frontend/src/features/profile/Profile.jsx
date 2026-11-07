@@ -58,7 +58,7 @@ export default function Profile({ onRoleChange, onNavigate, activeRole = 'mahasi
     if (/[^A-Za-z0-9]/.test(pass)) score += 1;
 
     if (score <= 1) return { score: 25, label: 'Lemah', color: 'bg-error' };
-    if (score === 2) return { score: 50, label: 'Cukup', color: 'bg-amber-500' };
+    if (score === 2) return { score: 50, label: 'Cukup', color: 'bg-warning-solid' };
     if (score === 3) return { score: 75, label: 'Kuat', color: 'bg-secondary' };
     return { score: 100, label: 'Sangat Kuat', color: 'bg-tertiary' };
   };
@@ -147,7 +147,7 @@ export default function Profile({ onRoleChange, onNavigate, activeRole = 'mahasi
             </div>
             <label
               htmlFor="avatar-upload-input"
-              className="absolute inset-0 rounded-full bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-center p-1"
+              className="absolute inset-0 rounded-full bg-overlay text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-center p-1"
             >
               <span className="material-symbols-outlined text-[24px]">photo_camera</span>
               <span className="text-[10px] font-semibold mt-0.5">Ubah Foto</span>

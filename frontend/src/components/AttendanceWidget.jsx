@@ -5,7 +5,7 @@ function AttendanceWidget({ onNavigate }) {
 
   const btnClass = attended
     ? 'mt-1 w-full py-1.5 rounded-lg font-label-sm text-label-sm font-bold transition-colors flex items-center justify-center gap-1 shadow-sm bg-surface-container-highest text-tertiary border border-tertiary/40 cursor-not-allowed'
-    : 'mt-1 w-full py-1.5 rounded-lg font-label-sm text-label-sm font-bold transition-colors flex items-center justify-center gap-1 shadow-sm bg-tertiary text-on-tertiary hover:bg-tertiary-fixed';
+    : 'mt-1 w-full py-1.5 rounded-lg font-label-sm text-label-sm font-bold transition-colors flex items-center justify-center gap-1 shadow-sm bg-tertiary text-on-tertiary hover:bg-tertiary-hover';
 
   return (
     <div className="rounded-xl bg-surface-container p-space-md shadow-md flex flex-col justify-between">

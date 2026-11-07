@@ -1,7 +1,27 @@
 ﻿<!doctype html>
-<html class="dark" lang="id">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      Anti-flash: tentukan tema SEBELUM paint pertama.
+      Default adalah CERAH; class `dark` hanya dipasang bila pengguna pernah
+      memilih mode gelap (localStorage key: spada-theme).
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('spada-theme');
+          if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {
+          /* localStorage bisa diblokir (private mode); tetap pakai mode cerah. */
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SPADA UPGRIS - Dasbor Pembelajaran Mahasiswa</title>

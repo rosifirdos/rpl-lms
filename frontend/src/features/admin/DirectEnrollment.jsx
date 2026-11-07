@@ -665,7 +665,7 @@ export default function DirectEnrollment({ onRoleChange }) {
                       <td className="py-3 px-4">
                         <span className={`inline-block px-2 py-0.5 rounded font-caption text-caption ${
                           st.prodi.includes('Ulang')
-                            ? 'bg-amber-500/20 text-amber-300 font-semibold'
+                            ? 'bg-warning-soft text-warning-ink border border-warning-border font-semibold'
                             : 'bg-surface-container-high text-on-surface-variant'
                         }`}>
                           {st.prodi}
@@ -963,7 +963,7 @@ export default function DirectEnrollment({ onRoleChange }) {
 
       {/* MODAL: UNENROLL CONFIRMATION */}
       {unenrollModalStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-dim/80 backdrop-blur-md p-space-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-md p-space-md">
           <div className="w-full max-w-lg bg-surface-container rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30">
             <div className="p-space-md bg-surface-container-high flex items-start gap-space-sm border-b border-outline-variant/20">
               <div className="w-12 h-12 rounded-xl bg-error-container text-error flex items-center justify-center shrink-0 shadow-inner">
@@ -1040,7 +1040,7 @@ export default function DirectEnrollment({ onRoleChange }) {
 
       {/* MODAL: IMPOR CSV MASSAL */}
       {showCsvModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-dim/80 backdrop-blur-md p-space-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-md p-space-md">
           <div className="w-full max-w-xl bg-surface-container rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30">
             <div className="p-space-md bg-surface-container-high flex items-start justify-between border-b border-outline-variant/20">
               <div className="flex items-center gap-space-sm">
@@ -1125,7 +1125,7 @@ export default function DirectEnrollment({ onRoleChange }) {
 
       {/* MODAL: LOG SINKRONISASI */}
       {showLogModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface-dim/80 backdrop-blur-md p-space-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-md p-space-md">
           <div className="w-full max-w-2xl bg-surface-container rounded-xl shadow-2xl overflow-hidden border border-outline-variant/30">
             <div className="p-space-md bg-surface-container-high flex items-start justify-between border-b border-outline-variant/20">
               <div className="flex items-center gap-space-sm">

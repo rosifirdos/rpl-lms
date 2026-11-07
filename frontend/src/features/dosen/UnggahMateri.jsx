@@ -237,8 +237,8 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           {/* State B: Validating */}
           {uploadState === 'validating' && selectedFile && (
             <div className="space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto animate-pulse">
-                <span className="material-symbols-outlined text-amber-400 text-[36px]">shield</span>
+              <div className="w-16 h-16 rounded-2xl bg-warning-soft flex items-center justify-center mx-auto animate-pulse">
+                <span className="material-symbols-outlined text-warning-ink text-[36px]">shield</span>
               </div>
               <p className="font-title-md text-on-surface font-bold">Memvalidasi file...</p>
               <p className="font-body-sm text-sm text-on-surface-variant">
@@ -274,10 +274,10 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           {/* State D: Success */}
           {uploadState === 'success' && selectedFile && (
             <div className="space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center mx-auto">
-                <span className="material-symbols-outlined text-emerald-400 text-[36px]">check_circle</span>
+              <div className="w-16 h-16 rounded-2xl bg-success-soft flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-success-ink text-[36px]">check_circle</span>
               </div>
-              <p className="font-title-md text-emerald-400 font-bold">File Berhasil Diunggah!</p>
+              <p className="font-title-md text-success-ink font-bold">File Berhasil Diunggah!</p>
               <div className="bg-surface-container rounded-xl p-3 max-w-sm mx-auto text-left">
                 <div className="flex items-center gap-2 text-sm text-on-surface font-semibold">
                   <span className="material-symbols-outlined text-primary text-[18px]">description</span>
@@ -302,16 +302,16 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           {/* State E: Error - Invalid Type */}
           {uploadState === 'error-type' && selectedFile && (
             <div className="space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-rose-500/20 flex items-center justify-center mx-auto">
-                <span className="material-symbols-outlined text-rose-400 text-[36px]">error</span>
+              <div className="w-16 h-16 rounded-2xl bg-danger-soft flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-danger-ink text-[36px]">error</span>
               </div>
-              <p className="font-title-md text-rose-400 font-bold">Tipe File Tidak Didukung</p>
+              <p className="font-title-md text-danger-ink font-bold">Tipe File Tidak Didukung</p>
               <p className="font-body-sm text-sm text-on-surface-variant">
-                File <span className="font-mono text-rose-300">{selectedFile.name}</span> memiliki format yang tidak
+                File <span className="font-mono text-danger-ink">{selectedFile.name}</span> memiliki format yang tidak
                 diizinkan.
               </p>
-              <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 max-w-sm mx-auto">
-                <p className="text-xs text-rose-300">
+              <div className="bg-danger-soft border border-danger-border rounded-lg p-3 max-w-sm mx-auto">
+                <p className="text-xs text-danger-ink">
                   Format yang diizinkan: <strong>PDF, PPTX, DOCX, MP4, WebM, PNG, JPG</strong>
                 </p>
               </div>
@@ -330,12 +330,12 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           {/* State F: Error - Too Large */}
           {uploadState === 'error-size' && selectedFile && (
             <div className="space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-rose-500/20 flex items-center justify-center mx-auto">
-                <span className="material-symbols-outlined text-rose-400 text-[36px]">file_upload_off</span>
+              <div className="w-16 h-16 rounded-2xl bg-danger-soft flex items-center justify-center mx-auto">
+                <span className="material-symbols-outlined text-danger-ink text-[36px]">file_upload_off</span>
               </div>
-              <p className="font-title-md text-rose-400 font-bold">Ukuran File Terlalu Besar</p>
+              <p className="font-title-md text-danger-ink font-bold">Ukuran File Terlalu Besar</p>
               <p className="font-body-sm text-sm text-on-surface-variant">
-                <span className="font-mono text-rose-300">{selectedFile.name}</span> ({formatSize(selectedFile.size)})
+                <span className="font-mono text-danger-ink">{selectedFile.name}</span> ({formatSize(selectedFile.size)})
                 melebihi batas {MAX_SIZE_MB} MB.
               </p>
               <button
@@ -451,10 +451,10 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { ext: 'PDF', icon: 'picture_as_pdf', color: 'text-rose-400', bg: 'bg-rose-500/10' },
-              { ext: 'PPTX', icon: 'slideshow', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+              { ext: 'PDF', icon: 'picture_as_pdf', color: 'text-danger-ink', bg: 'bg-danger-soft' },
+              { ext: 'PPTX', icon: 'slideshow', color: 'text-warning-ink', bg: 'bg-warning-soft' },
               { ext: 'DOCX', icon: 'description', color: 'text-primary', bg: 'bg-primary/10' },
-              { ext: 'MP4 / WebM', icon: 'videocam', color: 'text-sky-400', bg: 'bg-sky-500/10' },
+              { ext: 'MP4 / WebM', icon: 'videocam', color: 'text-info-ink', bg: 'bg-info-soft' },
             ].map((t) => (
               <div
                 key={t.ext}

@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { userFixtures } from '../features/shell/fixtures';
+import ThemeToggle from './ThemeToggle';
 
 function Header({
   onToggleSidebar,
@@ -83,7 +84,7 @@ function Header({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-surface-container/90 backdrop-blur-xl z-50 shadow-[0_1px_8px_rgba(0,0,0,0.3)]">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-surface-container/90 backdrop-blur-xl z-50 shadow-[0_1px_8px_rgb(var(--scrim)/0.12)]">
       <div className="w-full h-16 px-gutter flex items-center justify-between gap-space-sm sm:gap-space-md">
         {/* Left: Menu + Logo + Semester Badge + Search */}
         <div className="flex items-center gap-space-xs sm:gap-space-md min-w-0">
@@ -184,6 +185,9 @@ function Header({
               Admin
             </button>
           </div>
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           <button
             aria-label="Notifikasi"

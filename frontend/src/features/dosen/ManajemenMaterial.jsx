@@ -516,7 +516,7 @@ export default function ManajemenMaterial({ onNavigate, onRoleChange }) {
         {/* Dialog Konfirmasi Hapus */}
         {deleteTarget && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-surface-dim/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay backdrop-blur-sm"
             onClick={() => setDeleteTarget(null)}
           >
             <div

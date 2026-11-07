@@ -34,7 +34,7 @@ export default function StatusPresensi({ onNavigate }) {
     title: '',
     message: '',
     icon: 'check_circle',
-    iconBg: 'bg-emerald-100 text-emerald-600'
+    iconBg: 'bg-success-soft text-success-ink'
   });
 
   // Highlight trigger state for simulation
@@ -84,7 +84,7 @@ export default function StatusPresensi({ onNavigate }) {
   }, [secondsRemaining]);
 
   // Toast notification helper
-  const showToast = (title, message, icon = 'check_circle', iconBg = 'bg-emerald-100 text-emerald-600', duration = 4500) => {
+  const showToast = (title, message, icon = 'check_circle', iconBg = 'bg-success-soft text-success-ink', duration = 4500) => {
     setToast({ visible: true, title, message, icon, iconBg });
     setTimeout(() => {
       setToast(prev => ({ ...prev, visible: false }));
@@ -109,7 +109,7 @@ export default function StatusPresensi({ onNavigate }) {
       'Presensi Berhasil Divalidasi!',
       `Timestamp: ${nowStr}. Status kehadiran Anda tercatat HADIR (State C).`,
       'check_circle',
-      'bg-emerald-100 text-emerald-600'
+      'bg-success-soft text-success-ink'
     );
   };
 
@@ -136,7 +136,7 @@ export default function StatusPresensi({ onNavigate }) {
         'Permohonan Koreksi Terkirim',
         'Menunggu verifikasi dan persetujuan Dr. Bayu Pratama, M.Kom. (FR-039)',
         'outgoing_mail',
-        'bg-blue-100 text-blue-600'
+        'bg-info-soft text-info-ink'
       );
     }, 600);
   };
@@ -149,7 +149,7 @@ export default function StatusPresensi({ onNavigate }) {
       'Simulasi Direset',
       'Status kartu kembali ke kondisi awal siklus perkuliahan.',
       'restart_alt',
-      'bg-blue-100 text-blue-600',
+      'bg-info-soft text-info-ink',
       3000
     );
   };
@@ -327,45 +327,45 @@ export default function StatusPresensi({ onNavigate }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-lg items-stretch mb-space-xl">
         {/* ==================== CARD 1: STATE A ==================== */}
         {(filter === 'all' || filter === 'state-a') && (
-          <div className="flex flex-col justify-between rounded-xl bg-white text-slate-800 p-space-lg shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border border-slate-200">
+          <div className="flex flex-col justify-between rounded-xl bg-surface text-on-surface p-space-lg shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border border-outline-variant">
             <div>
               {/* Top State Indicator Badge */}
               <div className="flex items-center justify-between mb-space-md">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-label-sm text-label-sm font-semibold tracking-wide border border-slate-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-semibold tracking-wide border border-outline-variant">
+                  <span className="w-1.5 h-1.5 rounded-full bg-outline"></span>
                   STATE A — BELUM DIBUKA (LOCKED)
                 </span>
-                <span className="text-slate-400 font-caption text-caption font-mono">BR-010-PRE</span>
+                <span className="text-outline font-caption text-caption font-mono">BR-010-PRE</span>
               </div>
 
               {/* Card Header */}
               <div className="flex items-start justify-between gap-space-sm pb-space-sm mb-space-sm">
                 <div className="flex items-center gap-space-sm">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shadow-sm">
+                  <div className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant shadow-sm">
                     <span className="material-symbols-outlined text-[24px]">event_available</span>
                   </div>
                   <div>
-                    <h3 className="font-title-md text-title-md text-slate-900 font-bold leading-tight">Presensi Pertemuan 3</h3>
-                    <span className="font-caption text-caption text-slate-500">Bobot: 1 SKS Praktika</span>
+                    <h3 className="font-title-md text-title-md text-on-surface font-bold leading-tight">Presensi Pertemuan 3</h3>
+                    <span className="font-caption text-caption text-outline">Bobot: 1 SKS Praktika</span>
                   </div>
                 </div>
               </div>
 
               {/* Status Pill */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 font-label-sm text-label-sm font-medium mb-space-md border border-slate-200">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium mb-space-md border border-outline-variant">
                 <span className="material-symbols-outlined text-[16px]">lock</span>
                 <span>Sesi Belum Dibuka</span>
               </div>
 
               {/* Body Explanation */}
-              <p className="font-body-sm text-body-sm text-slate-600 leading-relaxed mb-space-md">
+              <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-md">
                 Dosen Pengampu belum membuka sesi presensi untuk pertemuan ini. Tombol kehadiran akan aktif secara otomatis saat sesi dibuka.
               </p>
 
               {/* Soft Lock Info Notice */}
-              <div className="rounded-lg bg-slate-50 p-space-sm mb-space-lg border border-slate-200/80">
-                <div className="flex items-start gap-space-xs text-slate-600 font-caption text-caption leading-snug">
-                  <span className="material-symbols-outlined text-[16px] text-slate-500 mt-0.5">info</span>
+              <div className="rounded-lg bg-surface-container p-space-sm mb-space-lg border border-outline-variant">
+                <div className="flex items-start gap-space-xs text-on-surface-variant font-caption text-caption leading-snug">
+                  <span className="material-symbols-outlined text-[16px] text-outline mt-0.5">info</span>
                   <span>Status: Menunggu instruksi dosen pengampu di ruang Lab Komputasi 3.</span>
                 </div>
               </div>
@@ -375,13 +375,13 @@ export default function StatusPresensi({ onNavigate }) {
             <div className="flex flex-col gap-space-sm mt-auto pt-space-sm">
               <button
                 aria-disabled="true"
-                className="w-full h-12 rounded-lg bg-slate-200 text-slate-400 font-label-md text-label-md font-medium flex items-center justify-center gap-2 cursor-not-allowed select-none shadow-none"
+                className="w-full h-12 rounded-lg bg-surface-container-highest text-outline font-label-md text-label-md font-medium flex items-center justify-center gap-2 cursor-not-allowed select-none shadow-none"
                 disabled
               >
                 <span className="material-symbols-outlined text-[20px]">lock</span>
                 <span>Isi Kehadiran</span>
               </button>
-              <div className="flex items-center justify-center gap-1.5 text-slate-500 font-caption text-caption text-center">
+              <div className="flex items-center justify-center gap-1.5 text-outline font-caption text-caption text-center">
                 <span className="material-symbols-outlined text-[14px]">sync</span>
                 <span>Terakhir diperbarui 09:10 WIB • Sinkronisasi otomatis</span>
               </div>
@@ -391,62 +391,62 @@ export default function StatusPresensi({ onNavigate }) {
 
         {/* ==================== CARD 2: STATE B ==================== */}
         {(filter === 'all' || filter === 'state-b') && (
-          <div className={`flex flex-col justify-between rounded-xl bg-white text-slate-800 p-space-lg shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border ${
-            isSubmitted ? 'border-emerald-300 ring-2 ring-emerald-400/40' : 'border-blue-300 ring-2 ring-blue-500/30'
+          <div className={`flex flex-col justify-between rounded-xl bg-surface text-on-surface p-space-lg shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border ${
+            isSubmitted ? 'border-success-border ring-2 ring-success-solid/40' : 'border-info-border ring-2 ring-info-solid/30'
           }`}>
             <div>
               {/* Top State Indicator Badge */}
               <div className="flex items-center justify-between mb-space-md">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-label-sm text-label-sm font-semibold tracking-wide border border-emerald-200">
-                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success-soft text-success-ink font-label-sm text-label-sm font-semibold tracking-wide border border-success-border">
+                  <span className="w-2 h-2 rounded-full bg-success-solid animate-pulse"></span>
                   STATE B — SESI TERBUKA (LIVE / ACTIVE)
                 </span>
-                <span className="text-emerald-700 font-caption text-caption font-mono font-bold">FR-023</span>
+                <span className="text-success-ink font-caption text-caption font-mono font-bold">FR-023</span>
               </div>
 
               {/* Card Header with highlight */}
               <div className="flex items-start justify-between gap-space-sm pb-space-sm mb-space-sm">
                 <div className="flex items-center gap-space-sm">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
+                  <div className="w-10 h-10 rounded-lg bg-info-soft flex items-center justify-center text-info-ink shadow-sm border border-info-border">
                     <span className="material-symbols-outlined text-[24px]">event_available</span>
                   </div>
                   <div>
-                    <h3 className="font-title-md text-title-md text-slate-900 font-bold leading-tight">Presensi Pertemuan 3</h3>
-                    <span className="font-caption text-caption text-blue-700 font-semibold">Toleransi Berjalan (15 Mnt)</span>
+                    <h3 className="font-title-md text-title-md text-on-surface font-bold leading-tight">Presensi Pertemuan 3</h3>
+                    <span className="font-caption text-caption text-info-ink font-semibold">Toleransi Berjalan (15 Mnt)</span>
                   </div>
                 </div>
               </div>
 
               {/* Status Pill: Active Green */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-label-sm text-label-sm font-semibold mb-space-md border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success-soft text-success-ink font-label-sm text-label-sm font-semibold mb-space-md border border-success-border">
+                <span className="w-2 h-2 rounded-full bg-success-solid"></span>
                 <span>Sesi Presensi Aktif</span>
               </div>
 
               {/* Countdown / Context Block */}
-              <div className="rounded-lg bg-blue-50 p-space-sm mb-space-md flex flex-col gap-space-xs border border-blue-100">
-                <div className="flex items-center gap-1.5 text-blue-700 font-caption text-caption font-semibold">
+              <div className="rounded-lg bg-info-soft p-space-sm mb-space-md flex flex-col gap-space-xs border border-info-border">
+                <div className="flex items-center gap-1.5 text-info-ink font-caption text-caption font-semibold">
                   <span className="material-symbols-outlined text-[16px]">schedule</span>
                   <span>Dibuka 09:15 WIB • Ditutup otomatis 09:30 WIB</span>
                 </div>
                 <div className="flex items-baseline justify-between mt-1">
-                  <span className="font-caption text-caption text-slate-600">Sisa Batas Waktu:</span>
-                  <span className="font-mono text-blue-800 font-bold text-sm tracking-wide">
+                  <span className="font-caption text-caption text-on-surface-variant">Sisa Batas Waktu:</span>
+                  <span className="font-mono text-info-ink font-bold text-sm tracking-wide">
                     {formattedCountdown}
                   </span>
                 </div>
                 {/* Progress bar */}
-                <div className="w-full h-1.5 bg-blue-200 rounded-full overflow-hidden mt-1">
+                <div className="w-full h-1.5 bg-info-border rounded-full overflow-hidden mt-1">
                   <div
-                    className="h-full bg-blue-600 rounded-full transition-all duration-1000"
+                    className="h-full bg-primary rounded-full transition-all duration-1000"
                     style={{ width: `${countdownPercent}%` }}
                   ></div>
                 </div>
               </div>
 
-              <p className="font-body-sm text-body-sm text-slate-600 leading-relaxed mb-space-md">
+              <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-md">
                 {isSubmitted ? (
-                  <span className="text-emerald-700 font-semibold">
+                  <span className="text-success-ink font-semibold">
                     ✓ Kehadiran Anda berhasil tercatat pada sesi ini! Anda dapat melihat konfirmasi detail pada STATE C.
                   </span>
                 ) : (
@@ -459,7 +459,7 @@ export default function StatusPresensi({ onNavigate }) {
             <div className="flex flex-col gap-space-sm mt-auto pt-space-sm">
               {isSubmitted ? (
                 <button
-                  className="w-full h-12 rounded-lg bg-emerald-600 text-white font-label-md text-label-md font-semibold flex items-center justify-center gap-2 shadow-md cursor-default"
+                  className="w-full h-12 rounded-lg bg-success-solid text-white font-label-md text-label-md font-semibold flex items-center justify-center gap-2 shadow-md cursor-default"
                   disabled
                 >
                   <span className="material-symbols-outlined text-[20px]">check_circle</span>
@@ -467,7 +467,7 @@ export default function StatusPresensi({ onNavigate }) {
                 </button>
               ) : (
                 <button
-                  className="w-full h-12 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] text-white font-label-md text-label-md font-semibold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 transition-all cursor-pointer"
+                  className="w-full h-12 rounded-lg bg-primary hover:bg-primary-hover active:bg-primary-active active:scale-[0.98] text-on-primary font-label-md text-label-md font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/30 transition-all cursor-pointer"
                   id="btn-submit-presence"
                   onClick={handlePresenceSubmit}
                   type="button"
@@ -476,7 +476,7 @@ export default function StatusPresensi({ onNavigate }) {
                   <span>Isi Kehadiran Sekarang</span>
                 </button>
               )}
-              <div className="flex items-center justify-center gap-1.5 text-slate-500 font-caption text-caption text-center">
+              <div className="flex items-center justify-center gap-1.5 text-outline font-caption text-caption text-center">
                 <span className="material-symbols-outlined text-[14px]">info</span>
                 <span>Sesi ditutup otomatis setelah batas toleransi berakhir (09:30 WIB).</span>
               </div>
@@ -486,52 +486,52 @@ export default function StatusPresensi({ onNavigate }) {
 
         {/* ==================== CARD 3: STATE C ==================== */}
         {(filter === 'all' || filter === 'state-c') && (
-          <div className="flex flex-col justify-between rounded-xl bg-white text-slate-800 p-space-lg shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border border-sky-200">
+          <div className="flex flex-col justify-between rounded-xl bg-surface text-on-surface p-space-lg shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border border-info-border">
             <div>
               {/* Top State Indicator Badge */}
               <div className="flex items-center justify-between mb-space-md">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 font-label-sm text-label-sm font-semibold tracking-wide border border-sky-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-600"></span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-info-soft text-info-ink font-label-sm text-label-sm font-semibold tracking-wide border border-info-border">
+                  <span className="w-1.5 h-1.5 rounded-full bg-info-solid"></span>
                   STATE C — TERKONFIRMASI HADIR (SUCCESS)
                 </span>
-                <span className="text-sky-700 font-caption text-caption font-mono font-bold">FR-024</span>
+                <span className="text-info-ink font-caption text-caption font-mono font-bold">FR-024</span>
               </div>
 
               {/* Card Header */}
               <div className="flex items-start justify-between gap-space-sm pb-space-sm mb-space-sm">
                 <div className="flex items-center gap-space-sm">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200">
+                  <div className="w-10 h-10 rounded-lg bg-success-soft flex items-center justify-center text-success-ink shadow-sm border border-success-border">
                     <span className="material-symbols-outlined text-[24px]">verified</span>
                   </div>
                   <div>
-                    <h3 className="font-title-md text-title-md text-slate-900 font-bold leading-tight">Presensi Pertemuan 3</h3>
-                    <span className="font-caption text-caption text-emerald-700 font-semibold">Tervalidasi Sistem</span>
+                    <h3 className="font-title-md text-title-md text-on-surface font-bold leading-tight">Presensi Pertemuan 3</h3>
+                    <span className="font-caption text-caption text-success-ink font-semibold">Tervalidasi Sistem</span>
                   </div>
                 </div>
               </div>
 
               {/* Status Pill */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-label-sm text-label-sm font-semibold mb-space-md border border-emerald-200">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success-soft text-success-ink font-label-sm text-label-sm font-semibold mb-space-md border border-success-border">
                 <span className="material-symbols-outlined text-[16px]">check_circle</span>
                 <span>HADIR (TERVALIDASI)</span>
               </div>
 
               {/* Detail Confirmed Row */}
-              <div className="rounded-lg bg-emerald-50 p-space-sm mb-space-md flex flex-col gap-1 border border-emerald-100">
+              <div className="rounded-lg bg-success-soft p-space-sm mb-space-md flex flex-col gap-1 border border-success-border">
                 <div className="flex items-center justify-between">
-                  <span className="font-caption text-caption text-slate-600">Waktu Rekam:</span>
-                  <span className="font-mono text-emerald-800 font-bold text-sm">
+                  <span className="font-caption text-caption text-on-surface-variant">Waktu Rekam:</span>
+                  <span className="font-mono text-success-ink font-bold text-sm">
                     {isSubmitted ? submissionTime : '09:18:22 WIB'}
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-500 leading-tight pt-1">
+                <div className="text-[11px] text-outline leading-tight pt-1">
                   IP: Kampus UPGRIS (Lab Komputasi 3) • Device: Desktop Browser Chrome 128.0
                 </div>
               </div>
 
               {/* Verification Proof Badge */}
-              <div className="rounded-lg bg-slate-50 p-space-sm mb-space-md flex items-start gap-space-xs text-slate-700 font-caption text-caption leading-snug border border-slate-200">
-                <span className="material-symbols-outlined text-[16px] text-emerald-600 mt-0.5">shield</span>
+              <div className="rounded-lg bg-surface-container p-space-sm mb-space-md flex items-start gap-space-xs text-on-surface-variant font-caption text-caption leading-snug border border-outline-variant">
+                <span className="material-symbols-outlined text-[16px] text-success-ink mt-0.5">shield</span>
                 <span>Token Sesi Valid — Kehadiran disimpan permanen di database SPADA LMS UPGRIS.</span>
               </div>
             </div>
@@ -540,13 +540,13 @@ export default function StatusPresensi({ onNavigate }) {
             <div className="flex flex-col gap-space-sm mt-auto pt-space-sm">
               <button
                 aria-disabled="true"
-                className="w-full h-12 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-label-md text-label-md font-semibold flex items-center justify-center gap-2 cursor-default select-none shadow-none"
+                className="w-full h-12 rounded-lg bg-success-soft text-success-ink border border-success-border font-label-md text-label-md font-semibold flex items-center justify-center gap-2 cursor-default select-none shadow-none"
                 disabled
               >
-                <span className="material-symbols-outlined text-[20px] text-emerald-600">task_alt</span>
+                <span className="material-symbols-outlined text-[20px] text-success-ink">task_alt</span>
                 <span>Kehadiran Sudah Tercatat</span>
               </button>
-              <div className="flex items-center justify-center gap-1.5 text-slate-500 font-caption text-caption text-center">
+              <div className="flex items-center justify-center gap-1.5 text-outline font-caption text-caption text-center">
                 <span className="material-symbols-outlined text-[14px]">auto_graph</span>
                 <span>Dihitung ke syarat kelayakan ujian UTS P-8 (Bobot 100%).</span>
               </div>
@@ -556,50 +556,50 @@ export default function StatusPresensi({ onNavigate }) {
 
         {/* ==================== CARD 4: STATE D ==================== */}
         {(filter === 'all' || filter === 'state-d') && (
-          <div className="flex flex-col justify-between rounded-xl bg-white text-slate-800 p-space-lg shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border border-rose-200">
+          <div className="flex flex-col justify-between rounded-xl bg-surface text-on-surface p-space-lg shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1 border border-danger-border">
             <div>
               {/* Top State Indicator Badge */}
               <div className="flex items-center justify-between mb-space-md">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-label-sm text-label-sm font-semibold tracking-wide border border-rose-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-danger-soft text-danger-ink font-label-sm text-label-sm font-semibold tracking-wide border border-danger-border">
+                  <span className="w-1.5 h-1.5 rounded-full bg-danger-solid"></span>
                   STATE D — SESI DITUTUP (EXPIRED)
                 </span>
-                <span className="text-rose-700 font-caption text-caption font-mono font-bold">BR-011</span>
+                <span className="text-danger-ink font-caption text-caption font-mono font-bold">BR-011</span>
               </div>
 
               {/* Card Header */}
               <div className="flex items-start justify-between gap-space-sm pb-space-sm mb-space-sm">
                 <div className="flex items-center gap-space-sm">
-                  <div className="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600 shadow-sm border border-rose-100">
+                  <div className="w-10 h-10 rounded-lg bg-danger-soft flex items-center justify-center text-danger-ink shadow-sm border border-danger-border">
                     <span className="material-symbols-outlined text-[24px]">cancel</span>
                   </div>
                   <div>
-                    <h3 className="font-title-md text-title-md text-slate-900 font-bold leading-tight">Presensi Pertemuan 3</h3>
-                    <span className="font-caption text-caption text-rose-600 font-semibold">Toleransi Berakhir</span>
+                    <h3 className="font-title-md text-title-md text-on-surface font-bold leading-tight">Presensi Pertemuan 3</h3>
+                    <span className="font-caption text-caption text-danger-ink font-semibold">Toleransi Berakhir</span>
                   </div>
                 </div>
               </div>
 
               {/* Status Pill: Slate Closed + Prominent Red Alpa */}
               <div className="flex flex-wrap items-center gap-2 mb-space-sm">
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-label-sm text-label-sm font-medium border border-slate-200">
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-medium border border-outline-variant">
                   <span className="material-symbols-outlined text-[14px]">lock_clock</span>
                   <span>Sesi Ditutup (09:30)</span>
                 </div>
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-label-sm text-label-sm font-bold border border-rose-200">
+                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-danger-soft text-danger-ink font-label-sm text-label-sm font-bold border border-danger-border">
                   <span className="material-symbols-outlined text-[14px]">cancel</span>
                   <span>STATUS: ALPA</span>
                 </div>
               </div>
 
               {/* Body Explanation */}
-              <p className="font-body-sm text-body-sm text-slate-600 leading-relaxed mb-space-md">
+              <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed mb-space-md">
                 Sesi presensi telah ditutup pukul 09:30 WIB dan Anda tidak mengisi kehadiran dalam masa toleransi. Status default tercatat ALPA.
               </p>
 
               {/* Warning Strip Threshold */}
-              <div className="rounded-lg bg-amber-50 p-space-sm mb-space-md flex items-start gap-space-xs text-amber-900 font-caption text-caption leading-snug border border-amber-200">
-                <span className="material-symbols-outlined text-[16px] text-amber-600 mt-0.5">warning</span>
+              <div className="rounded-lg bg-warning-soft p-space-sm mb-space-md flex items-start gap-space-xs text-warning-ink font-caption text-caption leading-snug border border-warning-border">
+                <span className="material-symbols-outlined text-[16px] text-warning-ink mt-0.5">warning</span>
                 <span>Dapat mempengaruhi ambang batas kehadiran syarat UTS (Minimum 70% per BR-012).</span>
               </div>
             </div>
@@ -607,14 +607,14 @@ export default function StatusPresensi({ onNavigate }) {
             {/* Footer & Action */}
             <div className="flex flex-col gap-space-sm mt-auto pt-space-sm">
               <button
-                className="w-full h-12 rounded-lg bg-white hover:bg-slate-50 text-slate-700 font-label-md text-label-md font-semibold flex items-center justify-center gap-2 shadow-sm border border-slate-200 transition-colors cursor-pointer"
+                className="w-full h-12 rounded-lg bg-surface hover:bg-surface-container text-on-surface-variant font-label-md text-label-md font-semibold flex items-center justify-center gap-2 shadow-sm border border-outline-variant transition-colors cursor-pointer"
                 onClick={() => setIsCorrectionModalOpen(true)}
                 type="button"
               >
-                <span className="material-symbols-outlined text-[20px] text-slate-500">assignment_late</span>
+                <span className="material-symbols-outlined text-[20px] text-outline">assignment_late</span>
                 <span>Ajukan Koreksi ke Dosen</span>
               </button>
-              <div className="flex items-center justify-center gap-1.5 text-slate-500 font-caption text-caption text-center">
+              <div className="flex items-center justify-center gap-1.5 text-outline font-caption text-caption text-center">
                 <span className="material-symbols-outlined text-[14px]">gavel</span>
                 <span>Koreksi hanya dapat disetujui Dosen Pengampu (FR-039).</span>
               </div>
@@ -701,17 +701,17 @@ export default function StatusPresensi({ onNavigate }) {
           toast.visible ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-32 opacity-0 pointer-events-none'
         }`}
       >
-        <div className="bg-white text-slate-800 rounded-xl p-space-md shadow-2xl flex items-center gap-space-md max-w-md border border-slate-200">
+        <div className="bg-surface text-on-surface rounded-xl p-space-md shadow-2xl flex items-center gap-space-md max-w-md border border-outline-variant">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${toast.iconBg}`}>
             <span className="material-symbols-outlined text-[24px]">{toast.icon}</span>
           </div>
           <div className="flex flex-col">
-            <span className="font-title-md text-title-md font-bold text-slate-900 leading-tight">{toast.title}</span>
-            <span className="font-caption text-caption text-slate-600 mt-0.5">{toast.message}</span>
+            <span className="font-title-md text-title-md font-bold text-on-surface leading-tight">{toast.title}</span>
+            <span className="font-caption text-caption text-on-surface-variant mt-0.5">{toast.message}</span>
           </div>
           <button
             aria-label="Tutup Notifikasi"
-            className="text-slate-400 hover:text-slate-600 ml-auto shrink-0 p-1"
+            className="text-outline hover:text-on-surface-variant ml-auto shrink-0 p-1"
             onClick={dismissToast}
             type="button"
           >
@@ -722,21 +722,21 @@ export default function StatusPresensi({ onNavigate }) {
 
       {/* MODAL FOR DISPENSATION / CORRECTION REQUEST (FR-039 DEMO) */}
       {isCorrectionModalOpen && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-space-md">
-          <div className="bg-white text-slate-900 rounded-xl max-w-lg w-full p-space-lg shadow-2xl flex flex-col gap-space-md border border-slate-200 animate-scale-up">
-            <div className="flex items-center justify-between pb-space-sm border-b border-slate-200">
+        <div className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm flex items-center justify-center p-space-md">
+          <div className="bg-surface text-on-surface rounded-xl max-w-lg w-full p-space-lg shadow-2xl flex flex-col gap-space-md border border-outline-variant animate-scale-up">
+            <div className="flex items-center justify-between pb-space-sm border-b border-outline-variant">
               <div className="flex items-center gap-space-sm">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
+                <div className="w-10 h-10 rounded-lg bg-info-soft text-info-ink flex items-center justify-center border border-info-border">
                   <span className="material-symbols-outlined text-[24px]">assignment_turned_in</span>
                 </div>
                 <div>
-                  <h4 className="font-title-lg text-title-lg font-bold text-slate-900">Pengajuan Koreksi Presensi</h4>
-                  <span className="font-caption text-caption text-slate-500">Sesuai Regulasi Akademik FR-039</span>
+                  <h4 className="font-title-lg text-title-lg font-bold text-on-surface">Pengajuan Koreksi Presensi</h4>
+                  <span className="font-caption text-caption text-outline">Sesuai Regulasi Akademik FR-039</span>
                 </div>
               </div>
               <button
                 aria-label="Tutup Dialog"
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg transition-colors"
+                className="text-outline hover:text-on-surface-variant p-1 rounded-lg transition-colors"
                 onClick={() => setIsCorrectionModalOpen(false)}
                 type="button"
               >
@@ -744,17 +744,17 @@ export default function StatusPresensi({ onNavigate }) {
               </button>
             </div>
 
-            <div className="text-slate-600 font-body-sm text-body-sm bg-slate-50 p-space-sm rounded-lg border border-slate-200">
-              Anda mengajukan permohonan dispensasi presensi untuk <strong className="text-slate-800">Pertemuan 3: Rekayasa Perangkat Lunak (TI-A)</strong> kepada <strong className="text-slate-800">Dr. Bayu Pratama, M.Kom.</strong>
+            <div className="text-on-surface-variant font-body-sm text-body-sm bg-surface-container p-space-sm rounded-lg border border-outline-variant">
+              Anda mengajukan permohonan dispensasi presensi untuk <strong className="text-on-surface">Pertemuan 3: Rekayasa Perangkat Lunak (TI-A)</strong> kepada <strong className="text-on-surface">Dr. Bayu Pratama, M.Kom.</strong>
             </div>
 
             <form onSubmit={handleCorrectionSubmit} className="flex flex-col gap-space-md">
               <div className="flex flex-col gap-space-xs">
-                <label className="font-label-sm text-label-sm text-slate-700 font-semibold">
-                  Alasan Keterlambatan / Ketidakhadiran <span className="text-red-500">*</span>
+                <label className="font-label-sm text-label-sm text-on-surface-variant font-semibold">
+                  Alasan Keterlambatan / Ketidakhadiran <span className="text-danger-ink">*</span>
                 </label>
                 <select
-                  className="w-full rounded-lg bg-slate-50 border border-slate-300 p-2.5 font-body-sm text-body-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full rounded-lg bg-surface-container border border-outline-variant p-2.5 font-body-sm text-body-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                   value={correctionReason}
                   onChange={(e) => setCorrectionReason(e.target.value)}
                 >
@@ -766,11 +766,11 @@ export default function StatusPresensi({ onNavigate }) {
               </div>
 
               <div className="flex flex-col gap-space-xs">
-                <label className="font-label-sm text-label-sm text-slate-700 font-semibold">
-                  Catatan Tambahan untuk Dosen <span className="text-red-500">*</span>
+                <label className="font-label-sm text-label-sm text-on-surface-variant font-semibold">
+                  Catatan Tambahan untuk Dosen <span className="text-danger-ink">*</span>
                 </label>
                 <textarea
-                  className="w-full rounded-lg bg-slate-50 border border-slate-300 p-2.5 font-body-sm text-body-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full rounded-lg bg-surface-container border border-outline-variant p-2.5 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                   placeholder="Tuliskan keterangan detail kendala Anda..."
                   rows="3"
                   value={correctionNote}
@@ -779,16 +779,16 @@ export default function StatusPresensi({ onNavigate }) {
                 ></textarea>
               </div>
 
-              <div className="flex items-center justify-end gap-space-sm pt-space-xs border-t border-slate-200">
+              <div className="flex items-center justify-end gap-space-sm pt-space-xs border-t border-outline-variant">
                 <button
-                  className="px-space-md py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-label-md text-label-md font-medium transition-colors"
+                  className="px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-highest text-on-surface-variant font-label-md text-label-md font-medium transition-colors"
                   onClick={() => setIsCorrectionModalOpen(false)}
                   type="button"
                 >
                   Batal
                 </button>
                 <button
-                  className="px-space-md py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-label-md text-label-md font-semibold transition-colors flex items-center gap-1.5 shadow-md disabled:opacity-50"
+                  className="px-space-md py-2 rounded-lg bg-primary hover:bg-primary-hover text-on-primary font-label-md text-label-md font-semibold transition-colors flex items-center gap-1.5 shadow-md disabled:opacity-50"
                   disabled={isSubmittingCorrection}
                   type="submit"
                 >

@@ -38,7 +38,10 @@ function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange, activeNavPath
     }
   }, [activeRole, activeNavPath]);
 
-  const asideClass = `fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ${
+  // `z-[45]` menempatkan drawer di atas scrim mobile (`z-30`) namun tetap di
+  // bawah Header (`z-50`), sehingga tombol menu di Header tetap bisa diklik
+  // untuk menutup drawer.
+  const asideClass = `fixed top-16 left-0 bottom-0 w-64 bg-surface-container-low z-[45] flex flex-col border-r border-outline-variant/20 transition-transform duration-300 ${
     isOpen ? 'translate-x-0' : '-translate-x-full'
   }`;
 

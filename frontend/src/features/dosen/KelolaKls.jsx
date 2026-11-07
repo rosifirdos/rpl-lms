@@ -41,7 +41,7 @@ const formatBytes = (bytes) => {
 
 const MEETING_TAG = (number) => {
   if (number === 8) {
-    return { label: 'Ujian Tengah Semester (UTS)', className: 'bg-mvp-warning-tint text-mvp-warning' };
+    return { label: 'Ujian Tengah Semester (UTS)', className: 'bg-mvp-warning-tint text-mvp-warning-ink' };
   }
   if (number === 16) {
     return { label: 'Ujian Akhir Semester (UAS)', className: 'bg-mvp-danger-tint text-mvp-danger-strong' };
@@ -54,7 +54,7 @@ const MEETING_TAG = (number) => {
 
 const PRESENCE_STYLE = {
   HADIR: { label: 'HADIR', icon: 'check_circle', className: 'text-mvp-success-strong bg-mvp-success-tint' },
-  SAKIT: { label: 'SAKIT', icon: 'medical_services', className: 'text-mvp-warning bg-mvp-warning-tint' },
+  SAKIT: { label: 'SAKIT', icon: 'medical_services', className: 'text-mvp-warning-ink bg-mvp-warning-tint' },
   IZIN: { label: 'IZIN', icon: 'event_available', className: 'text-mvp-primary-strong bg-mvp-primary-tint' },
   ALPA: { label: 'ALPA', icon: 'cancel', className: 'text-mvp-danger-strong bg-mvp-danger-tint' },
   BELUM: { label: 'BELUM', icon: 'pending', className: 'text-mvp-muted bg-mvp-subtle' },
@@ -391,7 +391,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
   const tabClass = (tab) =>
     `pb-3 text-sm whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer border-b-2 ${
       activeTab === tab
-        ? 'text-mvp-primary font-bold border-mvp-primary'
+        ? 'text-mvp-primary-strong font-bold border-mvp-primary'
         : 'text-mvp-muted hover:text-mvp-ink font-medium border-transparent'
     }`;
 
@@ -489,22 +489,22 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 pt-1 text-xs text-mvp-body">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-mvp-primary">group</span>
+                  <span className="material-symbols-outlined text-[18px] text-mvp-primary-strong">group</span>
                   <span>
                     {ENROLLED_STUDENTS.length} Mahasiswa Terdaftar{' '}
                     <span className="text-mvp-muted">(Maks: 40)</span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-mvp-warning">calendar_month</span>
+                  <span className="material-symbols-outlined text-[18px] text-mvp-warning-ink">calendar_month</span>
                   <span>{course.semester}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-mvp-primary">auto_stories</span>
+                  <span className="material-symbols-outlined text-[18px] text-mvp-primary-strong">auto_stories</span>
                   <span>{course.totalMeetings} Pertemuan (SN-Dikti OBE)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px] text-mvp-success">schedule</span>
+                  <span className="material-symbols-outlined text-[18px] text-mvp-success-ink">schedule</span>
                   <span className="truncate">{course.schedule}</span>
                 </div>
               </div>
@@ -530,7 +530,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
               <button
                 type="button"
                 onClick={() => onNavigate && onNavigate('pemeriksaan-tugas')}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-mvp-primary hover:bg-mvp-primary-strong text-white font-label-md font-semibold shadow-md transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-mvp-primary hover:bg-mvp-primary-hover text-white font-label-md font-semibold shadow-md transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">assignment_turned_in</span>
                 <span>Periksa Tugas</span>
@@ -572,7 +572,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
             <div className="flex-1 w-full space-y-4 min-w-0">
               <div className="bg-mvp-card rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="material-symbols-outlined text-mvp-primary text-[20px]">account_tree</span>
+                  <span className="material-symbols-outlined text-mvp-primary-strong text-[20px]">account_tree</span>
                   <span className="font-title-md text-title-md text-mvp-ink font-semibold">
                     Silabus &amp; Sesi Perkuliahan
                   </span>
@@ -706,7 +706,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
 
                           {isExam ? (
                             <div className="p-4 rounded-xl bg-mvp-subtle text-xs text-mvp-body flex items-center gap-2">
-                              <span className="material-symbols-outlined text-[18px] text-mvp-warning">
+                              <span className="material-symbols-outlined text-[18px] text-mvp-warning-ink">
                                 info
                               </span>
                               <span>
@@ -719,7 +719,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
                               {meeting.materials.length > 0 && (
                                 <div className="space-y-2">
                                   <h4 className="text-sm font-bold text-mvp-ink flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-mvp-primary text-[18px]">
+                                    <span className="material-symbols-outlined text-mvp-primary-strong text-[18px]">
                                       folder_open
                                     </span>
                                     <span>Materi Pembelajaran ({meeting.materials.length} Berkas)</span>
@@ -731,7 +731,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
                                         className="p-3 rounded-xl bg-mvp-subtle flex items-center justify-between gap-3"
                                       >
                                         <div className="flex items-center gap-3 min-w-0">
-                                          <div className="w-9 h-9 rounded-lg bg-mvp-card text-mvp-danger flex items-center justify-center shrink-0">
+                                          <div className="w-9 h-9 rounded-lg bg-mvp-card text-mvp-danger-ink flex items-center justify-center shrink-0">
                                             <span className="material-symbols-outlined text-[20px]">
                                               {material.type === 'pdf' ? 'picture_as_pdf' : 'description'}
                                             </span>
@@ -833,7 +833,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
                         ? 'bg-mvp-success-tint text-mvp-success-strong'
                         : activeSessionState === 'CLOSED'
                           ? 'bg-mvp-subtle text-mvp-muted'
-                          : 'bg-mvp-warning-tint text-mvp-warning'
+                          : 'bg-mvp-warning-tint text-mvp-warning-ink'
                     }`}
                   >
                     {activeSessionState === 'OPEN'
@@ -916,7 +916,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
 
                 {activeIsExam ? (
                   <div className="p-4 rounded-lg bg-mvp-warning-soft text-center space-y-2">
-                    <span className="material-symbols-outlined text-[28px] text-mvp-warning">quiz</span>
+                    <span className="material-symbols-outlined text-[28px] text-mvp-warning-ink">quiz</span>
                     <p className="text-sm font-semibold text-mvp-ink">Pekan Evaluasi</p>
                     <p className="text-[11px] text-mvp-muted leading-relaxed">
                       P{activeMeeting.number} adalah pekan {activeMeeting.number === 8 ? 'Ujian Tengah Semester' : 'Ujian Akhir Semester'}.
@@ -932,7 +932,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
                   </div>
                 ) : activeSessionState === 'NOT_OPENED' && (
                   <div className="p-4 rounded-lg bg-mvp-subtle text-center space-y-2">
-                    <span className="material-symbols-outlined text-[28px] text-mvp-warning">lock_clock</span>
+                    <span className="material-symbols-outlined text-[28px] text-mvp-warning-ink">lock_clock</span>
                     <p className="text-sm font-semibold text-mvp-ink">Presensi Belum Dibuka</p>
                     <p className="text-[11px] text-mvp-muted leading-relaxed">
                       Batas toleransi default 15 menit dengan verifikasi geolokasi / IP kampus.
@@ -940,7 +940,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
                     <button
                       type="button"
                       onClick={() => handleToggleSession(activeMeeting.id)}
-                      className="w-full py-2 rounded-lg bg-mvp-primary hover:bg-mvp-primary-strong text-white text-sm font-semibold transition-colors mt-2 cursor-pointer"
+                      className="w-full py-2 rounded-lg bg-mvp-primary hover:bg-mvp-primary-hover text-white text-sm font-semibold transition-colors mt-2 cursor-pointer"
                     >
                       Buka Sesi Presensi
                     </button>
@@ -949,7 +949,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
 
                 {!activeIsExam && activeSessionState === 'CLOSED' && (
                   <div className="p-4 rounded-lg bg-mvp-subtle text-center space-y-2">
-                    <span className="material-symbols-outlined text-[28px] text-mvp-success">
+                    <span className="material-symbols-outlined text-[28px] text-mvp-success-ink">
                       check_circle
                     </span>
                     <p className="text-sm font-semibold text-mvp-ink">Sesi Selesai &amp; Terkunci</p>
@@ -981,7 +981,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
                   <span className="text-xs font-bold text-mvp-muted uppercase tracking-wider">
                     Rasio Kehadiran Kelas
                   </span>
-                  <span className="material-symbols-outlined text-mvp-success text-[18px]">analytics</span>
+                  <span className="material-symbols-outlined text-mvp-success-ink text-[18px]">analytics</span>
                 </div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-2xl font-bold text-mvp-ink">{classAttendancePct}%</span>
@@ -1028,7 +1028,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
               <button
                 type="button"
                 onClick={() => onNavigate && onNavigate('rekap-kehadiran')}
-                className="px-3 py-1.5 rounded-lg bg-mvp-primary hover:bg-mvp-primary-strong text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-mvp-primary hover:bg-mvp-primary-hover text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                 <span>Buka Rekap Lengkap</span>
@@ -1046,7 +1046,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
                         key={meeting.id}
                         className={`py-2.5 px-2 text-center ${
                           meeting.number === 8
-                            ? 'bg-mvp-warning-tint text-mvp-warning'
+                            ? 'bg-mvp-warning-tint text-mvp-warning-ink'
                             : meeting.number === 16
                               ? 'bg-mvp-danger-tint text-mvp-danger-strong'
                               : ''
@@ -1203,7 +1203,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
               </span>
             </div>
 
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-mvp-warning-soft text-mvp-warning text-[11px]">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-mvp-warning-soft text-mvp-warning-ink text-[11px]">
               <span className="material-symbols-outlined text-[16px]">info</span>
               <span>
                 Ambang batas kehadiran 70% diberlakukan sebagai syarat akses ujian pada tahap evaluasi
@@ -1251,7 +1251,7 @@ function EditMeetingModal({ meeting, onSave, onClose }) {
   const [description, setDescription] = useState(meeting.description);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] bg-overlay backdrop-blur-sm flex items-center justify-center p-4">
       <div
         role="dialog"
         aria-modal="true"
@@ -1303,7 +1303,7 @@ function EditMeetingModal({ meeting, onSave, onClose }) {
           <button
             type="button"
             onClick={() => onSave(meeting.id, `P${meeting.number} • ${title}`, description)}
-            className="px-4 py-2 rounded-lg bg-mvp-primary hover:bg-mvp-primary-strong text-white text-sm font-bold shadow-md transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-lg bg-mvp-primary hover:bg-mvp-primary-hover text-white text-sm font-bold shadow-md transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[16px]">save</span>
             <span>Simpan Perubahan</span>
@@ -1316,14 +1316,14 @@ function EditMeetingModal({ meeting, onSave, onClose }) {
 
 function DeleteMaterialDialog({ material, onConfirm, onCancel }) {
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] bg-overlay backdrop-blur-sm flex items-center justify-center p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-material-title"
         className="bg-mvp-card rounded-2xl max-w-md w-full p-6 border border-mvp-line shadow-2xl text-mvp-ink"
       >
-        <div className="w-12 h-12 rounded-full bg-mvp-danger-tint text-mvp-danger flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-full bg-mvp-danger-tint text-mvp-danger-ink flex items-center justify-center mb-4">
           <span className="material-symbols-outlined text-[24px]">delete</span>
         </div>
 
@@ -1335,7 +1335,7 @@ function DeleteMaterialDialog({ material, onConfirm, onCancel }) {
           diakses lagi oleh mahasiswa yang terdaftar.
         </p>
 
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-mvp-warning-tint text-mvp-warning text-[11px] mb-5">
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-mvp-warning-tint text-mvp-warning-ink text-[11px] mb-5">
           <span className="material-symbols-outlined text-[16px]">warning</span>
           <span>Tindakan ini tidak dapat dibatalkan.</span>
         </div>
@@ -1425,7 +1425,7 @@ function DownloadStatusCard({ state, onDismiss, onBackToDashboard }) {
   return (
     <div className="rounded-xl border border-mvp-line bg-mvp-card p-3 space-y-2">
       <div className="flex items-center gap-2 min-w-0">
-        <span className="material-symbols-outlined text-[18px] text-mvp-primary animate-pulse">
+        <span className="material-symbols-outlined text-[18px] text-mvp-primary-strong animate-pulse">
           shield
         </span>
         <div className="min-w-0 flex-1">
@@ -1576,7 +1576,7 @@ function UploadMaterialModal({ meeting, course, onClose, onUploaded }) {
       : 'border-mvp-line bg-mvp-page hover:border-mvp-primary/60 hover:bg-mvp-subtle';
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[9999] bg-overlay backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div
         role="dialog"
         aria-modal="true"
@@ -1608,7 +1608,7 @@ function UploadMaterialModal({ meeting, course, onClose, onUploaded }) {
               htmlFor="upload-material-title"
               className="block text-[11px] uppercase font-bold text-mvp-muted mb-1"
             >
-              Judul Materi <span className="text-mvp-danger">*</span>
+              Judul Materi <span className="text-mvp-danger-ink">*</span>
             </label>
             <input
               id="upload-material-title"
@@ -1676,7 +1676,7 @@ function UploadMaterialModal({ meeting, course, onClose, onUploaded }) {
 
             {phase === 'idle' && !error && (
               <div className="space-y-2">
-                <span className="material-symbols-outlined text-[36px] text-mvp-primary">
+                <span className="material-symbols-outlined text-[36px] text-mvp-primary-strong">
                   cloud_upload
                 </span>
                 <p className="text-sm font-semibold text-mvp-ink">
@@ -1748,7 +1748,7 @@ function UploadMaterialModal({ meeting, course, onClose, onUploaded }) {
 
             {phase === 'uploading' && file && (
               <div className="space-y-2">
-                <span className="material-symbols-outlined text-[32px] text-mvp-primary">
+                <span className="material-symbols-outlined text-[32px] text-mvp-primary-strong">
                   cloud_upload
                 </span>
                 <p className="text-sm font-semibold text-mvp-ink">Mengunggah berkas…</p>
@@ -1816,7 +1816,7 @@ function UploadMaterialModal({ meeting, course, onClose, onUploaded }) {
             disabled={!canSubmit}
             className={`px-4 py-2 rounded-lg text-white text-sm font-bold shadow-md transition-colors flex items-center gap-1.5 ${
               canSubmit
-                ? 'bg-mvp-primary hover:bg-mvp-primary-strong cursor-pointer'
+                ? 'bg-mvp-primary hover:bg-mvp-primary-hover cursor-pointer'
                 : 'bg-mvp-muted opacity-60 cursor-not-allowed'
             }`}
           >

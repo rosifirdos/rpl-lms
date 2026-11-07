@@ -89,7 +89,7 @@ export default function DaftarHadirKoreksi({ onNavigate, onRoleChange }) {
 
       {/* Correction Modal */}
       {correctionModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-surface-container rounded-2xl max-w-md w-full p-6 border border-outline-variant/30 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
               <div>
@@ -114,10 +114,10 @@ export default function DaftarHadirKoreksi({ onNavigate, onRoleChange }) {
               </span>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { key: 'HADIR', label: 'HADIR', bg: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' },
-                  { key: 'SAKIT', label: 'SAKIT', bg: 'bg-sky-500/20 text-sky-400 border-sky-500/40' },
-                  { key: 'IZIN', label: 'IZIN', bg: 'bg-amber-500/20 text-amber-400 border-amber-500/40' },
-                  { key: 'ALPA', label: 'ALPA', bg: 'bg-rose-500/20 text-rose-400 border-rose-500/40' },
+                  { key: 'HADIR', label: 'HADIR', bg: 'bg-success-soft text-success-ink border-success-border' },
+                  { key: 'SAKIT', label: 'SAKIT', bg: 'bg-info-soft text-info-ink border-info-border' },
+                  { key: 'IZIN', label: 'IZIN', bg: 'bg-warning-soft text-warning-ink border-warning-border' },
+                  { key: 'ALPA', label: 'ALPA', bg: 'bg-danger-soft text-danger-ink border-danger-border' },
                 ].map((item) => (
                   <button
                     key={item.key}
@@ -206,8 +206,8 @@ export default function DaftarHadirKoreksi({ onNavigate, onRoleChange }) {
                   PERTEMUAN 3 (P-3)
                 </span>
                 {sessionActive ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-label-sm text-xs font-semibold border border-emerald-500/30">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-success-soft text-success-ink font-label-sm text-xs font-semibold border border-success-border">
+                    <span className="w-2 h-2 rounded-full bg-success-solid animate-pulse"></span>
                     Sesi Presensi Aktif
                   </span>
                 ) : (
@@ -235,8 +235,8 @@ export default function DaftarHadirKoreksi({ onNavigate, onRoleChange }) {
                 }}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg font-label-md text-label-md transition-all ${
                   sessionActive
-                    ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/40'
-                    : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40'
+                    ? 'bg-danger-soft text-danger-ink hover:bg-danger-soft/60 border border-danger-border'
+                    : 'bg-success-soft text-success-ink hover:bg-success-soft/60 border border-success-border'
                 }`}
               >
                 <span className="material-symbols-outlined text-[18px]">
@@ -258,42 +258,42 @@ export default function DaftarHadirKoreksi({ onNavigate, onRoleChange }) {
 
         {/* 4 Summary Metrics Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-success-soft border border-success-border flex items-center justify-between">
             <div>
-              <span className="text-caption font-bold uppercase tracking-wider text-emerald-400">HADIR</span>
-              <div className="text-headline-md font-extrabold text-emerald-400 leading-tight mt-1">{hadirCount}</div>
+              <span className="text-caption font-bold uppercase tracking-wider text-success-ink">HADIR</span>
+              <div className="text-headline-md font-extrabold text-success-ink leading-tight mt-1">{hadirCount}</div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-success-soft text-success-ink flex items-center justify-center">
               <span className="material-symbols-outlined text-[22px]">check_circle</span>
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-info-soft border border-info-border flex items-center justify-between">
             <div>
-              <span className="text-caption font-bold uppercase tracking-wider text-sky-400">SAKIT</span>
-              <div className="text-headline-md font-extrabold text-sky-400 leading-tight mt-1">{sakitCount}</div>
+              <span className="text-caption font-bold uppercase tracking-wider text-info-ink">SAKIT</span>
+              <div className="text-headline-md font-extrabold text-info-ink leading-tight mt-1">{sakitCount}</div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-info-soft text-info-ink flex items-center justify-center">
               <span className="material-symbols-outlined text-[22px]">medical_services</span>
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-warning-soft border border-warning-border flex items-center justify-between">
             <div>
-              <span className="text-caption font-bold uppercase tracking-wider text-amber-400">IZIN</span>
-              <div className="text-headline-md font-extrabold text-amber-400 leading-tight mt-1">{izinCount}</div>
+              <span className="text-caption font-bold uppercase tracking-wider text-warning-ink">IZIN</span>
+              <div className="text-headline-md font-extrabold text-warning-ink leading-tight mt-1">{izinCount}</div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-warning-soft text-warning-ink flex items-center justify-center">
               <span className="material-symbols-outlined text-[22px]">description</span>
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-danger-soft border border-danger-border flex items-center justify-between">
             <div>
-              <span className="text-caption font-bold uppercase tracking-wider text-rose-400">ALPA</span>
-              <div className="text-headline-md font-extrabold text-rose-400 leading-tight mt-1">{alpaCount}</div>
+              <span className="text-caption font-bold uppercase tracking-wider text-danger-ink">ALPA</span>
+              <div className="text-headline-md font-extrabold text-danger-ink leading-tight mt-1">{alpaCount}</div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-danger-soft text-danger-ink flex items-center justify-center">
               <span className="material-symbols-outlined text-[22px]">cancel</span>
             </div>
           </div>
@@ -358,12 +358,12 @@ export default function DaftarHadirKoreksi({ onNavigate, onRoleChange }) {
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
                           st.status === 'HADIR'
-                            ? 'bg-emerald-500/20 text-emerald-400'
+                            ? 'bg-success-soft text-success-ink'
                             : st.status === 'SAKIT'
-                            ? 'bg-sky-500/20 text-sky-400'
+                            ? 'bg-info-soft text-info-ink'
                             : st.status === 'IZIN'
-                            ? 'bg-amber-500/20 text-amber-400'
-                            : 'bg-rose-500/20 text-rose-400'
+                            ? 'bg-warning-soft text-warning-ink'
+                            : 'bg-danger-soft text-danger-ink'
                         }`}
                       >
                         {st.status}

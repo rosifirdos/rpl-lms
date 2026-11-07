@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ThemeToggle from '../../components/ThemeToggle';
 
 /**
  * ForgotPassword — feature component (auth)
@@ -102,14 +103,14 @@ export default function ForgotPassword({ onNavigate, onBack }) {
     <div className="min-h-screen flex flex-col justify-between bg-surface font-body-md text-body-md text-on-surface relative overflow-x-hidden selection:bg-primary selection:text-on-primary">
 
       {/* Decorative Radial Ambient Glow */}
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(59,130,246,0.15),rgba(255,255,255,0))]" />
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgb(var(--primary)/0.15),rgb(var(--surface)/0))]" />
 
       {/* ── Header Portal ── */}
       <header className="relative z-10 w-full pt-margin-mobile md:pt-margin">
         <div className="w-full max-w-7xl mx-auto px-gutter-mobile md:px-gutter flex items-center justify-between">
           {/* Brand */}
           <div className="flex items-center gap-space-md">
-            <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+            <div className="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary shadow-[0_1px_8px_rgb(var(--scrim)/0.04)]">
               <span className="material-symbols-outlined text-[24px]">school</span>
             </div>
             <div className="flex flex-col">
@@ -120,10 +121,13 @@ export default function ForgotPassword({ onNavigate, onBack }) {
             </div>
           </div>
 
-          {/* Status Aktif */}
-          <div className="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container-low">
-            <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
-            <span className="font-label-sm text-label-sm text-tertiary">Sistem Aktif</span>
+          {/* Pengalih tema + status aktif */}
+          <div className="flex items-center gap-space-sm">
+            <ThemeToggle variant="labeled" />
+            <div className="hidden sm:flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-container-low">
+              <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
+              <span className="font-label-sm text-label-sm text-tertiary">Sistem Aktif</span>
+            </div>
           </div>
         </div>
       </header>
@@ -140,28 +144,28 @@ export default function ForgotPassword({ onNavigate, onBack }) {
           <div className="w-full max-w-[480px] mx-auto">
 
             {/* Card utama */}
-            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-[0_20px_35px_-10px_rgba(2,15,30,0.7),0_0_0_1px_rgba(255,255,255,0.06)] relative overflow-hidden text-[#1F2937]">
+            <div className="bg-surface rounded-2xl p-6 sm:p-8 shadow-[0_20px_35px_-10px_rgb(var(--scrim)/0.35),0_0_0_1px_rgb(var(--on-surface)/0.06)] relative overflow-hidden text-on-surface">
 
               {/* Accent bar institusional */}
-              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#2563EB] via-[#38BDF8] to-[#10B981]" />
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-secondary to-tertiary" />
 
               {/* Micro-chip institusi */}
               <div className="flex justify-center mb-6">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F1F5F9] text-[#475569] font-caption text-caption tracking-wider uppercase font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB]" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-caption text-caption tracking-wider uppercase font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                   SPADA LMS &bull; UPGRIS
                 </span>
               </div>
 
               {/* Icon & Judul */}
               <div className="flex flex-col items-center text-center mb-6">
-                <div className="w-16 h-16 rounded-full bg-[#EFF6FF] flex items-center justify-center text-[#2563EB] shadow-inner mb-4 transition-transform hover:scale-105 duration-300">
+                <div className="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center text-primary shadow-inner mb-4 transition-transform hover:scale-105 duration-300">
                   <span className="material-symbols-outlined text-[32px]">lock_reset</span>
                 </div>
-                <h1 className="font-headline-md text-[22px] font-bold text-[#1F2937] tracking-tight mb-2">
+                <h1 className="font-headline-md text-[22px] font-bold text-on-surface tracking-tight mb-2">
                   Pemulihan Kata Sandi
                 </h1>
-                <p className="font-body-md text-body-md text-[#64748B] leading-relaxed max-w-sm">
+                <p className="font-body-md text-body-md text-outline leading-relaxed max-w-sm">
                   Masukkan email terdaftar Anda. Kami akan mengirimkan tautan untuk mengatur ulang
                   kata sandi akun SPADA Anda.
                 </p>
@@ -169,18 +173,18 @@ export default function ForgotPassword({ onNavigate, onBack }) {
 
               {/* ── Notifikasi sukses (kondisional) ── */}
               {submittedEmail && (
-                <div className="mb-6 p-4 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] transition-all duration-300">
+                <div className="mb-6 p-4 rounded-xl bg-tertiary-container border border-tertiary/30 transition-all duration-300">
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-[#059669] text-[22px] flex-shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-tertiary text-[22px] flex-shrink-0 mt-0.5">
                       check_circle
                     </span>
                     <div className="flex-1">
-                      <h4 className="font-title-md text-sm font-bold text-[#065F46]">
+                      <h4 className="font-title-md text-sm font-bold text-on-tertiary-container">
                         Tautan Berhasil Dikirim!
                       </h4>
-                      <p className="font-body-sm text-body-sm text-[#047857] mt-1 leading-normal">
+                      <p className="font-body-sm text-body-sm text-on-tertiary-container/90 mt-1 leading-normal">
                         Kami telah mengirimkan instruksi ke{' '}
-                        <span className="font-semibold text-[#065F46]">{submittedEmail}</span>.
+                        <span className="font-semibold text-on-tertiary-container">{submittedEmail}</span>.
                         Silakan periksa kotak masuk atau folder spam Anda.
                       </p>
                       <button
@@ -189,8 +193,8 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                         disabled={resendCooldown > 0 || loading}
                         className={`mt-2 text-xs font-semibold underline transition-colors ${
                           resendCooldown > 0 || loading
-                            ? 'text-[#6EE7B7] cursor-not-allowed'
-                            : 'text-[#059669] hover:text-[#047857] cursor-pointer'
+                            ? 'text-outline cursor-not-allowed'
+                            : 'text-tertiary hover:text-on-tertiary-container cursor-pointer'
                         }`}
                       >
                         {loading ? (
@@ -213,12 +217,12 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="recovery-email"
-                    className="block text-xs font-semibold text-[#475569] uppercase tracking-wider"
+                    className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider"
                   >
                     EMAIL TERDAFTAR
                   </label>
                   <div className="relative rounded-lg shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-outline">
                       <span className="material-symbols-outlined text-[20px]">alternate_email</span>
                     </div>
                     <input
@@ -235,25 +239,25 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                       required
                       aria-describedby={errorMessage ? 'email-error' : undefined}
                       aria-invalid={!!errorMessage}
-                      className={`w-full pl-10 pr-4 py-2.5 rounded-lg bg-white text-[#1F2937] placeholder-[#94A3B8]
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface text-on-surface placeholder-outline
                         font-body-md text-body-md shadow-sm transition-all outline-none border
-                        focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6]
-                        ${errorMessage ? 'border-[#DC2626]' : 'border-[#CBD5E1]'}`}
+                        focus:ring-2 focus:ring-primary/20 focus:border-primary
+                        ${errorMessage ? 'border-error' : 'border-outline-variant'}`}
                     />
                   </div>
                   {errorMessage && (
-                    <p id="email-error" role="alert" className="text-xs text-[#DC2626] font-medium mt-1">
+                    <p id="email-error" role="alert" className="text-xs text-error font-medium mt-1">
                       {errorMessage}
                     </p>
                   )}
                 </div>
 
                 {/* Pill informasi keamanan */}
-                <div className="p-3 bg-[#F8FAFC] rounded-lg flex items-start gap-2.5 border border-[#E2E8F0]">
-                  <span className="material-symbols-outlined text-[#64748B] text-[18px] flex-shrink-0 mt-0.5">
+                <div className="p-3 bg-surface-container rounded-lg flex items-start gap-2.5 border border-outline-variant">
+                  <span className="material-symbols-outlined text-outline text-[18px] flex-shrink-0 mt-0.5">
                     verified_user
                   </span>
-                  <p className="font-body-sm text-[12px] leading-tight text-[#64748B]">
+                  <p className="font-body-sm text-[12px] leading-tight text-outline">
                     Tautan pemulihan berlaku selama <strong>60 menit</strong> dan hanya dapat
                     digunakan satu kali demi keamanan data akademik Anda.
                   </p>
@@ -263,16 +267,16 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-11 px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] active:bg-[#1E40AF]
-                    disabled:opacity-80 disabled:cursor-not-allowed text-white font-label-md text-label-md
-                    rounded-lg font-medium shadow-[0_4px_12px_rgba(37,99,235,0.3)]
-                    hover:shadow-[0_6px_20px_rgba(37,99,235,0.4)] transition-all
+                  className="w-full h-11 px-4 py-2 bg-primary hover:bg-primary-hover active:bg-primary-active
+                    disabled:opacity-80 disabled:cursor-not-allowed text-on-primary font-label-md text-label-md
+                    rounded-lg font-medium shadow-[0_4px_12px_rgb(var(--primary)/0.3)]
+                    hover:shadow-[0_6px_20px_rgb(var(--primary)/0.4)] transition-all
                     flex items-center justify-center gap-2 relative overflow-hidden group"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
                       <svg
-                        className="animate-spin h-5 w-5 text-on-primary-container"
+                        className="animate-spin h-5 w-5 text-on-primary"
                         fill="none"
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
@@ -296,7 +300,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
 
               {/* Divider */}
               <div className="relative my-6">
-                <div className="h-px bg-[#E2E8F0]" />
+                <div className="h-px bg-outline-variant" />
               </div>
 
               {/* Link navigasi & helpdesk */}
@@ -310,7 +314,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                       onNavigate('login');
                     }
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors py-1 group cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-hover transition-colors py-1 group cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[18px] transition-transform group-hover:-translate-x-1">
                     arrow_back
@@ -319,13 +323,13 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                 </button>
 
                 <div className="pt-2">
-                  <p className="font-body-sm text-xs text-[#64748B]">
+                  <p className="font-body-sm text-xs text-outline">
                     Butuh bantuan langsung?{' '}
                     <a
                       href="https://upt-ptik.upgris.ac.id"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="font-medium text-[#475569] hover:text-[#2563EB] underline transition-colors"
+                      className="font-medium text-on-surface-variant hover:text-primary underline transition-colors"
                     >
                       Hubungi Helpdesk IT UPGRIS
                     </a>

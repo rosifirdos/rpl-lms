@@ -41,7 +41,7 @@ function AnnouncementBanner() {
           <div className="flex flex-wrap items-center gap-space-sm pt-space-xs mt-1">
             <a
               href="#"
-              className="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md font-bold transition-all shadow-md"
+              className="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-primary hover:bg-primary-hover text-on-primary font-label-md text-label-md font-bold transition-all shadow-md"
             >
               <span className="material-symbols-outlined text-[18px]">calendar_month</span>
               <span>Lihat Central Timeline Lengkap</span>
