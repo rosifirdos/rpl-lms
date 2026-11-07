@@ -1,9 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppShell from '../../components/AppShell';
 import { adminApi } from '../../services/api';
 
 /**
- * DasborAdmin â€” Feature Component
+ * DasborAdmin — Feature Component
  *
  * Implementasi React untuk Dasbor Administrator SPADA LMS UPGRIS.
  * Memanfaatkan AppShell tunggal terpadu dengan penegakan RBAC.
@@ -26,7 +26,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
       id: 'users',
       title: 'Total Pengguna Terdaftar',
       value: '1,420',
-      badge: '1,350 Mahasiswa â€¢ 70 Dosen',
+      badge: '1,350 Mahasiswa • 70 Dosen',
       subtext: '+45 pendaftar semester ini',
       subIcon: 'arrow_upward',
       subColor: 'text-tertiary',
@@ -62,11 +62,11 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
       id: 'enrollment',
       title: 'Total Direct Enrollment',
       value: '1,280',
-      badge: 'Bebas Rebutan Kuota Manual',
-      subtext: '100% Selesai Sinkronisasi',
+      badge: 'Mandiri Admin (Tanpa KRS Manual)',
+      subtext: '98.5% Mahasiswa Aktif',
       subIcon: 'check_circle',
       subColor: 'text-tertiary',
-      rightText: 'Otomatis PTIK',
+      rightText: 'Telah Ter-enroll',
       icon: 'how_to_reg',
       iconBg: 'bg-tertiary-container/20 text-tertiary',
     },
@@ -129,7 +129,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
       id: 'log-1',
       timestamp: '2026-10-29 08:24:12',
       actor: 'Admin PTIK (admin@upgris.ac.id)',
-      actorSub: 'NIP: 19880101 â€¢ Super Administrator',
+      actorSub: 'NIP: 19880101 • Super Administrator',
       actionType: 'ENROLLMENT',
       actionBadgeClass: 'bg-tertiary-container/30 text-tertiary',
       dotColor: 'bg-tertiary',
@@ -141,11 +141,11 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
       id: 'log-2',
       timestamp: '2026-10-29 07:58:30',
       actor: 'Dr. Bayu Pratama, M.Kom.',
-      actorSub: 'NIDN: 0612345601 â€¢ Dosen',
+      actorSub: 'NIDN: 0612345601 • Dosen',
       actionType: 'GRADE_MUTATION',
       actionBadgeClass: 'bg-primary-container/30 text-primary',
       dotColor: 'bg-primary',
-      entity: 'Tugas 01 â€¢ Pemrograman Web',
+      entity: 'Tugas 01 • Pemrograman Web',
       detail: 'Penilaian 38 berkas tugas mahasiswa, rata-rata skor 86.40',
       ip: '192.168.1.104',
     },
@@ -153,7 +153,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
       id: 'log-3',
       timestamp: '2026-10-28 16:15:00',
       actor: 'Admin PTIK (admin@upgris.ac.id)',
-      actorSub: 'NIP: 19880101 â€¢ Super Administrator',
+      actorSub: 'NIP: 19880101 • Super Administrator',
       actionType: 'CONFIG_CHANGE',
       actionBadgeClass: 'bg-secondary-container/30 text-secondary',
       dotColor: 'bg-secondary',
@@ -165,11 +165,11 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
       id: 'log-4',
       timestamp: '2026-10-28 14:02:19',
       actor: 'Ir. Nina Kartika, M.T.',
-      actorSub: 'NIDN: 0628047702 â€¢ Dosen',
+      actorSub: 'NIDN: 0628047702 • Dosen',
       actionType: 'GRADE_MUTATION',
       actionBadgeClass: 'bg-primary-container/30 text-primary',
       dotColor: 'bg-primary',
-      entity: 'Presensi Sesi 4 â€¢ Basis Data',
+      entity: 'Presensi Sesi 4 • Basis Data',
       detail: 'Tutup manual sesi presensi mahasiswa (41 hadir, 1 sakit)',
       ip: '192.168.1.55',
     },
@@ -177,7 +177,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
       id: 'log-5',
       timestamp: '2026-10-28 11:20:44',
       actor: 'Admin PTIK (admin@upgris.ac.id)',
-      actorSub: 'NIP: 19880101 â€¢ Super Administrator',
+      actorSub: 'NIP: 19880101 • Super Administrator',
       actionType: 'ENROLLMENT',
       actionBadgeClass: 'bg-tertiary-container/30 text-tertiary',
       dotColor: 'bg-tertiary',
@@ -213,7 +213,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
         </div>
       )}
 
-      {/* â”€â”€ MODAL OPERASIONAL ADMINISTRATOR â”€â”€ */}
+      {/* ── MODAL OPERASIONAL ADMINISTRATOR ── */}
       {modalOpen && (
         <div
           role="dialog"
@@ -426,7 +426,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
         </div>
       )}
 
-      {/* â”€â”€ SECTION 1: HEADER & STATUS BANNER â”€â”€ */}
+      {/* ── SECTION 1: HEADER & STATUS BANNER ── */}
       <section className="relative w-full rounded-2xl bg-surface-container-low p-gutter overflow-hidden shadow-sm mb-space-lg border border-outline-variant/20">
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-primary-container/10 blur-3xl pointer-events-none" />
 
@@ -475,7 +475,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
         </div>
       </section>
 
-      {/* â”€â”€ SECTION 2: 4 PRIMARY METRIC CARDS â”€â”€ */}
+      {/* ── SECTION 2: 4 PRIMARY METRIC CARDS ── */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {metricCards.map((card) => (
           <div
@@ -508,7 +508,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
         ))}
       </section>
 
-      {/* â”€â”€ SECTION 3: QUICK OPERATIONAL SHORTCUTS (Bento Action Grid) â”€â”€ */}
+      {/* ── SECTION 3: QUICK OPERATIONAL SHORTCUTS (Bento Action Grid) ── */}
       <section className="flex flex-col gap-space-sm mb-8">
         <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
           <h2 className="font-title-lg text-title-lg text-on-surface font-semibold">
@@ -565,7 +565,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
         </div>
       </section>
 
-      {/* â”€â”€ SECTION 4: RECENT AUDIT TRAIL & SYSTEM MONITORING â”€â”€ */}
+      {/* ── SECTION 4: RECENT AUDIT TRAIL & SYSTEM MONITORING ── */}
       <section className="flex flex-col gap-space-sm mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
           <div className="flex items-center gap-space-sm">
@@ -659,7 +659,7 @@ export default function DasborAdmin({ onRoleChange, activeNavPath, onNavChange }
         </div>
       </section>
 
-      {/* â”€â”€ SECTION 5: SYSTEM HEALTH & INTEGRITY WIDGET â”€â”€ */}
+      {/* ── SECTION 5: SYSTEM HEALTH & INTEGRITY WIDGET ── */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-space-md p-5 rounded-xl bg-surface-container-low shadow-sm border border-outline-variant/20">
         {/* Health 1: Storage Limit */}
         <div className="flex items-start gap-space-sm">
