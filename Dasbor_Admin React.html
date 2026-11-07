@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="web_dashboard" name="shell-type"/>
+  <title>Dasbor Administrator (React) - SPADA LMS UPGRIS</title>
+
+  <!-- Google Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+  <!-- Base Layer Style Reset & Custom Animations -->
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+    @keyframes pulseSoft {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .animate-pulse-soft {
+      animation: pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .animate-scale-in {
+      animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#2d3a4a",
+            "on-error": "#690005",
+            "on-secondary-fixed": "#001e2c",
+            "primary": "#adc6ff",
+            "primary-hover": "#80aaff",
+            "tertiary": "#4edea3",
+            "on-primary-container": "#00285d",
+            "on-surface": "#d6e4f9",
+            "inverse-on-surface": "#243141",
+            "tertiary-fixed-dim": "#4edea3",
+            "background": "#061423",
+            "secondary-fixed-dim": "#7bd0ff",
+            "secondary": "#7bd0ff",
+            "on-tertiary": "#003824",
+            "primary-container": "#4d8eff",
+            "on-secondary-fixed-variant": "#004c69",
+            "on-tertiary-container": "#00311f",
+            "inverse-primary": "#005ac2",
+            "on-secondary": "#00354a",
+            "on-tertiary-fixed": "#002113",
+            "on-primary-fixed-variant": "#004395",
+            "error-container": "#93000a",
+            "surface-dim": "#061423",
+            "secondary-container": "#00a6e0",
+            "secondary-fixed": "#c4e7ff",
+            "surface-container-highest": "#283646",
+            "tertiary-container": "#00a572",
+            "error": "#ffb4ab",
+            "on-error-container": "#ffdad6",
+            "outline-variant": "#424754",
+            "on-background": "#d6e4f9",
+            "on-tertiary-fixed-variant": "#005236",
+            "on-secondary-container": "#00374d",
+            "on-primary-fixed": "#001a42",
+            "primary-fixed": "#d8e2ff",
+            "outline": "#8c909f",
+            "surface-tint": "#adc6ff",
+            "primary-fixed-dim": "#adc6ff",
+            "surface": "#061423",
+            "surface-container": "#132030",
+            "on-surface-variant": "#c2c6d6",
+            "tertiary-fixed": "#6ffbbe",
+            "surface-container-high": "#1e2b3b",
+            "surface-container-low": "#0f1c2c",
+            "surface-container-lowest": "#020f1e",
+            "inverse-surface": "#d6e4f9",
+            "surface-variant": "#283646",
+            "on-primary": "#002e6a"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "gutter": "1.5rem",
+            "margin": "2rem",
+            "margin-mobile": "1rem",
+            "space-md": "1rem",
+            "space-xl": "2rem",
+            "gutter-mobile": "1rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem"
+          },
+          fontFamily: {
+            "headline-md": ["Plus Jakarta Sans", "sans-serif"],
+            "headline-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "display-hero": ["Plus Jakarta Sans", "sans-serif"],
+            "label-sm": ["Inter", "sans-serif"],
+            "display-hero-mobile": ["Plus Jakarta Sans", "sans-serif"],
+            "body-lg": ["Inter", "sans-serif"],
+            "body-sm": ["Inter", "sans-serif"],
+            "title-md": ["Plus Jakarta Sans", "sans-serif"],
+            "label-md": ["Inter", "sans-serif"],
+            "caption": ["Inter", "sans-serif"],
+            "title-lg": ["Plus Jakarta Sans", "sans-serif"]
+          },
+          fontSize: {
+            "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "headline-lg": ["30px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "body-md": ["14px", { lineHeight: "22px", fontWeight: "400" }],
+            "display-hero": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }],
+            "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }],
+            "display-hero-mobile": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "body-lg": ["16px", { lineHeight: "26px", fontWeight: "400" }],
+            "body-sm": ["12px", { lineHeight: "18px", fontWeight: "400" }],
+            "title-md": ["16px", { lineHeight: "24px", fontWeight: "600" }],
+            "label-md": ["14px", { lineHeight: "20px", fontWeight: "500" }],
+            "caption": ["11px", { lineHeight: "14px", fontWeight: "500" }],
+            "title-lg": ["20px", { lineHeight: "28px", fontWeight: "600" }]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18, ReactDOM & Babel Standalone CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-background font-body-md text-on-surface antialiased min-h-screen selection:bg-primary-container selection:text-on-primary">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function DasborAdminApp() {
+      const [sidebarOpen, setSidebarOpen] = useState(true);
+      const [activeRole, setActiveRole] = useState('admin');
+      const [activePath, setActivePath] = useState('dasbor-admin');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [toastMessage, setToastMessage] = useState(null);
+      const [modalOpen, setModalOpen] = useState(false);
+      const [modalType, setModalType] = useState(null); // 'QUICK', 'USER', 'CLASS', 'ENROLL', 'AUDIT'
+      const [filterCategory, setFilterCategory] = useState('ALL');
+      const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+      const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+      const [serverTime, setServerTime] = useState('08:30 WIB');
+
+      const showToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(null), 3200);
+      };
+
+      // Realtime Server Clock Simulation
+      useEffect(() => {
+        const updateClock = () => {
+          const now = new Date();
+          const hh = String(now.getHours()).padStart(2, '0');
+          const mm = String(now.getMinutes()).padStart(2, '0');
+          setServerTime(`${hh}:${mm} WIB`);
+        };
+        updateClock();
+        const interval = setInterval(updateClock, 30000);
+        return () => clearInterval(interval);
+      }, []);
+
+      const metricCards = [
+        {
+          id: 'users',
+          title: 'Total Pengguna Terdaftar',
+          value: '1,420',
+          badge: '1,350 Mahasiswa • 70 Dosen',
+          subtext: '+45 pendaftar semester ini',
+          subIcon: 'arrow_upward',
+          subColor: 'text-tertiary',
+          rightText: '2 Admin Aktif',
+          icon: 'groups',
+          iconBg: 'bg-primary-container/20 text-primary group-hover:bg-primary group-hover:text-on-primary',
+          glowBg: 'bg-primary/5',
+        },
+        {
+          id: 'courses',
+          title: 'Total Mata Kuliah',
+          value: '48 MK',
+          badge: 'Kurikulum Terakreditasi (144 SKS)',
+          subtext: '100% Silabus 16 Sesi',
+          subIcon: 'verified',
+          subColor: 'text-tertiary',
+          rightText: 'Terkonfigurasi',
+          icon: 'menu_book',
+          iconBg: 'bg-secondary-container/20 text-secondary group-hover:bg-secondary-container group-hover:text-on-secondary-container',
+          glowBg: 'bg-secondary/5',
+        },
+        {
+          id: 'classes',
+          title: 'Kelas Perkuliahan',
+          value: '36 Kelas',
+          badge: 'Semester Ganjil 2026/2027',
+          subtext: 'Seluruh Dosen Ditugaskan',
+          subIcon: 'done_all',
+          subColor: 'text-tertiary',
+          rightText: '36/36 Lengkap',
+          icon: 'co_present',
+          iconBg: 'bg-surface-container-high text-primary group-hover:bg-primary-container group-hover:text-on-primary-container',
+          glowBg: 'bg-primary-container/10',
+        },
+        {
+          id: 'enrollment',
+          title: 'Total Direct Enrollment',
+          value: '1,280',
+          badge: 'Mandiri Admin (Tanpa KRS Manual)',
+          badgeColor: 'bg-tertiary-container/20 text-tertiary font-semibold',
+          subtext: '98.5% Mahasiswa Aktif',
+          subIcon: 'check_circle',
+          subColor: 'text-tertiary',
+          rightText: 'Telah Ter-enroll',
+          icon: 'how_to_reg',
+          iconBg: 'bg-tertiary-container/20 text-tertiary group-hover:bg-tertiary group-hover:text-on-tertiary',
+          glowBg: 'bg-tertiary/10',
+        },
+      ];
+
+      const shortcuts = [
+        {
+          id: 'user',
+          title: 'Tambah Pengguna Baru',
+          desc: 'Registrasi akun Mahasiswa, Dosen, atau kelola pembagian hak akses RBAC SPADA.',
+          cta: 'Kelola Master Akun',
+          icon: 'person_add',
+          color: 'text-primary',
+          bgClass: 'bg-surface-container-high hover:bg-surface-bright',
+          onClick: () => {
+            setModalType('USER');
+            setModalOpen(true);
+          },
+        },
+        {
+          id: 'class',
+          title: 'Buka Kelas Baru',
+          desc: 'Buka kelas perkuliahan semester ganjil dan tetapkan dosen pengampu definitif.',
+          cta: 'Buka Kelas Perkuliahan',
+          icon: 'create_new_folder',
+          color: 'text-secondary',
+          bgClass: 'bg-surface-container-high hover:bg-surface-bright',
+          onClick: () => {
+            setModalType('CLASS');
+            setModalOpen(true);
+          },
+        },
+        {
+          id: 'enrollment',
+          title: 'Kelola Direct Enrollment',
+          badge: 'Prioritas',
+          desc: 'Daftarkan mahasiswa langsung ke kelas per individu atau massal (batch via CSV/Excel).',
+          cta: 'Buka Pusat Enrollment',
+          icon: 'assignment_ind',
+          color: 'text-tertiary',
+          bgClass: 'bg-surface-container-highest hover:bg-surface-bright shadow-md relative overflow-hidden',
+          isPriority: true,
+          onClick: () => {
+            setModalType('ENROLL');
+            setModalOpen(true);
+          },
+        },
+        {
+          id: 'audit',
+          title: 'Lihat Jejak Audit',
+          desc: 'Pantau audit trail perubahan nilai numerik, mutasi kepesertaan, dan keamanan gateway.',
+          cta: 'Periksa Log Lengkap',
+          icon: 'shield_with_heart',
+          color: 'text-primary',
+          bgClass: 'bg-surface-container-high hover:bg-surface-bright',
+          onClick: () => {
+            setFilterCategory('ALL');
+            showToast('Menampilkan seluruh rekaman audit trail sistem');
+          },
+        },
+      ];
+
+      const auditLogs = [
+        {
+          id: 'log-1',
+          timestamp: '13 Okt 2026, 08:24:12 WIB',
+          actor: 'Admin Utama',
+          actorSub: 'NIP: 19820512',
+          actionType: 'ENROLLMENT',
+          badgeClass: 'bg-tertiary-container/30 text-tertiary',
+          dotColor: 'bg-tertiary',
+          entity: 'Kelas TIF-301 TI-A (RPL)',
+          detail: 'Direct enroll 40 mahasiswa angkatan 2024 (Batch)',
+          ip: '10.15.2.40 • Terverifikasi',
+        },
+        {
+          id: 'log-2',
+          timestamp: '13 Okt 2026, 08:15:03 WIB',
+          actor: 'Dr. Awan Rosi, M.Kom.',
+          actorSub: 'Dosen Pengampu',
+          actionType: 'GRADE_MUTATION',
+          badgeClass: 'bg-primary-container/30 text-primary',
+          dotColor: 'bg-primary',
+          entity: 'Tugas 01 (TIF-305)',
+          detail: 'Input skor numerik SPADA 88.50 untuk NIM 24670001',
+          ip: '10.15.4.12 • Terverifikasi',
+        },
+        {
+          id: 'log-3',
+          timestamp: '13 Okt 2026, 07:50:45 WIB',
+          actor: 'Admin Utama',
+          actorSub: 'NIP: 19820512',
+          actionType: 'CONFIG_CHANGE',
+          badgeClass: 'bg-surface-container-highest text-secondary',
+          dotColor: 'bg-secondary',
+          entity: 'File Security Policy',
+          detail: 'Update batas maks upload: 10MB (.pdf, .docx, .xlsx, .zip)',
+          ip: '10.15.2.40 • Terverifikasi',
+        },
+        {
+          id: 'log-4',
+          timestamp: '12 Okt 2026, 16:30:19 WIB',
+          actor: 'Admin Utama',
+          actorSub: 'NIP: 19820512',
+          actionType: 'CLASS_UPDATE',
+          badgeClass: 'bg-primary/20 text-primary-fixed',
+          dotColor: 'bg-primary-fixed',
+          entity: 'Kelas TIF-402 TI-A',
+          detail: 'Penetapan Dosen Pengampu: Budi Santoso, M.Cs.',
+          ip: '10.15.2.40 • Terverifikasi',
+        },
+        {
+          id: 'log-5',
+          timestamp: '12 Okt 2026, 14:10:02 WIB',
+          actor: 'Admin Utama',
+          actorSub: 'NIP: 19820512',
+          actionType: 'USER_CREATE',
+          badgeClass: 'bg-surface-bright text-tertiary-fixed',
+          dotColor: 'bg-tertiary-fixed',
+          entity: 'Akun Dosen Baru',
+          detail: 'Aktivasi NIDN: 0628098701 (Ir. Siti Aminah, M.T.)',
+          ip: '10.15.2.40 • Terverifikasi',
+        },
+      ];
+
+      const navSections = [
+        {
+          title: 'Menu Utama',
+          items: [
+            { id: 'dasbor-admin', label: 'Dasbor', icon: 'grid_view' },
+            { id: 'kelas-saya', label: 'Kelas Saya', icon: 'menu_book' },
+            { id: 'panduan-belajar', label: 'Panduan Belajar', icon: 'explore' },
+          ],
+        },
+        {
+          title: 'Akademik',
+          items: [
+            { id: 'central-timeline', label: 'Central Timeline', icon: 'calendar_today' },
+            { id: 'rekap-nilai-dan-presensi', label: 'Rekap Nilai & Presensi', icon: 'check_circle' },
+          ],
+        },
+        {
+          title: 'Menu Dosen',
+          items: [
+            { id: 'dasbor-dosen', label: 'Kelas Diampu', icon: 'co_present' },
+            { id: 'pemeriksaan-tugas', label: 'Pemeriksaan Tugas', icon: 'assignment_turned_in' },
+          ],
+        },
+        {
+          title: 'Administrasi SPADA',
+          items: [
+            { id: 'manajemen-pengguna', label: 'Manajemen Pengguna', icon: 'group' },
+            { id: 'master-mata-kuliah', label: 'Master Mata Kuliah', icon: 'local_library' },
+            { id: 'pembukaan-kelas', label: 'Pembukaan Kelas', icon: 'edit_calendar' },
+            { id: 'jejak-audit', label: 'Jejak Audit', icon: 'security' },
+            { id: 'konfigurasi-sistem', label: 'Konfigurasi Sistem', icon: 'settings' },
+          ],
+        },
+      ];
+
+      const filteredLogs = auditLogs.filter((log) => {
+        const matchesCategory = filterCategory === 'ALL' || log.actionType === filterCategory;
+        const matchesQuery = searchQuery === '' ||
+          log.entity.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          log.detail.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          log.actor.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesQuery;
+      });
+
+      return (
+        <div className="bg-background font-body-md text-on-surface antialiased min-h-screen">
+          {/* Toast Notification */}
+          {toastMessage && (
+            <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-surface-container-highest text-on-surface px-4 py-3 rounded-xl shadow-2xl border border-primary/30 animate-scale-in">
+              <span className="material-symbols-outlined text-primary text-[20px]">info</span>
+              <span className="font-label-md text-sm">{toastMessage}</span>
+            </div>
+          )}
+
+          {/* ════════════════ HEADER ════════════════ */}
+          <header className="fixed top-0 left-0 right-0 h-16 bg-surface-container/90 backdrop-blur-xl z-50 shadow-[0_1px_8px_rgba(0,0,0,0.3)] border-b border-outline-variant/20">
+            <div className="w-full h-16 px-gutter flex items-center justify-between gap-space-md">
+              <div className="flex items-center gap-space-md">
+                <button
+                  aria-label="Toggle Sidebar"
+                  type="button"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="p-space-xs rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[24px]">menu</span>
+                </button>
+                <div className="flex items-center gap-space-sm cursor-pointer" onClick={() => setActivePath('dasbor-admin')}>
+                  <div className="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-sm">
+                    <span className="material-symbols-outlined text-[24px]">school</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-title-md text-title-md text-on-surface tracking-tight leading-tight">SPADA UPGRIS</span>
+                    <span className="font-caption text-caption text-on-surface-variant leading-none">Sistem Pembelajaran Daring</span>
+                  </div>
+                </div>
+                <div className="hidden xl:flex items-center gap-space-xs px-space-sm py-space-xs rounded-full bg-tertiary-container/20 text-tertiary font-label-sm text-label-sm border border-tertiary/20">
+                  <span className="material-symbols-outlined text-[14px]">circle</span>
+                  <span>Semester Ganjil 2026/2027</span>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="hidden md:flex flex-1 max-w-md mx-space-md items-center">
+                <div className="w-full relative flex items-center bg-surface-container-low rounded-lg px-space-md py-space-xs border border-outline-variant/30 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+                  <span className="material-symbols-outlined text-outline mr-space-sm text-[20px]">search</span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Cari mata kuliah, materi, atau tugas..."
+                    className="w-full bg-transparent font-body-sm text-body-sm text-on-surface placeholder-outline focus:outline-none"
+                  />
+                  <kbd className="hidden sm:inline-block px-space-xs py-0.5 rounded bg-surface-container font-caption text-caption text-on-surface-variant">Ctrl+K</kbd>
+                </div>
+              </div>
+
+              {/* Action Buttons & Profile */}
+              <div className="flex items-center gap-space-md">
+                <div className="hidden lg:flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+                  <span className="material-symbols-outlined text-[16px] text-tertiary">schedule</span>
+                  <span>Server: {serverTime}</span>
+                </div>
+
+                {/* Notification Bell */}
+                <div className="relative">
+                  <button
+                    aria-label="Notifikasi"
+                    type="button"
+                    onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
+                    className="relative p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[22px]">notifications</span>
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span>
+                  </button>
+
+                  {notifDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-80 rounded-xl bg-surface-container-high border border-outline-variant/30 shadow-2xl p-4 z-50 animate-scale-in">
+                      <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20 mb-2">
+                        <span className="font-label-md text-sm font-bold text-on-surface">Notifikasi Sistem</span>
+                        <span className="text-xs text-tertiary cursor-pointer hover:underline" onClick={() => setNotifDropdownOpen(false)}>Tandai terbaca</span>
+                      </div>
+                      <div className="space-y-2 text-xs">
+                        <div className="p-2 rounded bg-surface-container hover:bg-surface-bright transition-colors cursor-pointer">
+                          <p className="font-semibold text-on-surface">Direct Enrollment 40 Mahasiswa Sukses</p>
+                          <span className="text-on-surface-variant text-[11px]">5 menit yang lalu • Kelas TIF-301 TI-A</span>
+                        </div>
+                        <div className="p-2 rounded bg-surface-container hover:bg-surface-bright transition-colors cursor-pointer">
+                          <p className="font-semibold text-on-surface">Peringatan Sinkronisasi Basis Data</p>
+                          <span className="text-on-surface-variant text-[11px]">30 menit yang lalu • Server Utama Normal</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Role Switcher */}
+                <div className="hidden sm:flex items-center bg-surface-container-low p-space-xs rounded-lg gap-space-xs border border-outline-variant/30">
+                  <button
+                    type="button"
+                    onClick={() => { setActiveRole('mahasiswa'); showToast('Beralih ke tampilan Mahasiswa'); }}
+                    className={`px-space-sm py-space-xs rounded font-label-sm text-label-sm transition-colors ${
+                      activeRole === 'mahasiswa' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+                    }`}
+                  >
+                    Mahasiswa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveRole('dosen'); showToast('Beralih ke tampilan Dosen'); }}
+                    className={`px-space-sm py-space-xs rounded font-label-sm text-label-sm transition-colors ${
+                      activeRole === 'dosen' ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+                    }`}
+                  >
+                    Dosen
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveRole('admin'); showToast('Mode Administrator Aktif'); }}
+                    className={`px-space-sm py-space-xs rounded font-label-sm text-label-sm transition-colors ${
+                      activeRole === 'admin' ? 'bg-primary-container text-on-primary-container font-bold shadow-sm' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+                    }`}
+                  >
+                    Admin
+                  </button>
+                </div>
+
+                {/* Profile Pill */}
+                <div className="relative flex items-center gap-space-sm pl-space-xs">
+                  <button
+                    type="button"
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="flex items-center gap-space-sm text-left hover:opacity-90 transition-opacity"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold shadow-sm">
+                      <span className="material-symbols-outlined text-[18px]">person</span>
+                    </div>
+                    <div className="hidden md:flex flex-col text-left">
+                      <span className="font-label-md text-label-md text-on-surface leading-tight font-semibold">Administrator Utama</span>
+                      <span className="font-caption text-caption text-secondary uppercase font-bold">PTIK UPGRIS</span>
+                    </div>
+                    <span className="material-symbols-outlined text-[20px] text-on-surface-variant">keyboard_arrow_down</span>
+                  </button>
+
+                  {profileDropdownOpen && (
+                    <div className="absolute right-0 top-12 w-56 rounded-xl bg-surface-container-high border border-outline-variant/30 shadow-2xl p-2 z-50 animate-scale-in">
+                      <div className="px-3 py-2 border-b border-outline-variant/20 mb-1">
+                        <p className="text-xs font-semibold text-on-surface">Super Administrator</p>
+                        <p className="text-[11px] text-on-surface-variant truncate">admin@upgris.ac.id</p>
+                      </div>
+                      <button
+                        onClick={() => { setProfileDropdownOpen(false); showToast('Membuka Konfigurasi Akun'); }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center gap-2"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">manage_accounts</span>
+                        <span>Pengaturan Akun</span>
+                      </button>
+                      <button
+                        onClick={() => { setProfileDropdownOpen(false); showToast('Sesi tetap diamankan'); }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs text-error hover:bg-error-container/20 transition-colors flex items-center gap-2"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">logout</span>
+                        <span>Keluar Sesi</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* ════════════════ SIDEBAR ════════════════ */}
+          <aside
+            className={`fixed left-0 top-16 bottom-0 w-64 bg-surface-container-low z-40 flex flex-col justify-between overflow-y-auto transition-transform duration-300 border-r border-outline-variant/20 ${
+              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            <div className="flex flex-col">
+              <div className="px-gutter py-space-md bg-surface-container-lowest/50 flex flex-col gap-0.5 border-b border-outline-variant/20">
+                <div className="flex items-center gap-space-xs">
+                  <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
+                  <span className="font-title-md text-title-md text-on-surface font-bold">SPADA LMS</span>
+                </div>
+                <span className="font-caption text-caption text-outline uppercase tracking-wider">Team Membangun Negeri</span>
+              </div>
+
+              <nav className="flex flex-col px-space-sm py-space-sm gap-space-xs">
+                {navSections.map((sec) => (
+                  <div key={sec.title}>
+                    <div className="px-space-sm pt-space-sm pb-space-xs font-caption text-caption text-outline uppercase tracking-wider font-semibold">
+                      {sec.title}
+                    </div>
+                    {sec.items.map((item) => {
+                      const isActive = activePath === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setActivePath(item.id);
+                            showToast(`Navigasi ke: ${item.label}`);
+                          }}
+                          className={`w-full flex items-center gap-space-sm px-space-md py-space-sm rounded-lg transition-colors font-label-md text-label-md text-left ${
+                            isActive
+                              ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
+                              : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </nav>
+            </div>
+
+            <div className="p-space-md bg-surface-container-lowest/80 flex flex-col gap-space-sm border-t border-outline-variant/20">
+              <div className="text-center font-caption text-caption text-outline">SPADA UPGRIS v2.4 • Standalone LMS</div>
+              <a
+                href="https://upt-ptik.upgris.ac.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-space-xs py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-secondary hover:text-on-surface transition-colors font-label-sm text-label-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">support_agent</span>
+                <span>IT Helpdesk</span>
+              </a>
+            </div>
+          </aside>
+
+          {/* ════════════════ MAIN CONTENT ════════════════ */}
+          <div className={`transition-all duration-300 ${sidebarOpen ? 'pl-64' : 'pl-0'}`}>
+            <main className="w-full pt-16 px-gutter bg-background min-h-screen">
+              <div className="flex flex-col w-full pb-16">
+
+                {/* Ambient Glow Effects */}
+                <div className="relative w-full">
+                  <div className="absolute -top-12 left-1/4 w-96 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10" />
+                  <div className="absolute -top-12 right-12 w-80 h-40 bg-tertiary/10 rounded-full blur-3xl pointer-events-none -z-10" />
+                </div>
+
+                {/* SECTION 1: HEADER & OPERATIONAL STATUS */}
+                <section className="flex flex-col gap-space-md mb-8 pt-4">
+                  {/* Breadcrumb & Top Indicator Pill */}
+                  <div className="flex flex-wrap items-center justify-between gap-space-sm">
+                    <nav className="flex items-center gap-space-xs font-caption text-caption text-on-surface-variant">
+                      <span className="hover:text-primary transition-colors cursor-pointer" onClick={() => showToast('Kembali ke Beranda')}>Beranda</span>
+                      <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                      <span className="text-on-surface font-semibold">Dasbor Administrator</span>
+                    </nav>
+
+                    <div className="inline-flex items-center gap-space-xs px-3 py-1 rounded-full bg-surface-container-high text-on-surface shadow-sm border border-tertiary/20">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-tertiary"></span>
+                      </span>
+                      <span className="font-caption text-caption font-bold tracking-wider text-tertiary uppercase">
+                        Portal Administrator Utama • Kontrol Tunggal SPADA LMS
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Main Title Block & Quick Operations */}
+                  <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-space-lg">
+                    <div className="flex flex-col gap-1 max-w-3xl">
+                      <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+                        Dasbor Administrator SPADA LMS
+                      </h1>
+                      <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                        Semester Ganjil 2026/2027 • Pengelolaan Terpusat Master Data, Direct Enrollment, dan Jejak Keamanan Sistem
+                      </p>
+                    </div>
+
+                    {/* Controls Block */}
+                    <div className="flex flex-wrap items-center gap-space-sm self-start xl:self-end">
+                      <div className="inline-flex items-center gap-space-xs px-3 py-2 rounded-lg bg-surface-container text-secondary font-label-sm text-label-sm shadow-sm border border-outline-variant/30">
+                        <span className="material-symbols-outlined text-[16px] text-secondary">admin_panel_settings</span>
+                        <span>Mode Peran: <strong className="text-on-surface">Admin Tunggal</strong></span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setModalType('QUICK');
+                          setModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-space-xs px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-md hover:bg-primary-hover hover:shadow-lg transition-all active:scale-[0.98] font-semibold cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                        <span>+ Buat Master Kelas / User</span>
+                      </button>
+
+                      <div className="flex items-center gap-space-xs px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface-variant font-caption text-caption shadow-inner border border-outline-variant/20">
+                        <span className="material-symbols-outlined text-[14px] text-tertiary">sync</span>
+                        <span>Waktu Server: <span className="font-mono text-on-surface font-semibold">{serverTime}</span> (Sinkronisasi Basis Data Aktif)</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* SECTION 2: 4 PRIMARY METRIC CARDS */}
+                <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                  {metricCards.map((card) => (
+                    <div
+                      key={card.id}
+                      className="flex flex-col justify-between p-5 rounded-xl bg-surface-container shadow-md hover:shadow-lg transition-all group relative overflow-hidden border border-outline-variant/20"
+                    >
+                      <div className={`absolute top-0 right-0 w-24 h-24 ${card.glowBg} rounded-bl-full pointer-events-none transition-transform group-hover:scale-110`} />
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-label-md text-label-md text-on-surface-variant">{card.title}</span>
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${card.iconBg}`}>
+                            <span className="material-symbols-outlined text-[20px]">{card.icon}</span>
+                          </div>
+                        </div>
+                        <div className="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold mb-1">
+                          {card.value}
+                        </div>
+                        <div className={`inline-block px-2 py-0.5 rounded text-caption font-caption mb-3 ${card.badgeColor || 'bg-surface-container-high text-secondary'}`}>
+                          {card.badge}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-3 border-t border-outline-variant/30 text-outline">
+                        <span className={`font-caption text-caption flex items-center gap-1 font-semibold ${card.subColor}`}>
+                          <span className="material-symbols-outlined text-[14px]">{card.subIcon}</span>
+                          {card.subtext}
+                        </span>
+                        <span className="font-caption text-caption text-on-surface-variant">{card.rightText}</span>
+                      </div>
+                    </div>
+                  ))}
+                </section>
+
+                {/* SECTION 3: QUICK OPERATIONAL SHORTCUTS (Bento Action Grid) */}
+                <section className="flex flex-col gap-space-sm mb-8">
+                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+                    <h2 className="font-title-lg text-title-lg text-on-surface">Pintasan Operasional Administrator</h2>
+                    <span className="font-caption text-caption text-on-surface-variant">
+                      Aksi cepat konfigurasi master data dan manajemen kepesertaan perkuliahan
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+                    {shortcuts.map((sc) => (
+                      <div
+                        key={sc.id}
+                        onClick={sc.onClick}
+                        className={`group flex flex-col justify-between p-5 rounded-xl transition-all cursor-pointer border border-outline-variant/20 ${sc.bgClass}`}
+                      >
+                        {sc.isPriority && (
+                          <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-tertiary/10 rounded-full blur-xl pointer-events-none" />
+                        )}
+                        <div className="flex flex-col gap-3">
+                          <div className={`w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center ${sc.color} group-hover:scale-105 transition-transform`}>
+                            <span className="material-symbols-outlined text-[24px]">{sc.icon}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-title-md text-title-md text-on-surface font-semibold group-hover:${sc.color} transition-colors`}>
+                                {sc.title}
+                              </span>
+                              {sc.badge && (
+                                <span className="px-1.5 py-0.5 rounded bg-tertiary text-on-tertiary font-caption text-caption font-bold">
+                                  {sc.badge}
+                                </span>
+                              )}
+                            </div>
+                            <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                              {sc.desc}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`pt-4 flex items-center gap-1 font-label-sm text-label-sm ${sc.color} font-bold`}>
+                          <span>{sc.cta}</span>
+                          <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* SECTION 4: RECENT AUDIT TRAIL & SYSTEM MONITORING */}
+                <section className="flex flex-col gap-space-sm mb-8">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
+                    <div className="flex flex-wrap items-center gap-space-sm">
+                      <h2 className="font-title-lg text-title-lg text-on-surface">Jejak Audit Terkini (Recent Audit Trail)</h2>
+                      <span className="inline-flex px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary font-caption text-caption font-semibold border border-outline-variant/30">
+                        {filteredLogs.length} Entri Ditampilkan (Immutable Log)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center bg-surface-container-low rounded-lg p-0.5 border border-outline-variant/30 text-xs">
+                        {['ALL', 'ENROLLMENT', 'GRADE_MUTATION', 'CONFIG_CHANGE'].map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setFilterCategory(cat)}
+                            className={`px-2.5 py-1 rounded font-medium transition-colors ${
+                              filterCategory === cat
+                                ? 'bg-primary-container text-on-primary-container font-bold'
+                                : 'text-on-surface-variant hover:text-on-surface'
+                            }`}
+                          >
+                            {cat === 'ALL' ? 'Semua' : cat}
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterCategory('ALL');
+                          setSearchQuery('');
+                          showToast('Membuka seluruh audit trail (2,840 entri)');
+                        }}
+                        className="font-label-sm text-label-sm text-primary hover:text-primary-hover flex items-center gap-1 cursor-pointer"
+                      >
+                        <span className="hidden sm:inline">Buka Seluruh Audit Trail (2,840 entri)</span>
+                        <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Data Table Container */}
+                  <div className="w-full bg-surface-container rounded-xl shadow-md overflow-hidden border border-outline-variant/20">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-surface-container-highest text-on-surface font-label-sm text-label-sm border-b border-outline-variant/30">
+                            <th className="py-3 px-4 font-semibold tracking-wider">STEMPEL WAKTU (SERVER)</th>
+                            <th className="py-3 px-4 font-semibold tracking-wider">PELAKU (ACTOR)</th>
+                            <th className="py-3 px-4 font-semibold tracking-wider">JENIS AKSI</th>
+                            <th className="py-3 px-4 font-semibold tracking-wider">ENTITAS SASARAN</th>
+                            <th className="py-3 px-4 font-semibold tracking-wider">RINCIAN MODIFIKASI</th>
+                            <th className="py-3 px-4 font-semibold tracking-wider text-right">STATUS KEAMANAN</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-outline-variant/20 font-body-sm text-body-sm text-on-surface">
+                          {filteredLogs.length === 0 ? (
+                            <tr>
+                              <td colSpan="6" className="py-8 text-center text-on-surface-variant">
+                                Tidak ada log audit yang sesuai dengan filter.
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredLogs.map((log) => (
+                              <tr key={log.id} className="hover:bg-surface-container-high/60 transition-colors">
+                                <td className="py-3 px-4 whitespace-nowrap font-mono text-on-surface-variant text-[12px]">
+                                  {log.timestamp}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex flex-col">
+                                    <span className="font-semibold text-on-surface">{log.actor}</span>
+                                    <span className="font-caption text-caption text-outline">{log.actorSub}</span>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 whitespace-nowrap">
+                                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-label-sm text-[11px] font-bold ${log.badgeClass}`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${log.dotColor}`}></span>
+                                    {log.actionType}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 font-semibold text-secondary">
+                                  {log.entity}
+                                </td>
+                                <td className="py-3 px-4 text-on-surface-variant max-w-xs truncate" title={log.detail}>
+                                  {log.detail}
+                                </td>
+                                <td className="py-3 px-4 text-right whitespace-nowrap">
+                                  <span className="inline-flex items-center gap-1 font-mono text-[11px] text-tertiary">
+                                    <span className="material-symbols-outlined text-[13px]">verified_user</span>
+                                    {log.ip}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </section>
+
+                {/* SECTION 5: SYSTEM HEALTH & INTEGRITY WIDGET */}
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-space-md p-5 rounded-xl bg-surface-container-low shadow-sm border border-outline-variant/20">
+                  {/* Health 1: Storage Limit */}
+                  <div className="flex items-start gap-space-sm">
+                    <div className="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-primary shrink-0">
+                      <span className="material-symbols-outlined text-[20px]">cloud_done</span>
+                    </div>
+                    <div className="flex flex-col gap-1 w-full">
+                      <div className="flex items-center justify-between">
+                        <span className="font-label-sm text-label-sm text-on-surface font-semibold">Penyimpanan Berkas Terproteksi</span>
+                        <span className="font-caption text-caption text-tertiary font-bold">Aman (8.5%)</span>
+                      </div>
+                      <div className="w-full bg-surface-container rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-primary h-1.5 rounded-full" style={{ width: '8.5%' }}></div>
+                      </div>
+                      <span className="font-caption text-caption text-on-surface-variant">
+                        42.8 GB / 500 GB Digunakan
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Health 2: Whitelist File Extensions */}
+                  <div className="flex items-start gap-space-sm">
+                    <div className="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-secondary shrink-0">
+                      <span className="material-symbols-outlined text-[20px]">security</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-label-sm text-label-sm text-on-surface font-semibold">Whitelist Ekstensi Berkas</span>
+                      <div className="flex flex-wrap items-center gap-1">
+                        {['.pdf', '.docx', '.xlsx', '.zip'].map((ext) => (
+                          <span key={ext} className="px-1.5 py-0.2 rounded bg-surface-container font-mono text-[11px] text-secondary">
+                            {ext}
+                          </span>
+                        ))}
+                      </div>
+                      <span className="font-caption text-caption text-tertiary font-medium">
+                        Maks. 10MB • Validasi MIME Ganda Aktif
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Health 3: Gatekeeping Presensi */}
+                  <div className="flex items-start gap-space-sm">
+                    <div className="w-9 h-9 rounded-lg bg-surface-container-high flex items-center justify-center text-tertiary shrink-0">
+                      <span className="material-symbols-outlined text-[20px]">lock_clock</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-label-sm text-label-sm text-on-surface font-semibold">Gatekeeping Presensi Ujian</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-title-md text-title-md text-tertiary font-bold">Min. 70%</span>
+                        <span className="font-caption text-caption text-on-surface-variant">(12 / 16 Sesi Perkuliahan)</span>
+                      </div>
+                      <span className="font-caption text-caption text-on-surface-variant">
+                        Auto-lock kartu UTS/UAS terintegrasi realtime
+                      </span>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            </main>
+          </div>
+
+          {/* ════════════════ MODALS ════════════════ */}
+          {modalOpen && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-scale-in"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setModalOpen(false);
+              }}
+            >
+              <div className="w-full max-w-lg rounded-2xl bg-surface-container-lowest border border-outline-variant/30 shadow-2xl p-6 flex flex-col gap-4 text-on-surface">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-outline-variant/20">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+                      <span className="material-symbols-outlined text-[20px]">
+                        {modalType === 'QUICK' && 'add_circle'}
+                        {modalType === 'USER' && 'person_add'}
+                        {modalType === 'CLASS' && 'create_new_folder'}
+                        {modalType === 'ENROLL' && 'assignment_ind'}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-on-surface">
+                        {modalType === 'QUICK' && 'Buat Master Kelas / Tambah Pengguna'}
+                        {modalType === 'USER' && 'Tambah Pengguna Baru'}
+                        {modalType === 'CLASS' && 'Buka Kelas Perkuliahan Baru'}
+                        {modalType === 'ENROLL' && 'Direct Enrollment Massal Mahasiswa'}
+                      </h3>
+                      <p className="text-xs text-on-surface-variant">Sinkronisasi langsung ke sistem basis data SPADA</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(false)}
+                    className="text-on-surface-variant hover:text-on-surface p-1 rounded-lg"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="flex flex-col gap-3">
+                  {modalType === 'QUICK' && (
+                    <div className="grid grid-cols-2 gap-3 py-2">
+                      <button
+                        onClick={() => setModalType('USER')}
+                        className="p-4 rounded-xl bg-surface-container hover:bg-surface-bright border border-outline-variant/20 flex flex-col items-center gap-2 text-center transition-all group"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-primary-container/20 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                          <span className="material-symbols-outlined text-[24px]">person_add</span>
+                        </div>
+                        <span className="font-semibold text-sm">Tambah Pengguna</span>
+                        <span className="text-[11px] text-on-surface-variant">Mahasiswa, Dosen, atau Staf Admin</span>
+                      </button>
+
+                      <button
+                        onClick={() => setModalType('CLASS')}
+                        className="p-4 rounded-xl bg-surface-container hover:bg-surface-bright border border-outline-variant/20 flex flex-col items-center gap-2 text-center transition-all group"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-secondary-container/20 text-secondary flex items-center justify-center group-hover:bg-secondary group-hover:text-on-secondary transition-colors">
+                          <span className="material-symbols-outlined text-[24px]">create_new_folder</span>
+                        </div>
+                        <span className="font-semibold text-sm">Buka Kelas Baru</span>
+                        <span className="text-[11px] text-on-surface-variant">Kelas semester ganjil &amp; tetapkan dosen</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {modalType === 'USER' && (
+                    <>
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Nama Lengkap &amp; Gelar</label>
+                        <input
+                          type="text"
+                          placeholder="cth: Ir. Siti Aminah, M.T."
+                          className="w-full mt-1 px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-sm focus:outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Peran (Role)</label>
+                          <select className="w-full mt-1 px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-sm focus:outline-none focus:border-primary">
+                            <option value="MAHASISWA">Mahasiswa</option>
+                            <option value="DOSEN">Dosen Pengampu</option>
+                            <option value="ADMIN">Administrator PTIK</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">NIM / NIDN / NIP</label>
+                          <input
+                            type="text"
+                            placeholder="cth: 0628098701"
+                            className="w-full mt-1 px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-sm focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {modalType === 'CLASS' && (
+                    <>
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Mata Kuliah</label>
+                        <select className="w-full mt-1 px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-sm focus:outline-none focus:border-primary">
+                          <option>TIF-301 - Rekayasa Perangkat Lunak (3 SKS)</option>
+                          <option>TIF-305 - Pemrograman Berorientasi Objek (3 SKS)</option>
+                          <option>TIF-402 - Arsitektur Enterprise (2 SKS)</option>
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Kode / Nama Kelas</label>
+                          <input
+                            type="text"
+                            placeholder="cth: TI-A (Pagi)"
+                            className="w-full mt-1 px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-sm focus:outline-none focus:border-primary"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Dosen Pengampu</label>
+                          <select className="w-full mt-1 px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-sm focus:outline-none focus:border-primary">
+                            <option>Dr. Bayu Pratama, M.Kom.</option>
+                            <option>Dr. Awan Rosi, M.Kom.</option>
+                            <option>Ir. Nina Kartika, M.T.</option>
+                          </select>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {modalType === 'ENROLL' && (
+                    <>
+                      <div>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Pilih Kelas Sasaran</label>
+                        <select className="w-full mt-1 px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-sm focus:outline-none focus:border-primary">
+                          <option>TIF-301 Kelas TI-A (RPL)</option>
+                          <option>TIF-305 Kelas TI-B (PBO)</option>
+                          <option>TIF-402 Kelas TI-A (Enterprise)</option>
+                        </select>
+                      </div>
+                      <div className="p-4 border-2 border-dashed border-outline-variant/50 rounded-xl flex flex-col items-center justify-center gap-1.5 text-center bg-surface-container-high/40">
+                        <span className="material-symbols-outlined text-[28px] text-tertiary">upload_file</span>
+                        <p className="text-xs font-semibold text-on-surface">Unggah Berkas Mahasiswa (CSV / XLSX)</p>
+                        <span className="text-[11px] text-on-surface-variant">Format: NIM, Nama, Program Studi, Angkatan</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Modal Footer */}
+                {modalType !== 'QUICK' && (
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-outline-variant/20">
+                    <button
+                      type="button"
+                      onClick={() => setModalOpen(false)}
+                      className="px-4 py-2 rounded-lg text-xs font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalOpen(false);
+                        showToast('Data berhasil disimpan dan disinkronkan ke basis data!');
+                      }}
+                      className="px-4 py-2 rounded-lg text-xs font-bold bg-primary text-on-primary hover:bg-primary-hover shadow-md transition-colors"
+                    >
+                      Simpan &amp; Sinkronkan
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Render React App
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<DasborAdminApp />);
+  </script>
+</body>
+</html>
