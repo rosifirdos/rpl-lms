@@ -131,14 +131,8 @@ npm run db:seed         # Isi akun pengguna & master awal
 ```bash
 npm run dev             # Mode development (nodemon)
 npm start               # Mode produksi
-npm test                # Menjalankan seluruh pengujian otomatis (Fase 2–6)
+npm test                # Menjalankan seluruh pengujian otomatis (70 test, Fase 2–4)
 ```
-
-## Dokumentasi API Fase 6
-
-Dokumentasi OpenAPI 3.0 untuk seluruh endpoint MVP 1 tersedia di [docs/openapi.yaml](docs/openapi.yaml). Dokumen tersebut mencakup autentikasi, manajemen pengguna, mata kuliah, kelas, enrollment, dashboard, ruang kelas, dan audit log.
-
-Komitmen pengujian Fase 6 memvalidasi regresi alur utama, RBAC, penolakan akun suspended, kapasitas enrollment, jejak audit, serta kelengkapan artefak OpenAPI.
 
 ### 4. Database Alternatif (Embedded Postgres)
 Tanpa instalasi PostgreSQL manual, `scripts/run-pg.js` menyediakan embedded-postgres di port 5433:
@@ -176,8 +170,7 @@ Seeder juga membuat 5 master mata kuliah (`TIF101`–`TIF105`) dan 2 kelas perku
   - Manajemen pengguna Admin: pencarian username/email/nama/NIM/NIDN/NIP, filter role/status, dan pembuatan akun dengan identitas mahasiswa/dosen.
   - CRUD mata kuliah dengan pencarian, paginasi, validasi SKS 1–6, dan penonaktifan yang mempertahankan relasi kelas.
   - CRUD kelas dengan filter akademik, validasi mata kuliah/dosen aktif, jejak audit, dan perlindungan kapasitas serta enrollment.
-  - Suite backend saat ini mencakup Fase 2–6; jumlah aktual ditampilkan oleh `npm test`.
-  - Pengujian Fase 6 menambahkan validasi kepatuhan, kapasitas enrollment konkuren, dan dokumentasi handoff OpenAPI.
+  - Seluruh pengujian otomatis Fase 2–4: **70 test**.
 
 ### Modul SRS yang **belum diimplementasikan**
 

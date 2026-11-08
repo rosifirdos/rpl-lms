@@ -78,13 +78,6 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
-  if (err.code === 'P2034') {
-    return apiResponse.error(res, {
-      statusCode: 409,
-      message: 'Konflik transaksi database. Silakan coba kembali permintaan ini.',
-    });
-  }
-
   // Kesalahan Server Tak Terduga
   console.error('[Unhandled Error]:', err);
   return apiResponse.error(res, {
