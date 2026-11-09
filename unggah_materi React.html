@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html class="dark" lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="web_dashboard" name="shell-type"/>
+  <title>Unggah Materi Pembelajaran (React) - SPADA UPGRIS</title>
+
+  <!-- Google Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+  <!-- Base Layer Style Reset & Custom Keyframes -->
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+
+    @keyframes progressStripes {
+      from { background-position: 0 0; }
+      to { background-position: 32px 0; }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .animate-scale-in {
+      animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes toastFade {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-toast {
+      animation: toastFade 0.25s ease-out forwards;
+    }
+  </style>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "inverse-surface": "#d6e4f9",
+            "secondary-fixed": "#c4e7ff",
+            "surface-container-low": "#0f1c2c",
+            "surface-dim": "#061423",
+            "surface-bright": "#2d3a4a",
+            "on-tertiary-fixed": "#002113",
+            "inverse-on-surface": "#243141",
+            "on-error": "#690005",
+            "on-secondary": "#00354a",
+            "tertiary-fixed": "#6ffbbe",
+            "secondary-container": "#00a6e0",
+            "on-surface": "#d6e4f9",
+            "on-background": "#d6e4f9",
+            "on-secondary-container": "#00374d",
+            "on-tertiary-fixed-variant": "#005236",
+            "on-secondary-fixed-variant": "#004c69",
+            "on-secondary-fixed": "#001e2c",
+            "surface-container-highest": "#283646",
+            "surface-tint": "#adc6ff",
+            "outline-variant": "#424754",
+            "primary-fixed": "#d8e2ff",
+            "tertiary-fixed-dim": "#4edea3",
+            "on-tertiary-container": "#00311f",
+            "surface-container": "#132030",
+            "on-primary-fixed-variant": "#004395",
+            "surface-container-high": "#1e2b3b",
+            "surface-container-lowest": "#020f1e",
+            "on-primary": "#002e6a",
+            "error": "#ffb4ab",
+            "secondary-fixed-dim": "#7bd0ff",
+            "background": "#061423",
+            "on-surface-variant": "#c2c6d6",
+            "surface": "#061423",
+            "on-primary-container": "#00285d",
+            "primary": "#adc6ff",
+            "on-error-container": "#ffdad6",
+            "on-primary-fixed": "#001a42",
+            "outline": "#8c909f",
+            "primary-fixed-dim": "#adc6ff",
+            "error-container": "#93000a",
+            "inverse-primary": "#005ac2",
+            "surface-variant": "#283646",
+            "tertiary": "#4edea3",
+            "primary-container": "#4d8eff",
+            "tertiary-container": "#00a572",
+            "on-tertiary": "#003824",
+            "secondary": "#7bd0ff"
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          spacing: {
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-xl": "2rem",
+            "gutter-mobile": "1rem",
+            "margin": "2rem",
+            "gutter": "1.5rem",
+            "space-xs": "0.25rem",
+            "margin-mobile": "1rem",
+            "space-md": "1rem"
+          },
+          fontFamily: {
+            "body-lg": ["Inter", "sans-serif"],
+            "title-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "body-md": ["Inter", "sans-serif"],
+            "body-sm": ["Inter", "sans-serif"],
+            "headline-md": ["Plus Jakarta Sans", "sans-serif"],
+            "display-hero": ["Plus Jakarta Sans", "sans-serif"],
+            "display-hero-mobile": ["Plus Jakarta Sans", "sans-serif"],
+            "title-md": ["Plus Jakarta Sans", "sans-serif"],
+            "label-md": ["Inter", "sans-serif"],
+            "headline-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "caption": ["Inter", "sans-serif"],
+            "label-sm": ["Inter", "sans-serif"]
+          },
+          fontSize: {
+            "body-lg": ["16px", { lineHeight: "26px", fontWeight: "400" }],
+            "title-lg": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+            "body-md": ["14px", { lineHeight: "22px", fontWeight: "400" }],
+            "body-sm": ["12px", { lineHeight: "18px", fontWeight: "400" }],
+            "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }],
+            "display-hero": ["40px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "800" }],
+            "display-hero-mobile": ["28px", { lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "title-md": ["16px", { lineHeight: "24px", fontWeight: "600" }],
+            "label-md": ["14px", { lineHeight: "20px", fontWeight: "500" }],
+            "headline-lg": ["30px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "700" }],
+            "caption": ["11px", { lineHeight: "14px", fontWeight: "500" }],
+            "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18, ReactDOM & Babel Standalone CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="bg-surface font-body-md text-on-surface antialiased min-h-screen selection:bg-primary-container selection:text-on-primary">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const INITIAL_MODULES = [
+      {
+        id: 'p1',
+        meeting: 'Pertemuan 1',
+        status: 'Selesai',
+        statusColor: 'text-tertiary',
+        title: 'Pengantar Rekayasa Perangkat Lunak & SDLC',
+        desc: 'Konsep dasar rekayasa sistem, evolusi perangkat lunak, dan model sekuensial linier waterfall.'
+      },
+      {
+        id: 'p2',
+        meeting: 'Pertemuan 2',
+        status: 'Selesai',
+        statusColor: 'text-tertiary',
+        title: 'Agile Methodologies, Scrum Framework',
+        desc: 'Siklus sprint planning, backlog grooming, retrospective, dan manajemen artefak Jira.'
+      },
+      {
+        id: 'p3',
+        meeting: 'Pertemuan 3',
+        status: 'Sedang Berlangsung',
+        statusColor: 'text-secondary',
+        title: 'Analisis Kebutuhan Sistem & SRS IEEE 830',
+        desc: 'Menyusun dokumen software requirements specification fungsional & non-fungsional.',
+        isActive: true
+      }
+    ];
+
+    function UnggahMateriApp() {
+      // Shell state
+      const [sidebarOpen, setSidebarOpen] = useState(true);
+      const [activeRole, setActiveRole] = useState('dosen');
+      const [activeMenu, setActiveMenu] = useState('unggah-materi-ajar');
+      const [serverClock, setServerClock] = useState('08:30:00 WIB');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [isDarkMode, setIsDarkMode] = useState(true);
+
+      // Modal & Form State
+      const [isModalOpen, setIsModalOpen] = useState(true);
+      const [isClosingModal, setIsClosingModal] = useState(false);
+      const [judulMateri, setJudulMateri] = useState('Modul 3 — Analisis Kebutuhan Sistem & Spesifikasi SRS IEEE 830');
+      const [deskripsiMateri, setDeskripsiMateri] = useState('Pelajari format IEEE 830 sebelum kelas praktikum laboratorium. Selesaikan kuis pemahaman mandiri di modul ini paling lambat Jumat pukul 23:59 WIB.');
+      const [publishToTimeline, setPublishToTimeline] = useState(true);
+
+      // 6 Validation States: 'a' | 'b' | 'c' | 'd' | 'e' | 'f'
+      const [dropzoneState, setDropzoneState] = useState('a');
+      const [uploadProgress, setUploadProgress] = useState(64);
+      const [selectedFileName, setSelectedFileName] = useState('Modul-03_Analisis_Kebutuhan_IEEE830.pdf');
+      const [fileSizeText, setFileSizeText] = useState('1.2 MB');
+      const [oversizeDetails, setOversizeDetails] = useState({
+        name: 'Slide_Presentasi_Lengkap_Video.pptx',
+        size: '12.4 MB',
+        excess: '+2.4 MB Berlebih'
+      });
+      const [rejectedExt, setRejectedExt] = useState('.rar');
+
+      // Module List
+      const [modules, setModules] = useState(INITIAL_MODULES);
+
+      // Toast Notification
+      const [toast, setToast] = useState({ visible: false, message: '', type: 'info' });
+
+      // File Input Reference
+      const fileInputRef = useRef(null);
+
+      // Initialize Theme & Server Clock
+      useEffect(() => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+          setIsDarkMode(false);
+          document.documentElement.classList.remove('dark');
+        } else {
+          setIsDarkMode(true);
+          document.documentElement.classList.add('dark');
+        }
+
+        const clockInterval = setInterval(() => {
+          const now = new Date();
+          setServerClock(now.toLocaleTimeString('id-ID') + ' WIB');
+        }, 1000);
+
+        return () => clearInterval(clockInterval);
+      }, []);
+
+      const toggleTheme = () => {
+        setIsDarkMode(prev => {
+          const next = !prev;
+          if (next) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+          }
+          return next;
+        });
+      };
+
+      const showToast = (message, type = 'info') => {
+        setToast({ visible: true, message, type });
+        setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3500);
+      };
+
+      // Modal animation handler
+      const closeModal = () => {
+        setIsClosingModal(true);
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setIsClosingModal(false);
+        }, 250);
+      };
+
+      const openModal = () => {
+        setIsModalOpen(true);
+      };
+
+      // Switch Dropzone State
+      const switchState = (stateKey) => {
+        setDropzoneState(stateKey);
+      };
+
+      // Simulate Real File Upload
+      const handleFileProcess = (file) => {
+        const ext = '.' + file.name.split('.').pop().toLowerCase();
+        const allowedExts = ['.pdf', '.docx', '.xlsx', '.zip'];
+
+        if (!allowedExts.includes(ext)) {
+          setRejectedExt(ext);
+          setDropzoneState('c');
+          showToast(`Format berkas ${ext} ditolak. Harap gunakan format .pdf, .docx, .xlsx, atau .zip.`, 'error');
+          return;
+        }
+
+        const maxBytes = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxBytes) {
+          const currentMb = (file.size / (1024 * 1024)).toFixed(1);
+          const excessMb = ((file.size - maxBytes) / (1024 * 1024)).toFixed(1);
+          setOversizeDetails({
+            name: file.name,
+            size: `${currentMb} MB`,
+            excess: `+${excessMb} MB Berlebih`
+          });
+          setDropzoneState('d');
+          showToast(`Ukuran berkas (${currentMb} MB) melebihi batas 10.0 MB.`, 'error');
+          return;
+        }
+
+        // File is valid: Run uploading simulation
+        setSelectedFileName(file.name);
+        setFileSizeText((file.size / (1024 * 1024)).toFixed(1) + ' MB');
+        setDropzoneState('e');
+        setUploadProgress(15);
+
+        let currentP = 15;
+        const interval = setInterval(() => {
+          currentP += 25;
+          if (currentP >= 100) {
+            currentP = 100;
+            clearInterval(interval);
+            setUploadProgress(100);
+            setTimeout(() => {
+              setDropzoneState('f');
+              showToast(`Berkas "${file.name}" berhasil divalidasi dengan checksum SHA-256!`, 'success');
+            }, 300);
+          } else {
+            setUploadProgress(currentP);
+          }
+        }, 250);
+      };
+
+      // File input change
+      const handleFileInputChange = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          handleFileProcess(file);
+        }
+      };
+
+      // Drag and Drop handlers
+      const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dropzoneState !== 'b' && dropzoneState !== 'e') {
+          setDropzoneState('b');
+        }
+      };
+
+      const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dropzoneState === 'b') {
+          setDropzoneState('a');
+        }
+      };
+
+      const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) {
+          handleFileProcess(file);
+        } else {
+          setDropzoneState('a');
+        }
+      };
+
+      // Default dropzone click demo
+      const handleDefaultClick = () => {
+        if (fileInputRef.current) {
+          fileInputRef.current.click();
+        }
+      };
+
+      // Form submission
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!judulMateri.trim()) {
+          showToast('Harap masukkan judul materi pembelajaran.', 'error');
+          return;
+        }
+
+        if (dropzoneState === 'c' || dropzoneState === 'd') {
+          showToast('Harap perbaiki berkas materi sebelum mengunggah.', 'error');
+          return;
+        }
+
+        if (dropzoneState === 'e') {
+          showToast('Proses unggah berkas sedang berlangsung...', 'info');
+          return;
+        }
+
+        // Add to weekly modules if not present
+        const newModuleId = `mod-${Date.now()}`;
+        const newModule = {
+          id: newModuleId,
+          meeting: 'Pertemuan 3 (Baru)',
+          status: 'Materi Siap',
+          statusColor: 'text-tertiary',
+          title: judulMateri,
+          desc: deskripsiMateri || 'Materi perkuliahan baru berhasil diunggah.',
+          isActive: false
+        };
+
+        setModules(prev => [...prev, newModule]);
+        showToast('Materi Pembelajaran berhasil diunggah dan disinkronkan ke cloud SPADA UPGRIS!', 'success');
+        closeModal();
+      };
+
+      return (
+        <div className="bg-surface font-body-md text-on-surface antialiased min-h-screen selection:bg-primary-container selection:text-on-primary">
+          {/* Toast Notification */}
+          {toast.visible && (
+            <div className="fixed top-5 right-5 z-[9999] animate-toast">
+              <div
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border ${
+                  toast.type === 'success'
+                    ? 'bg-emerald-900/90 text-emerald-100 border-emerald-500/50'
+                    : toast.type === 'error'
+                    ? 'bg-rose-950/90 text-rose-100 border-rose-500/50'
+                    : 'bg-surface-container-highest text-on-surface border-outline/30'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  {toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'error' : 'info'}
+                </span>
+                <span className="font-label-md text-label-md">{toast.message}</span>
+                <button
+                  onClick={() => setToast(prev => ({ ...prev, visible: false }))}
+                  className="p-1 hover:opacity-75"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.docx,.xlsx,.zip"
+            className="hidden"
+            onChange={handleFileInputChange}
+          />
+
+          {/* Fixed Sidebar */}
+          <aside
+            className={`fixed left-0 top-0 h-full w-[260px] bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between transition-transform duration-300 ${
+              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            <div className="flex flex-col flex-1 overflow-y-auto">
+              <div className="px-space-md py-space-md bg-surface-container-lowest flex items-center gap-space-sm border-b border-outline-variant/10">
+                <div className="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-on-primary-container text-[20px]">school</span>
+                </div>
+                <div className="flex flex-col overflow-hidden">
+                  <span className="font-title-md text-title-md text-on-surface tracking-tight truncate font-bold">
+                    SPADA LMS UPGRIS
+                  </span>
+                  <span className="font-caption text-caption text-secondary truncate">Team Membangun Negeri</span>
+                </div>
+              </div>
+
+              <nav className="flex-1 px-space-sm py-space-md space-y-space-md">
+                <div className="space-y-space-xs">
+                  <div className="px-space-sm py-space-xs font-caption text-caption uppercase tracking-wider text-outline font-semibold">
+                    Main Menu
+                  </div>
+                  <div className="space-y-space-xs">
+                    <button
+                      onClick={() => setActiveMenu('dasbor-dosen')}
+                      className={`w-full flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg font-body-md text-body-md transition-colors text-left ${
+                        activeMenu === 'dasbor-dosen'
+                          ? 'bg-surface-container-high text-on-surface'
+                          : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">space_dashboard</span>
+                      <span>Dasbor Dosen</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveMenu('kelas-diampu')}
+                      className={`w-full flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg font-body-md text-body-md transition-colors text-left ${
+                        activeMenu === 'kelas-diampu'
+                          ? 'bg-surface-container-high text-on-surface'
+                          : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">class</span>
+                      <span>Kelas Diampu</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveMenu('panduan-dosen')}
+                      className={`w-full flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg font-body-md text-body-md transition-colors text-left ${
+                        activeMenu === 'panduan-dosen'
+                          ? 'bg-surface-container-high text-on-surface'
+                          : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">menu_book</span>
+                      <span>Panduan Dosen</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-space-xs">
+                  <div className="px-space-sm py-space-xs font-caption text-caption uppercase tracking-wider text-outline font-semibold">
+                    Akademik
+                  </div>
+                  <div className="space-y-space-xs">
+                    <button
+                      onClick={() => setActiveMenu('central-timeline')}
+                      className="w-full flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors text-left"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">calendar_clock</span>
+                      <span>Central Timeline & Jadwal</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveMenu('pemeriksaan-tugas')}
+                      className="w-full flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors text-left"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">assignment_turned_in</span>
+                      <span>Pemeriksaan Tugas & Skor</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveMenu('rekap-presensi')}
+                      className="w-full flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors text-left"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">fact_check</span>
+                      <span>Rekap Presensi & Nilai</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-space-xs">
+                  <div className="px-space-sm py-space-xs font-caption text-caption uppercase tracking-wider text-outline font-semibold">
+                    Manajemen Kelas
+                  </div>
+                  <div className="space-y-space-xs">
+                    <button
+                      onClick={() => setActiveMenu('unggah-materi-ajar')}
+                      className={`w-full flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg font-body-md text-body-md transition-colors text-left font-medium ${
+                        activeMenu === 'unggah-materi-ajar'
+                          ? 'bg-primary-container text-on-primary-container shadow-sm'
+                          : 'text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">upload_file</span>
+                      <span>Unggah Materi Ajar</span>
+                    </button>
+                    <button
+                      onClick={() => setActiveMenu('bank-kuis-ujian')}
+                      className="w-full flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg font-body-md text-body-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors text-left"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">quiz</span>
+                      <span>Bank Kuis & Ujian (UTS/UAS)</span>
+                    </button>
+                  </div>
+                </div>
+              </nav>
+            </div>
+
+            <div className="p-space-md bg-surface-container space-y-space-sm border-t border-outline-variant/10">
+              <a
+                href="https://upt-ptik.upgris.ac.id"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full flex items-center justify-between text-secondary font-label-sm text-label-sm hover:underline"
+              >
+                <span>Bantuan & Tiket PTIK</span>
+                <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+              </a>
+              <div className="text-on-surface-variant font-caption text-caption">
+                Semester Ganjil 2026/2027<br />
+                v2.4.0 (Framework React Standalone)
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Layout Area */}
+          <div className={`transition-all duration-300 min-h-screen flex flex-col ${sidebarOpen ? 'md:pl-[260px]' : 'pl-0'}`}>
+            {/* Top Header Bar */}
+            <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-outline-variant/10 px-4 md:px-8 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSidebarOpen(prev => !prev)}
+                  className="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors"
+                  title="Toggle Menu Sidebar"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    {sidebarOpen ? 'menu_open' : 'menu'}
+                  </span>
+                </button>
+                <nav className="flex items-center gap-2 text-on-surface-variant font-body-sm text-[13px]">
+                  <span className="hover:text-on-surface cursor-pointer">Ruang Kelas</span>
+                  <span>/</span>
+                  <span className="hover:text-on-surface cursor-pointer">Rekayasa Perangkat Lunak (TI-A)</span>
+                  <span>/</span>
+                  <span className="text-primary font-semibold">Unggah Materi</span>
+                </nav>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Search */}
+                <div className="hidden sm:flex items-center bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/20 focus-within:border-primary/50">
+                  <span className="material-symbols-outlined text-outline text-[18px] mr-2">search</span>
+                  <input
+                    type="text"
+                    placeholder="Cari materi..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent border-none text-[13px] text-on-surface focus:outline-none w-36"
+                  />
+                </div>
+
+                {/* Theme Toggle */}
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors"
+                  title={isDarkMode ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {isDarkMode ? 'light_mode' : 'dark_mode'}
+                  </span>
+                </button>
+
+                {/* Server Clock Badge */}
+                <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container font-mono text-caption text-secondary">
+                  <span className="material-symbols-outlined text-[15px]">schedule</span>
+                  <span>{serverClock}</span>
+                </div>
+
+                {/* User Profile Info */}
+                <div className="flex items-center gap-2 pl-2 border-l border-outline-variant/20">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
+                    BP
+                  </div>
+                  <div className="hidden lg:flex flex-col text-left">
+                    <span className="font-label-sm text-[12px] font-bold text-on-surface leading-tight">
+                      Dr. Bayu Pratama, M.Kom.
+                    </span>
+                    <span className="font-caption text-[11px] text-secondary">Dosen Pengampu</span>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            {/* Main Content View (Background behind modal) */}
+            <main className="p-4 md:p-8 flex-1 space-y-6">
+              {/* Class Header Banner */}
+              <div className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/15 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/20 text-primary flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[32px]">folder_special</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-secondary-container/20 text-secondary font-label-sm text-label-sm px-2.5 py-0.5 rounded-full font-semibold">
+                        TIF-302
+                      </span>
+                      <span className="text-on-surface-variant font-caption text-caption">
+                        3 SKS • Reguler Pagi
+                      </span>
+                    </div>
+                    <h1 className="font-headline-md text-headline-md text-on-surface mt-1">
+                      Rekayasa Perangkat Lunak (TI-A)
+                    </h1>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant">
+                      Dosen: Dr. Bayu Pratama, M.Kom. • Kampus IV UPGRIS Gedung GP II Lt. 4
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-space-sm flex-wrap">
+                  <button className="bg-surface-container-high px-4 py-2 rounded-lg font-label-md text-label-md text-on-surface flex items-center gap-1.5 hover:bg-surface-container-highest transition-colors">
+                    <span className="material-symbols-outlined text-[18px]">group</span>
+                    <span>42 Mahasiswa</span>
+                  </button>
+                  <button
+                    onClick={openModal}
+                    className="bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg font-label-md text-label-md text-on-primary font-semibold flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">add</span>
+                    <span>Tambah Aktivitas</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Weekly Modules Timeline */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-title-lg text-title-lg text-on-surface font-bold">
+                    Linimasa Pembelajaran Mingguan
+                  </h2>
+                  <span className="text-on-surface-variant text-[12px]">Semester Ganjil 2026/2027</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+                  {modules.map((m) => (
+                    <div
+                      key={m.id}
+                      className={`${
+                        m.isActive
+                          ? 'bg-surface-container-high border-2 border-primary/40'
+                          : 'bg-surface-container border border-outline-variant/10'
+                      } rounded-xl p-space-md flex flex-col gap-2 relative overflow-hidden transition-all hover:border-primary/50`}
+                    >
+                      <span className={`${m.statusColor} font-label-sm text-label-sm flex items-center gap-1.5 font-semibold`}>
+                        {m.isActive && <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>}
+                        {m.meeting} • {m.status}
+                      </span>
+                      <h3 className="font-title-md text-title-md text-on-surface font-semibold">
+                        {m.title}
+                      </h3>
+                      <p className="font-body-sm text-body-sm text-on-surface-variant line-clamp-2">
+                        {m.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </main>
+          </div>
+
+          {/* ========================================================================= */}
+          {/* MODAL BACKDROP OVERLAY & REACTIVE DIALOG (6-STATE DROPZONE)               */}
+          {/* ========================================================================= */}
+          {isModalOpen && (
+            <div
+              id="modal-backdrop"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title-heading"
+              className="fixed inset-0 z-50 bg-[#0F172A]/80 backdrop-blur-[6px] flex items-center justify-center p-3 sm:p-5 overflow-y-auto"
+              onClick={(e) => {
+                if (e.target.id === 'modal-backdrop') closeModal();
+              }}
+            >
+              <div
+                className={`w-full max-w-[680px] bg-white rounded-2xl shadow-[0_20px_25px_-5px_rgba(15,23,42,0.35),0_8px_10px_-6px_rgba(15,23,42,0.2)] border border-slate-200 p-5 sm:p-7 flex flex-col gap-5 text-slate-900 transition-all duration-200 ${
+                  isClosingModal ? 'scale-95 opacity-0' : 'animate-scale-in'
+                }`}
+              >
+                {/* MODAL HEADER */}
+                <div className="flex items-start justify-between gap-4 pb-1 border-b border-slate-100">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2
+                        id="modal-title-heading"
+                        className="text-[20px] font-bold tracking-tight text-slate-900 font-headline-md leading-snug"
+                      >
+                        Unggah Materi Baru
+                      </h2>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[12px] font-medium font-body-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                        Pertemuan 3 • Rekayasa Perangkat Lunak (TI-A)
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-slate-500 font-body-sm">
+                      Tambahkan dokumen modul perkuliahan terintegrasi dengan SPADA UPGRIS Cloud Storage.
+                    </p>
+                  </div>
+                  <button
+                    id="btn-close-modal"
+                    type="button"
+                    onClick={closeModal}
+                    aria-label="Tutup dialog"
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">close</span>
+                  </button>
+                </div>
+
+                {/* FORM FIELDS STACK */}
+                <form id="form-upload-materi" onSubmit={handleSubmit} className="flex flex-col gap-4">
+                  {/* Field 1: Judul Materi */}
+                  <div className="flex flex-col gap-1.5">
+                    <label
+                      htmlFor="input-judul-materi"
+                      className="text-[12px] font-bold tracking-wider uppercase text-slate-700 font-label-sm"
+                    >
+                      Judul Materi <span className="text-rose-600">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="input-judul-materi"
+                        type="text"
+                        required
+                        value={judulMateri}
+                        onChange={(e) => setJudulMateri(e.target.value)}
+                        placeholder="Contoh: Modul 3 — Analisis Kebutuhan Sistem & Spesifikasi SRS IEEE 830"
+                        className="w-full h-11 px-3.5 rounded-lg border border-slate-300 bg-white text-slate-800 text-[14px] font-body-md placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Field 2: Deskripsi Materi */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex justify-between items-center">
+                      <label
+                        htmlFor="input-deskripsi-materi"
+                        className="text-[12px] font-bold tracking-wider uppercase text-slate-700 font-label-sm"
+                      >
+                        Deskripsi Materi <span className="text-slate-400 font-normal lowercase">(opsional)</span>
+                      </label>
+                      <span id="char-counter" className="text-[12px] font-caption text-slate-500 font-medium">
+                        {deskripsiMateri.length} / 300 karakter
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <textarea
+                        id="input-deskripsi-materi"
+                        rows="2"
+                        maxLength="300"
+                        value={deskripsiMateri}
+                        onChange={(e) => setDeskripsiMateri(e.target.value)}
+                        placeholder="Tuliskan ringkasan materi, instruksi membaca mandiri, atau referensi bab yang wajib disiapkan mahasiswa..."
+                        className="w-full p-3 rounded-lg border border-slate-300 bg-white text-slate-800 text-[13px] font-body-sm leading-relaxed placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-all resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Field 3: Interactive Dropzone Section with State Switcher Bar */}
+                  <div className="flex flex-col gap-2 pt-1">
+                    {/* Switcher Bar Header (Tabs A to F) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                      <span className="text-[11px] font-bold tracking-wider text-slate-500 uppercase px-2 font-label-sm flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px] text-blue-600">tune</span>
+                        Simulasi Status Uji Validasi:
+                      </span>
+                      <div role="tablist" aria-label="Status Pratinjau Dropzone" className="flex flex-wrap items-center gap-1 overflow-x-auto">
+                        {[
+                          { key: 'a', label: 'A. Default' },
+                          { key: 'b', label: 'B. Drag-Over' },
+                          { key: 'c', label: 'C. Format Error' },
+                          { key: 'd', label: 'D. Oversize' },
+                          { key: 'e', label: 'E. Uploading' },
+                          { key: 'f', label: 'F. Success' }
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            type="button"
+                            role="tab"
+                            aria-selected={dropzoneState === tab.key}
+                            onClick={() => switchState(tab.key)}
+                            className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition-all focus:outline-none ${
+                              dropzoneState === tab.key
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'bg-transparent text-slate-600 hover:bg-slate-200/70'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* DYNAMIC DROPZONE CONTAINER */}
+                    <div
+                      id="dropzone-dynamic-wrapper"
+                      className="w-full relative focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 rounded-xl transition-all"
+                      onDragOver={handleDragOver}
+                      onDragEnter={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      {/* STATE A: DEFAULT (Netral) */}
+                      {dropzoneState === 'a' && (
+                        <div
+                          id="state-panel-a"
+                          role="button"
+                          tabIndex="0"
+                          onClick={handleDefaultClick}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleDefaultClick();
+                            }
+                          }}
+                          aria-label="Area unggah berkas, klik atau seret berkas ke sini"
+                          className="border-2 border-dashed border-slate-300 hover:border-blue-400 bg-slate-50/80 rounded-xl p-6 sm:p-7 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3 shadow-inner">
+                            <span className="material-symbols-outlined text-[28px]">cloud_upload</span>
+                          </div>
+                          <p className="text-[14px] font-semibold text-slate-800 font-title-md">
+                            Tarik & lepas berkas di sini, atau{' '}
+                            <span className="text-blue-600 hover:text-blue-700 underline underline-offset-2 cursor-pointer">
+                              Pilih Berkas Dari Komputer
+                            </span>
+                          </p>
+                          <p className="text-[12px] text-slate-500 font-body-sm mt-1 max-w-sm">
+                            Berkas otomatis dipindai antivirus sistem SPADA sebelum disinkronkan ke kelas mahasiswa.
+                          </p>
+                          {/* Badges Whitelist & Limit */}
+                          <div className="flex flex-wrap items-center justify-center gap-1.5 mt-4 pt-3 border-t border-slate-200/70 w-full max-w-md">
+                            <span className="px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 text-[11px] font-medium font-caption">.pdf</span>
+                            <span className="px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 text-[11px] font-medium font-caption">.docx</span>
+                            <span className="px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 text-[11px] font-medium font-caption">.xlsx</span>
+                            <span className="px-2 py-0.5 rounded bg-slate-200/80 text-slate-700 text-[11px] font-medium font-caption">.zip</span>
+                            <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium px-2 py-0.5 rounded bg-slate-100 ml-1">
+                              <span className="material-symbols-outlined text-[13px] text-slate-400">lock</span>
+                              Batas maks. 10MB per berkas (Regulasi SPADA)
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* STATE B: DRAG-OVER / HOVER */}
+                      {dropzoneState === 'b' && (
+                        <div
+                          id="state-panel-b"
+                          className="border-2 border-dashed border-blue-600 bg-blue-50/70 rounded-xl p-6 sm:p-7 flex flex-col items-center justify-center text-center transition-all duration-200 shadow-[0_0_0_4px_rgba(37,99,235,0.1)]"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center mb-3 animate-bounce shadow-md">
+                            <span className="material-symbols-outlined text-[28px]">file_download</span>
+                          </div>
+                          <p className="text-[15px] font-bold text-blue-700 font-title-md">
+                            Lepaskan berkas untuk memulai unggahan...
+                          </p>
+                          <p className="text-[12px] text-blue-600/80 font-body-sm mt-1">
+                            Sistem siap menerima dan memvalidasi berkas mata kuliah Anda
+                          </p>
+                          <div className="mt-3 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-[11px] font-semibold flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
+                            Dropzone Aktif Terdeteksi
+                          </div>
+                        </div>
+                      )}
+
+                      {/* STATE C: INVALID FORMAT (Error .rar / .exe) */}
+                      {dropzoneState === 'c' && (
+                        <div
+                          id="state-panel-c"
+                          role="alert"
+                          aria-live="assertive"
+                          className="border-2 border-red-600 bg-red-50/70 rounded-xl p-5 sm:p-6 flex flex-col gap-3 transition-all duration-200 animate-[shake_0.4s_ease-in-out]"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                              <span className="material-symbols-outlined text-[24px]">warning</span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[14px] font-bold text-red-900 font-title-md">Format Berkas Ditolak</span>
+                                <span className="px-2 py-0.2 rounded bg-red-200 text-red-800 text-[11px] font-mono font-semibold">
+                                  {rejectedExt} terdeteksi
+                                </span>
+                              </div>
+                              <p className="text-[13px] text-red-700 font-body-sm leading-relaxed">
+                                Format berkas tidak didukung demi keamanan sistem SPADA UPGRIS. Harap unggah file dengan ekstensi resmi:{' '}
+                                <strong className="font-semibold underline">.pdf</strong>,{' '}
+                                <strong className="font-semibold underline">.docx</strong>,{' '}
+                                <strong className="font-semibold underline">.xlsx</strong>, atau{' '}
+                                <strong className="font-semibold underline">.zip</strong>.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-2 border-t border-red-200 text-[12px]">
+                            <span className="text-red-600 font-medium">
+                              Arsip {rejectedExt} berpotensi melanggar kebijakan integritas SPADA.
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => switchState('a')}
+                              className="text-red-700 font-bold hover:underline flex items-center gap-0.5"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">refresh</span> Unggah Ulang
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* STATE D: OVERSIZE ERROR (> 10MB) */}
+                      {dropzoneState === 'd' && (
+                        <div
+                          id="state-panel-d"
+                          role="alert"
+                          aria-live="assertive"
+                          className="border-2 border-red-600 bg-red-50/70 rounded-xl p-5 sm:p-6 flex flex-col gap-3 transition-all duration-200"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                              <span className="material-symbols-outlined text-[24px]">error</span>
+                            </div>
+                            <div className="flex flex-col gap-1.5 flex-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[14px] font-bold text-red-900 font-title-md">
+                                  Ukuran Berkas Melebihi Batas Maksimal
+                                </span>
+                                <span className="px-2 py-0.5 rounded bg-red-200 text-red-800 text-[11px] font-bold">
+                                  {oversizeDetails.excess}
+                                </span>
+                              </div>
+                              <p className="text-[13px] text-red-700 font-body-sm">
+                                Berkas <strong className="font-semibold">{oversizeDetails.name}</strong> berukuran {oversizeDetails.size}. Kuota maksimum per materi adalah 10.0 MB.
+                              </p>
+                              {/* Visual Size Meter Bar */}
+                              <div className="mt-1 flex flex-col gap-1">
+                                <div className="flex justify-between text-[11px] font-mono text-red-800 font-semibold">
+                                  <span>Ukuran File: {oversizeDetails.size}</span>
+                                  <span>Batas Maks: 10.0 MB</span>
+                                </div>
+                                <div className="w-full h-2.5 bg-red-200 rounded-full overflow-hidden flex">
+                                  <div className="bg-red-500 h-full w-[80%]" title="Kapasitas Maksimal 10MB"></div>
+                                  <div className="bg-red-700 h-full w-[20%] animate-pulse" title="Kelebihan Kapasitas"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between pt-2 border-t border-red-200 text-[12px]">
+                            <span className="text-red-700 font-medium">
+                              Saran: Kompres PDF atau pisahkan video ke link Google Drive internal UPGRIS.
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => switchState('a')}
+                              className="text-red-800 font-bold hover:underline"
+                            >
+                              Ganti Berkas
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* STATE E: UPLOADING (Animated Progress) */}
+                      {dropzoneState === 'e' && (
+                        <div
+                          id="state-panel-e"
+                          aria-live="polite"
+                          className="border border-slate-300 bg-slate-50 rounded-xl p-4 sm:p-5 flex flex-col gap-3 transition-all duration-200"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[13px] font-bold text-slate-800 font-body-md truncate">
+                                  {selectedFileName}
+                                </span>
+                                <span className="text-[11px] text-slate-500 font-body-sm">
+                                  {fileSizeText} dari 10.0 MB • Kecepatan Unggah 2.1 MB/s
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[13px] font-bold text-blue-600 font-mono bg-blue-50 px-2 py-0.5 rounded">
+                                {uploadProgress}%
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => switchState('a')}
+                                title="Batalkan unggahan"
+                                className="w-7 h-7 rounded-full text-slate-400 hover:text-red-600 hover:bg-slate-200 flex items-center justify-center transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">close</span>
+                              </button>
+                            </div>
+                          </div>
+                          {/* Animated Striped Progress Bar */}
+                          <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 relative overflow-hidden"
+                              style={{ width: `${uploadProgress}%` }}
+                            >
+                              <div className="absolute inset-0 bg-white/20 bg-[linear-gradient(45deg,rgba(255,255,255,0.25)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.25)_50%,rgba(255,255,255,0.25)_75%,transparent_75%,transparent)] bg-[length:16px_16px] animate-[progressStripes_1s_linear_infinite]"></div>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping"></span>
+                              Mentransfer data ke storage cluster UPGRIS...
+                            </span>
+                            <span>Perkiraan sisa waktu: ~2 detik</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* STATE F: SUCCESS / READY (.pdf) */}
+                      {dropzoneState === 'f' && (
+                        <div
+                          id="state-panel-f"
+                          aria-live="polite"
+                          className="border border-emerald-300 bg-emerald-50/70 rounded-xl p-4 sm:p-5 flex flex-col gap-3 transition-all duration-200"
+                        >
+                          <div className="flex items-start sm:items-center justify-between gap-3 flex-col sm:flex-row">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-outlined text-[24px]">task_alt</span>
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[13px] font-bold text-emerald-950 font-body-md truncate">
+                                    {selectedFileName}
+                                  </span>
+                                  <span className="bg-emerald-200/80 text-emerald-800 text-[10px] font-bold uppercase px-1.5 py-0.2 rounded font-caption">
+                                    Terverifikasi
+                                  </span>
+                                </div>
+                                <span className="text-[12px] text-emerald-700 font-body-sm">
+                                  {fileSizeText} • Lolos Validasi Ekstensi & SHA-256 Checksum
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => showToast(`Membuka pratinjau berkas "${selectedFileName}"...`, 'info')}
+                                className="px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100 text-[12px] font-semibold flex items-center gap-1 transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-[15px]">visibility</span>
+                                Pratinjau Berkas
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => switchState('a')}
+                                className="px-2.5 py-1.5 rounded-lg text-rose-600 hover:text-rose-800 hover:bg-rose-50 text-[12px] font-semibold flex items-center gap-1 transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-[15px]">delete_outline</span>
+                                Ganti
+                              </button>
+                            </div>
+                          </div>
+                          <div className="pt-2 border-t border-emerald-200/70 flex items-center justify-between text-[11px] text-emerald-700">
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[14px] text-emerald-600">verified_user</span>
+                              Berkas bersih dari malware & enkripsi AES-256 aktif
+                            </span>
+                            <span className="font-mono">Ready to publish</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Publishing Visibility Checkbox */}
+                  <div className="pt-1 pb-1">
+                    <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={publishToTimeline}
+                        onChange={(e) => setPublishToTimeline(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 transition-colors"
+                      />
+                      <span className="text-[13px] text-slate-700 font-body-sm">
+                        Publikasikan langsung ke Linimasa Mahasiswa Kelas TI-A
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* MODAL FOOTER */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 mt-1">
+                    {/* Security Notice */}
+                    <div className="flex items-center gap-1.5 text-slate-500 text-[11px] font-caption max-w-xs">
+                      <span className="material-symbols-outlined text-[16px] text-slate-400 shrink-0">enhanced_encryption</span>
+                      <span>Tersimpan di Private Storage Terenkripsi (Sesuai BR-009 & NFR-005)</span>
+                    </div>
+
+                    {/* Buttons Group */}
+                    <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                      <button
+                        id="btn-cancel"
+                        type="button"
+                        onClick={closeModal}
+                        className="px-4 py-2.5 rounded-lg text-slate-600 hover:text-slate-800 hover:bg-slate-100 text-[13px] font-semibold font-label-md transition-colors"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        id="btn-submit-upload"
+                        type="submit"
+                        disabled={dropzoneState === 'c' || dropzoneState === 'd' || dropzoneState === 'e'}
+                        className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-[13px] font-label-md flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(37,99,235,0.28)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {dropzoneState === 'e' ? (
+                          <>
+                            <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                            <span>Sedang Mengunggah ({uploadProgress}%)...</span>
+                          </>
+                        ) : dropzoneState === 'c' || dropzoneState === 'd' ? (
+                          <>
+                            <span className="material-symbols-outlined text-[18px]">block</span>
+                            <span>Perbaiki Berkas Terlebih Dahulu</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="material-symbols-outlined text-[18px]">upload</span>
+                            <span>Unggah Materi Pembelajaran</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const rootElement = document.getElementById('root');
+    ReactDOM.createRoot(rootElement).render(<UnggahMateriApp />);
+  </script>
+</body>
+</html>
+
