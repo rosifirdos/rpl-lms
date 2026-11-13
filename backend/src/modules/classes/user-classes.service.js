@@ -3,6 +3,11 @@ import { AppError } from '../../utils/errors.js';
 import { ROLES } from '../../constants/roles.js';
 import { ACADEMIC } from '../../constants/academic.js';
 import { formatLecturerName } from '../../utils/format.js';
+import {
+  authorizeClassAccess,
+  getLecturerRecordOrThrow,
+  getStudentRecordOrThrow,
+} from '../../utils/ownership.js';
 
 export class UserClassesService {
   /**
@@ -50,12 +55,7 @@ export class UserClassesService {
     const currentPage = Math.max(1, Number(page) || 1);
 
     if (user.role === ROLES.MAHASISWA) {
-      const student = await prisma.mahasiswa.findUnique({
-        where: { user_id: user.id },
-      });
-      if (!student) {
-        throw new AppError('Data mahasiswa tidak ditemukan', 404);
-      }
+      const student = await getStudentRecordOrThrow(user.id);
 
       const where = {
         student_id: student.id,
@@ -137,12 +137,7 @@ export class UserClassesService {
     }
 
     if (user.role === ROLES.DOSEN) {
-      const lecturer = await prisma.dosen.findUnique({
-        where: { user_id: user.id },
-      });
-      if (!lecturer) {
-        throw new AppError('Data dosen tidak ditemukan', 404);
-      }
+      const lecturer = await getLecturerRecordOrThrow(user.id);
 
       const where = {
         lecturer_id: lecturer.id,
@@ -247,41 +242,8 @@ export class UserClassesService {
       throw new AppError('Kelas perkuliahan tidak ditemukan', 404);
     }
 
-    // Otoritas Akses Kelas (Aturan Bisnis BR-003)
-    if (user.role === ROLES.MAHASISWA) {
-      const student = await prisma.mahasiswa.findUnique({
-        where: { user_id: user.id },
-      });
-      if (!student) {
-        throw new AppError('Data mahasiswa tidak ditemukan', 404);
-      }
-
-      const enrollment = await prisma.enrollment.findUnique({
-        where: {
-          class_id_student_id: {
-            class_id: classId,
-            student_id: student.id,
-          },
-        },
-      });
-
-      if (!enrollment) {
-        throw new AppError(
-          'Akses ditolak: Anda tidak terdaftar pada kelas perkuliahan ini (BR-003)',
-          403
-        );
-      }
-    } else if (user.role === ROLES.DOSEN) {
-      if (classRecord.lecturer.user_id !== user.id) {
-        throw new AppError(
-          'Akses ditolak: Anda bukan dosen pengampu untuk kelas perkuliahan ini',
-          403
-        );
-      }
-    } else {
-      // FIX F5: Admin tidak boleh mengakses /api/classes/:id (gunakan /api/admin/classes/:id)
-      throw new AppError('Akses ditolak: endpoint ini khusus untuk Mahasiswa dan Dosen terdaftar', 403);
-    }
+    // Otoritas Akses Kelas (Aturan Bisnis BR-003) — helper terpusat Fase 0 MVP 2
+    await authorizeClassAccess({ user, classRecord, classId });
 
     const meetings = this.generate16Meetings(classRecord);
 
