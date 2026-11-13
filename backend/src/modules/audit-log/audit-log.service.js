@@ -2,6 +2,7 @@
 import path from 'node:path';
 import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
+import { normalizeAuditEntity } from '../../constants/auditEntities.js';
 
 /**
  * Layanan terpusat Audit Trail Engine E-Learning Kampus (SRS Bab 15 & Bab 35)
@@ -40,7 +41,7 @@ export class AuditLogService {
     const payload = {
       user_id: userId || null,
       action: String(action).toUpperCase(),
-      entity: String(entity).toLowerCase(),
+      entity: normalizeAuditEntity(entity),
       entity_id: entityId ? String(entityId) : null,
       old_values: oldValues ? this.#sanitizeValues(oldValues) : null,
       new_values: newValues ? this.#sanitizeValues(newValues) : null,
@@ -213,7 +214,7 @@ export class AuditLogService {
     }
 
     if (entity) {
-      where.entity = { contains: entity.trim().toLowerCase(), mode: 'insensitive' };
+      where.entity = { contains: normalizeAuditEntity(entity), mode: 'insensitive' };
     }
 
     if (userId) {
