@@ -1,6 +1,7 @@
 import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
+import { ACADEMIC } from '../../constants/academic.js';
 
 const classAuditValues = ({ course_id, lecturer_id, academic_year, semester, name, capacity }) => ({
   course_id,
@@ -34,6 +35,35 @@ const classRelations = {
   },
   _count: { select: { enrollments: true } },
 };
+
+/**
+ * Membangkitkan 16 pertemuan terstruktur untuk sebuah kelas (BR-004)
+ * Dipanggil di dalam transaksi yang sama dengan pembuatan kelas
+ */
+async function generateMeetingsForClass(classId, tx) {
+  const meetings = [];
+  for (let i = 1; i <= ACADEMIC.TOTAL_MEETINGS; i++) {
+    const isExam = !!ACADEMIC.EXAM_MEETINGS[i];
+    const examType = ACADEMIC.EXAM_MEETINGS[i] || 'NONE';
+    const title = isExam
+      ? `Pertemuan ${i}: ${examType === 'UTS' ? 'Evaluasi Tengah Semester (UTS)' : 'Evaluasi Akhir Semester (UAS)'}`
+      : `Pertemuan ${i}`;
+
+    meetings.push({
+      class_id: classId,
+      meeting_number: i,
+      title,
+      description: isExam
+        ? `Ujian ${examType === 'UTS' ? 'Tengah' : 'Akhir'} Semester`
+        : `Sesi pembelajaran perkuliahan pertemuan ke-${i}`,
+      is_exam: isExam,
+      exam_type: examType,
+      is_published: true,
+    });
+  }
+
+  await tx.meeting.createMany({ data: meetings });
+}
 
 export class ClassesService {
   static async getClasses({
@@ -123,20 +153,29 @@ export class ClassesService {
 
   static async createClass({ adminId, classData, ipAddress, userAgent }) {
     await this.validateReferences(classData);
-    const classRecord = await prisma.class.create({
-      data: classData,
-      include: classRelations,
+
+    // Transaksi: buat kelas + generate 16 pertemuan secara atomik
+    const result = await prisma.$transaction(async (tx) => {
+      const classRecord = await tx.class.create({
+        data: classData,
+        include: classRelations,
+      });
+
+      // Auto-generate 16 pertemuan (MVP 2 Fase 1)
+      await generateMeetingsForClass(classRecord.id, tx);
+
+      return classRecord;
     });
 
     await AuditLogService.logClassMutation({
       userId: adminId,
       action: 'CREATE_CLASS',
-      classId: classRecord.id,
-      newValues: classAuditValues(classRecord),
+      classId: result.id,
+      newValues: classAuditValues(result),
       ipAddress,
       userAgent,
     });
-    return classRecord;
+    return result;
   }
 
   static async updateClass({ adminId, classId, updateData, ipAddress, userAgent }) {
