@@ -1,12 +1,5 @@
 // =============================================================================
-// E-Learning Kampus — Prisma Schema (MVP 1)
-//
-// Mengacu IMPLEMENTATION_PLAN_MVP1_BACKEND.md Bab 3 & SRS.md Bab 13.
-//
-// Keputusan 1 (BR-001): Standalone LMS — tidak ada SIA/PMB/KRS manual.
-// Keputusan 2: 3 Role tunggal (mahasiswa, dosen, admin) sebagai enum.
-// Keputusan 3 (BR-002): Direct Enrollment mahasiswa oleh Admin.
-// Keputusan 4 (BR-009): Penyimpanan berkas terproteksi (private storage).
+// E-Learning Kampus — Prisma Schema (MVP 1 + MVP 2)
 // =============================================================================
 
 generator client {
@@ -37,6 +30,24 @@ enum UserStatus {
 enum Semester {
   ganjil
   genap
+}
+
+enum ExamType {
+  NONE
+  UTS
+  UAS
+}
+
+enum AttendanceStatus {
+  OPEN
+  CLOSED
+}
+
+enum PresenceStatus {
+  HADIR
+  SAKIT
+  IZIN
+  ALPA
 }
 
 // ---------------------------------------------------------------------------
@@ -92,8 +103,9 @@ model Mahasiswa {
   updated_at DateTime @updatedAt
 
   // Relations
-  user        User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  enrollments Enrollment[]
+  user               User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  enrollments        Enrollment[]
+  attendance_records AttendanceRecord[]
 
   @@map("mahasiswa")
 }
@@ -169,6 +181,7 @@ model Class {
   course      Course       @relation(fields: [course_id], references: [id])
   lecturer    Dosen        @relation(fields: [lecturer_id], references: [id])
   enrollments Enrollment[]
+  meetings    Meeting[]
 
   @@unique([course_id, academic_year, semester, name])
   @@index([academic_year, semester])
@@ -193,6 +206,76 @@ model Enrollment {
 }
 
 // ---------------------------------------------------------------------------
+// E-Learning MVP 2 — 16 Pertemuan, Materi, Presensi
+// ---------------------------------------------------------------------------
+
+model Meeting {
+  id             String        @id @default(uuid()) @db.Uuid
+  class_id       String        @db.Uuid
+  meeting_number Int
+  title          String        @db.VarChar(150)
+  description    String?       @db.Text
+  is_exam        Boolean       @default(false)
+  exam_type      ExamType      @default(NONE)
+  is_published   Boolean       @default(true)
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+
+  class              Class              @relation(fields: [class_id], references: [id], onDelete: Cascade)
+  materials          Material[]
+  attendance_session AttendanceSession?
+
+  @@unique([class_id, meeting_number])
+  @@map("meetings")
+}
+
+model Material {
+  id          String   @id @default(uuid()) @db.Uuid
+  meeting_id  String   @db.Uuid
+  title       String   @db.VarChar(150)
+  description String?  @db.Text
+  file_id     String   @db.Uuid
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  meeting Meeting @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+  file    File    @relation(fields: [file_id], references: [id], onDelete: Restrict)
+
+  @@map("materials")
+}
+
+model AttendanceSession {
+  id                String           @id @default(uuid()) @db.Uuid
+  meeting_id        String           @unique @db.Uuid
+  opened_at         DateTime?
+  closed_at         DateTime?
+  status            AttendanceStatus @default(CLOSED)
+  tolerance_minutes Int              @default(15)
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+
+  meeting Meeting            @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+  records AttendanceRecord[]
+
+  @@map("attendance_sessions")
+}
+
+model AttendanceRecord {
+  id          String         @id @default(uuid()) @db.Uuid
+  session_id  String         @db.Uuid
+  student_id  String         @db.Uuid
+  status      PresenceStatus @default(HADIR)
+  recorded_at DateTime       @default(now())
+  notes       String?        @db.Text
+
+  session AttendanceSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  student Mahasiswa         @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@unique([session_id, student_id])
+  @@map("attendance_records")
+}
+
+// ---------------------------------------------------------------------------
 // File Storage (Private — BR-009)
 // ---------------------------------------------------------------------------
 
@@ -207,8 +290,9 @@ model File {
   created_at    DateTime @default(now())
 
   // Relations
-  uploader User      @relation(fields: [uploaded_by], references: [id], onDelete: Cascade)
-  profiles Profile[] @relation("ProfileAvatar")
+  uploader   User       @relation(fields: [uploaded_by], references: [id], onDelete: Cascade)
+  profiles   Profile[]  @relation("ProfileAvatar")
+  materials  Material[]
 
   @@map("files")
 }
