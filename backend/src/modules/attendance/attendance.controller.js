@@ -94,4 +94,20 @@ export class AttendanceController {
       return next(error);
     }
   }
+
+  static async getAttendanceRecap(req, res, next) {
+    try {
+      const data = await AttendanceService.getAttendanceRecap({
+        user: req.user,
+        classId: req.params.classId,
+      });
+
+      return apiResponse.success(res, {
+        message: 'Rekapitulasi kehadiran kelas berhasil diambil',
+        data,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
