@@ -26,17 +26,10 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const ALLOWED_TYPES = [
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'video/mp4',
-    'video/webm',
-    'image/png',
-    'image/jpeg',
-  ];
-  const ALLOWED_EXTENSIONS = ['.pdf', '.pptx', '.docx', '.mp4', '.webm', '.png', '.jpg', '.jpeg'];
-  const MAX_SIZE_MB = 50;
+  // Whitelist sesuai SRS 7.5 / BR-007 dan kebijakan backend (STORAGE.DOC_*):
+  // .pdf/.docx/.xlsx/.zip dengan batas 10MB per berkas.
+  const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.xlsx', '.zip'];
+  const MAX_SIZE_MB = 10;
 
   const simulateUpload = (file) => {
     // State A: Validating
@@ -126,7 +119,11 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
     >
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-surface-container-highest text-on-surface px-4 py-3 rounded-xl shadow-2xl border border-primary/30 animate-fade-in">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-surface-container-highest text-on-surface px-4 py-3 rounded-xl shadow-2xl border border-primary/30 animate-fade-in"
+        >
           <span className="material-symbols-outlined text-primary text-[20px]">check_circle</span>
           <span className="font-label-md text-sm">{toastMessage}</span>
         </div>
@@ -136,6 +133,7 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 font-body-sm text-body-sm text-outline">
           <button
+            type="button"
             onClick={() => onNavigate && onNavigate('dasbor-dosen')}
             className="hover:text-primary transition-colors flex items-center gap-1"
           >
@@ -144,6 +142,7 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           </button>
           <span>/</span>
           <button
+            type="button"
             onClick={() => onNavigate && onNavigate('kelola-kelas')}
             className="text-on-surface-variant hover:text-primary transition-colors"
           >
@@ -151,6 +150,7 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           </button>
           <span>/</span>
           <button
+            type="button"
             onClick={() => onNavigate && onNavigate('manajemen-materi')}
             className="text-on-surface-variant hover:text-primary transition-colors"
           >
@@ -187,7 +187,18 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           }}
           onDrop={handleDrop}
           onClick={() => uploadState === 'idle' && fileInputRef.current?.click()}
-          className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer ${
+          onKeyDown={(e) => {
+            if (uploadState !== 'idle') return;
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          role="button"
+          tabIndex={uploadState === 'idle' ? 0 : -1}
+          aria-disabled={uploadState !== 'idle'}
+          aria-label="Area unggah berkas. Seret berkas ke sini, atau tekan Enter untuk memilih berkas dari komputer."
+          className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
             dragActive
               ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
               : uploadState === 'idle'
@@ -197,9 +208,12 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
         >
           <input
             ref={fileInputRef}
+            id="materi-file-input"
             type="file"
             accept={ALLOWED_EXTENSIONS.join(',')}
             onChange={handleFileSelect}
+            aria-hidden="true"
+            tabIndex={-1}
             className="hidden"
           />
 
@@ -222,21 +236,19 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
               <div className="flex items-center justify-center gap-4 text-xs text-outline font-mono">
                 <span>PDF</span>
                 <span>•</span>
-                <span>PPTX</span>
-                <span>•</span>
                 <span>DOCX</span>
                 <span>•</span>
-                <span>MP4</span>
+                <span>XLSX</span>
                 <span>•</span>
-                <span>PNG/JPG</span>
+                <span>ZIP</span>
               </div>
-              <p className="text-[11px] text-outline">Ukuran maksimum: {MAX_SIZE_MB} MB per file</p>
+              <p className="text-[11px] text-outline">Maksimal {MAX_SIZE_MB}MB per berkas</p>
             </div>
           )}
 
           {/* State B: Validating */}
           {uploadState === 'validating' && selectedFile && (
-            <div className="space-y-3">
+            <div role="status" aria-live="polite" className="space-y-3">
               <div className="w-16 h-16 rounded-2xl bg-warning-soft flex items-center justify-center mx-auto animate-pulse">
                 <span className="material-symbols-outlined text-warning-ink text-[36px]">shield</span>
               </div>
@@ -250,7 +262,7 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
 
           {/* State C: Uploading */}
           {uploadState === 'uploading' && selectedFile && (
-            <div className="space-y-3">
+            <div role="status" aria-live="polite" className="space-y-3">
               <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto">
                 <span className="material-symbols-outlined text-primary text-[36px] animate-bounce">cloud_upload</span>
               </div>
@@ -260,7 +272,13 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
                   <span className="font-mono">{selectedFile.name}</span>
                   <span className="font-bold text-primary">{Math.round(uploadProgress)}%</span>
                 </div>
-                <div className="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                <div
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(uploadProgress)}
+                  className="w-full bg-surface-container rounded-full h-3 overflow-hidden"
+                >
                   <div
                     className="bg-gradient-to-r from-primary to-secondary h-3 rounded-full transition-all duration-200"
                     style={{ width: `${uploadProgress}%` }}
@@ -273,7 +291,7 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
 
           {/* State D: Success */}
           {uploadState === 'success' && selectedFile && (
-            <div className="space-y-3">
+            <div role="status" aria-live="polite" className="space-y-3">
               <div className="w-16 h-16 rounded-2xl bg-success-soft flex items-center justify-center mx-auto">
                 <span className="material-symbols-outlined text-success-ink text-[36px]">check_circle</span>
               </div>
@@ -288,6 +306,7 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
                 </div>
               </div>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleReset();
@@ -301,21 +320,23 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
 
           {/* State E: Error - Invalid Type */}
           {uploadState === 'error-type' && selectedFile && (
-            <div className="space-y-3">
+            <div role="alert" aria-live="assertive" className="space-y-3">
               <div className="w-16 h-16 rounded-2xl bg-danger-soft flex items-center justify-center mx-auto">
                 <span className="material-symbols-outlined text-danger-ink text-[36px]">error</span>
               </div>
               <p className="font-title-md text-danger-ink font-bold">Tipe File Tidak Didukung</p>
               <p className="font-body-sm text-sm text-on-surface-variant">
-                File <span className="font-mono text-danger-ink">{selectedFile.name}</span> memiliki format yang tidak
-                diizinkan.
+                Format berkas tidak didukung. Harap unggah file berformat{' '}
+                <strong>.pdf, .docx, .xlsx, atau .zip</strong>.
               </p>
               <div className="bg-danger-soft border border-danger-border rounded-lg p-3 max-w-sm mx-auto">
                 <p className="text-xs text-danger-ink">
-                  Format yang diizinkan: <strong>PDF, PPTX, DOCX, MP4, WebM, PNG, JPG</strong>
+                  Berkas <span className="font-mono">{selectedFile.name}</span> berada di luar whitelist ekstensi yang
+                  diizinkan sistem.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleReset();
@@ -329,16 +350,32 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
 
           {/* State F: Error - Too Large */}
           {uploadState === 'error-size' && selectedFile && (
-            <div className="space-y-3">
+            <div role="alert" aria-live="assertive" className="space-y-3">
               <div className="w-16 h-16 rounded-2xl bg-danger-soft flex items-center justify-center mx-auto">
                 <span className="material-symbols-outlined text-danger-ink text-[36px]">file_upload_off</span>
               </div>
               <p className="font-title-md text-danger-ink font-bold">Ukuran File Terlalu Besar</p>
               <p className="font-body-sm text-sm text-on-surface-variant">
-                <span className="font-mono text-danger-ink">{selectedFile.name}</span> ({formatSize(selectedFile.size)})
-                melebihi batas {MAX_SIZE_MB} MB.
+                Ukuran berkas melebihi batas maksimal yang diizinkan (maks. {MAX_SIZE_MB}MB).
               </p>
+              <div className="max-w-sm mx-auto w-full">
+                <div className="flex items-center justify-between text-xs text-on-surface-variant mb-1">
+                  <span className="font-mono">{selectedFile.name}</span>
+                  <span className="font-bold text-danger-ink">
+                    {formatSize(selectedFile.size)} / {MAX_SIZE_MB} MB
+                  </span>
+                </div>
+                <div className="w-full bg-surface-container rounded-full h-3 overflow-hidden">
+                  <div
+                    className="bg-danger h-3 rounded-full"
+                    style={{
+                      width: `${Math.min(100, (selectedFile.size / (MAX_SIZE_MB * 1024 * 1024)) * 100)}%`,
+                    }}
+                  ></div>
+                </div>
+              </div>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleReset();
@@ -362,11 +399,17 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Title */}
               <div className="md:col-span-2">
-                <label className="block font-label-sm text-xs text-on-surface-variant uppercase tracking-wider mb-1">
+                <label
+                  htmlFor="materi-judul"
+                  className="block font-label-sm text-xs text-on-surface-variant uppercase tracking-wider mb-1"
+                >
                   Judul Materi *
                 </label>
                 <input
+                  id="materi-judul"
                   type="text"
+                  required
+                  aria-required="true"
                   value={formData.title}
                   onChange={(e) => setFormData((f) => ({ ...f, title: e.target.value }))}
                   placeholder="Modul 1 — Pengantar Rekayasa Perangkat Lunak"
@@ -376,10 +419,15 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
 
               {/* Meeting Select */}
               <div>
-                <label className="block font-label-sm text-xs text-on-surface-variant uppercase tracking-wider mb-1">
+                <label
+                  htmlFor="materi-pertemuan"
+                  className="block font-label-sm text-xs text-on-surface-variant uppercase tracking-wider mb-1"
+                >
                   Pertemuan Tujuan *
                 </label>
                 <select
+                  id="materi-pertemuan"
+                  aria-required="true"
                   value={formData.meeting}
                   onChange={(e) => setFormData((f) => ({ ...f, meeting: e.target.value }))}
                   className="w-full bg-surface-container text-on-surface font-body-sm text-sm px-4 py-2.5 rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -394,10 +442,14 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
 
               {/* Visibility */}
               <div>
-                <label className="block font-label-sm text-xs text-on-surface-variant uppercase tracking-wider mb-1">
+                <label
+                  htmlFor="materi-visibilitas"
+                  className="block font-label-sm text-xs text-on-surface-variant uppercase tracking-wider mb-1"
+                >
                   Visibilitas
                 </label>
                 <select
+                  id="materi-visibilitas"
                   value={formData.visibility}
                   onChange={(e) => setFormData((f) => ({ ...f, visibility: e.target.value }))}
                   className="w-full bg-surface-container text-on-surface font-body-sm text-sm px-4 py-2.5 rounded-xl border border-outline-variant/30 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -409,10 +461,14 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
 
               {/* Description */}
               <div className="md:col-span-2">
-                <label className="block font-label-sm text-xs text-on-surface-variant uppercase tracking-wider mb-1">
+                <label
+                  htmlFor="materi-deskripsi"
+                  className="block font-label-sm text-xs text-on-surface-variant uppercase tracking-wider mb-1"
+                >
                   Deskripsi (Opsional)
                 </label>
                 <textarea
+                  id="materi-deskripsi"
                   value={formData.description}
                   onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))}
                   rows={3}
@@ -425,12 +481,14 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
             {/* Actions */}
             <div className="flex items-center justify-end gap-3 pt-2 border-t border-outline-variant/20">
               <button
+                type="button"
                 onClick={() => onNavigate && onNavigate('manajemen-materi')}
                 className="px-5 py-2.5 rounded-xl bg-surface-container text-on-surface-variant font-label-md text-sm hover:bg-surface-container-high transition-all border border-outline-variant/30"
               >
                 Batal
               </button>
               <button
+                type="button"
                 onClick={() => {
                   showToast('Materi berhasil disimpan ke kelas.');
                   setTimeout(() => onNavigate && onNavigate('manajemen-materi'), 1500);
@@ -452,9 +510,9 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               { ext: 'PDF', icon: 'picture_as_pdf', color: 'text-danger-ink', bg: 'bg-danger-soft' },
-              { ext: 'PPTX', icon: 'slideshow', color: 'text-warning-ink', bg: 'bg-warning-soft' },
               { ext: 'DOCX', icon: 'description', color: 'text-primary', bg: 'bg-primary/10' },
-              { ext: 'MP4 / WebM', icon: 'videocam', color: 'text-info-ink', bg: 'bg-info-soft' },
+              { ext: 'XLSX', icon: 'table_chart', color: 'text-success-ink', bg: 'bg-success-soft' },
+              { ext: 'ZIP', icon: 'folder_zip', color: 'text-info-ink', bg: 'bg-info-soft' },
             ].map((t) => (
               <div
                 key={t.ext}
