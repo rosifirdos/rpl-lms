@@ -196,7 +196,6 @@ export default function UnggahMateri({ onNavigate, onRoleChange, activeRole = 'd
           }}
           role="button"
           tabIndex={uploadState === 'idle' ? 0 : -1}
-          aria-disabled={uploadState !== 'idle'}
           aria-label="Area unggah berkas. Seret berkas ke sini, atau tekan Enter untuk memilih berkas dari komputer."
           className={`relative rounded-2xl border-2 border-dashed p-8 text-center transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
             dragActive
