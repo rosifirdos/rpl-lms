@@ -1,7 +1,7 @@
 /**
  * pages/KlsSayaMahasiswa.jsx
  *
- * Halaman-level wrapper untuk Kelas Saya (Mahasiswa) SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Kelas Saya (Mahasiswa) E-Learning Kampus.
  */
 import KlsSayaMahasiswa from '../features/mahasiswa/KlsSayaMahasiswa';
 

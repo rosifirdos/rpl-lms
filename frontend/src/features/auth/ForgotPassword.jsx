@@ -4,7 +4,7 @@ import ThemeToggle from '../../components/ThemeToggle';
 /**
  * ForgotPassword — feature component (auth)
  *
- * Digunakan sebagai komponen inti halaman pemulihan kata sandi SPADA LMS.
+ * Digunakan sebagai komponen inti halaman pemulihan kata sandi E-Learning Kampus.
  * Mendukung navigasi SPA via props (onNavigate, onBack) serta API nyata:
  *   POST /api/auth/forgot-password  { email }
  *   POST /api/auth/resend-reset     { email }
@@ -66,13 +66,13 @@ export default function ForgotPassword({ onNavigate, onBack }) {
     const trimmedEmail = email.trim();
 
     if (!trimmedEmail) {
-      setErrorMessage('Harap masukkan alamat email resmi UPGRIS yang valid.');
+      setErrorMessage('Harap masukkan alamat email resmi kampus yang valid.');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
-      setErrorMessage('Format email tidak valid. Gunakan email terdaftar UPGRIS.');
+      setErrorMessage('Format email tidak valid. Gunakan email terdaftar kampus.');
       return;
     }
 
@@ -114,9 +114,9 @@ export default function ForgotPassword({ onNavigate, onBack }) {
               <span className="material-symbols-outlined text-[24px]">school</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-title-lg text-title-lg text-on-surface tracking-tight">SPADA LMS</span>
+              <span className="font-title-lg text-title-lg text-on-surface tracking-tight">E-Learning Kampus</span>
               <span className="font-caption text-caption text-on-surface-variant uppercase tracking-wider">
-                Universitas PGRI Semarang
+                Universitas
               </span>
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
               <div className="flex justify-center mb-6">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-caption text-caption tracking-wider uppercase font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  SPADA LMS &bull; UPGRIS
+                  E-Learning Kampus &bull; Universitas
                 </span>
               </div>
 
@@ -167,7 +167,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                 </h1>
                 <p className="font-body-md text-body-md text-outline leading-relaxed max-w-sm">
                   Masukkan email terdaftar Anda. Kami akan mengirimkan tautan untuk mengatur ulang
-                  kata sandi akun SPADA Anda.
+                  kata sandi akun E-Learning Kampus Anda.
                 </p>
               </div>
 
@@ -235,7 +235,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                         setEmail(e.target.value);
                         if (errorMessage) setErrorMessage('');
                       }}
-                      placeholder="contoh: mahasiswa@upgris.ac.id"
+                      placeholder="contoh: mahasiswa@kampus.ac.id"
                       required
                       aria-describedby={errorMessage ? 'email-error' : undefined}
                       aria-invalid={!!errorMessage}
@@ -326,12 +326,12 @@ export default function ForgotPassword({ onNavigate, onBack }) {
                   <p className="font-body-sm text-xs text-outline">
                     Butuh bantuan langsung?{' '}
                     <a
-                      href="https://upt-ptik.upgris.ac.id"
+                      href="https://helpdesk.kampus.ac.id"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-medium text-on-surface-variant hover:text-primary underline transition-colors"
                     >
-                      Hubungi Helpdesk IT UPGRIS
+                      Hubungi Helpdesk IT Kampus
                     </a>
                   </p>
                 </div>
@@ -358,10 +358,10 @@ export default function ForgotPassword({ onNavigate, onBack }) {
         <div className="w-full max-w-7xl mx-auto px-gutter-mobile md:px-gutter flex flex-col sm:flex-row items-center justify-between gap-space-sm font-caption text-caption text-on-surface-variant">
           <div className="flex items-center gap-space-xs">
             <span className="material-symbols-outlined text-[16px] text-primary">verified_user</span>
-            <span>Enkripsi 256-bit Terproteksi SSL &bull; Pusat Data Terpadu UPT PTIK UPGRIS</span>
+            <span>Enkripsi 256-bit Terproteksi SSL &bull; Pusat Data Terpadu Kampus</span>
           </div>
           <div>
-            <span>&copy; {new Date().getFullYear()} SPADA LMS UPGRIS. Hak Cipta Dilindungi Undang-Undang.</span>
+            <span>&copy; {new Date().getFullYear()} E-Learning Kampus. Hak Cipta Dilindungi Undang-Undang.</span>
           </div>
         </div>
       </footer>

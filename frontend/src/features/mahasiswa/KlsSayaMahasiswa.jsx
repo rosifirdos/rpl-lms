@@ -140,7 +140,7 @@ export default function KlsSayaMahasiswa({ onNavigate, onRoleChange }) {
             className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">home</span>
-            <span>Dasbor</span>
+            <span>Dashboard</span>
           </button>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
           <span className="text-on-surface font-semibold">Kelas Saya</span>

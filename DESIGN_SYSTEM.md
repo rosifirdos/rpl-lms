@@ -1,12 +1,12 @@
 # LAPORAN SPESIFIKASI DESIGN SYSTEM (UI/UX)
-# SISTEM PEMBELAJARAN DARING (SPADA LMS) UNIVERSITAS PGRI SEMARANG
+# SISTEM PEMBELAJARAN DARING (E-LEARNING KAMPUS) UNIVERSITAS
 **Team Membangun Negeri — Spesifikasi Desain Antarmuka Terpadu (Design Tokens & Component Library)**
 
 ---
 
 ## 1. PENDAHULUAN & PRINSIP DESAIN
 
-Design System ini menjadi acuan tunggal (*single source of truth*) dalam perancangan antarmuka visual **SPADA (Learning Management System) Universitas PGRI Semarang (UPGRIS)**. Sistem mengadopsi dua mode permukaan antarmuka yang terintegrasi harmonis:
+Design System ini menjadi acuan tunggal (*single source of truth*) dalam perancangan antarmuka visual **E-Learning Kampus (Learning Management System) Universitas**. Sistem mengadopsi dua mode permukaan antarmuka yang terintegrasi harmonis:
 1. **Portal Login & Landing Gateway:** Mengusung tema *Dark-Mode Professional Navy* dengan sentuhan *Electric Accent* untuk menghadirkan gerbang masuk pembelajaran digital yang modern, tepercaya, berwibawa, dan berkeamanan tinggi.
 2. **Operasional Pembelajaran (App Shell, Dashboard, Ruang Kelas, Timeline):** Mengusung tema *Light Clean Surface* dengan kontras tinggi (WCAG 2.1 AA) untuk memaksimalkan kenyamanan membaca, fokus belajar, akses materi, serta efisiensi evaluasi tugas dan presensi bagi Mahasiswa, Dosen, dan Admin.
 
@@ -22,18 +22,18 @@ Digunakan secara eksklusif pada halaman publik gerbang autentikasi (`/login`, `/
 | **Primary Background** | `#0D1B2A` – `#1B2A4A` | Gradient Biru Gelap / Deep Navy. Digunakan sebagai latar belakang utama halaman landing & login. |
 | **Primary Accent** | `#3B82F6` / `#4F46E5` | Royal / Electric Blue. Digunakan pada tombol aksi utama ("Masuk Sekarang"), checkbox, dan tombol SSO. |
 | **Secondary Accent** | `#38BDF8` / `#06B6D4` | Cyan / Aqua Blue. Digunakan untuk teks sorotan (*highlight*), garis aktif, dan aksen navigasi. |
-| **Status & Security** | `#10B981` | Emerald Green. Digunakan untuk badge "Portal Resmi SPADA", indikator "SSL Terenkripsi", dan Help Center. |
+| **Status & Security** | `#10B981` | Emerald Green. Digunakan untuk badge "Portal Resmi E-Learning Kampus", indikator "SSL Terenkripsi", dan Help Center. |
 | **Card Background** | `#FFFFFF` | Solid White. Kontainer utama form login agar kontras maksimal dengan latar belakang gelap (*floating card*). |
 | **Text Primary** | `#1F2937` | Dark Slate / Neutral Gray. Teks utama pada form login (judul kartu dan label input). |
 | **Text Muted** | `#6B7280` / `#9CA3AF` | Neutral Muted Gray. Digunakan untuk placeholder, deskripsi sekunder, dan hak cipta footer. |
 
-### 2.2 Palet Operasional SPADA LMS (Light Clean Surface)
+### 2.2 Palet Operasional E-Learning Kampus LMS (Light Clean Surface)
 Digunakan pada seluruh halaman terotentikasi (Dasbor, Ruang Kelas 16 Pertemuan, Timeline, Lembar Penilaian, Manajemen Enrollment).
 
 ```text
 [Brand Primary - Navy/Royal Blue]
 Primary 900: #0F172A (Deep Slate - Topbar & Headings)
-Primary 700: #1E3A8A (Brand Kampus UPGRIS)
+Primary 700: #1E3A8A (Brand Kampus)
 Primary 600: #2563EB (Active Interactive / Buttons)
 Primary 500: #3B82F6 (Primary Focus / Focus Rings)
 Primary 100: #DBEAFE (Selected Background / Subtle Accent)
@@ -67,17 +67,17 @@ Sistem tipografi menggunakan keluarga huruf **Sans-Serif Modern** (*Plus Jakarta
   - **Ukuran:** 32pt – 36pt (42px – 48px), Line-height: 1.2
   - **Weight:** Bold (700)
   - **Warna:** Pure White (`#FFFFFF`) dengan Cyan Highlight (`#38BDF8`)
-  - **Teks:** *"Membangun Negeri Melalui SPADA LMS UPGRIS"*
+  - **Teks:** *"Membangun Negeri Melalui E-Learning Kampus"*
 - **Card Title (H2):**
   - **Ukuran:** 20pt – 24pt (26px – 32px)
   - **Weight:** Bold / Semi-Bold (600–700)
   - **Warna:** Dark Slate (`#1F2937`)
-  - **Teks:** *"Masuk ke SPADA LMS"* / *"Single Sign On"*
+  - **Teks:** *"Masuk ke E-Learning Kampus LMS"* / *"Single Sign On"*
 - **Section Header / Sub-title:**
   - **Ukuran:** 13pt – 15pt (17px – 20px)
   - **Weight:** Semi-Bold (600), Letter-spacing: +0.05em
   - **Warna:** Light Blue / Cyan (`#38BDF8`)
-  - **Teks:** *"LEARNING MANAGEMENT SYSTEM — UNIVERSITAS PGRI SEMARANG"*
+  - **Teks:** *"LEARNING MANAGEMENT SYSTEM — UNIVERSITAS"*
 - **Form Labels & Captions:**
   - **Ukuran:** 10pt – 11pt (13px – 14px)
   - **Weight:** Semi-Bold (600), Uppercase
@@ -105,8 +105,8 @@ Sistem tipografi menggunakan keluarga huruf **Sans-Serif Modern** (*Plus Jakarta
 ### 4.1 Komponen Gerbang Portal & Login
 
 #### A. Navigasi Portal (Navbar)
-- **Brand Logo & Label:** Terletak di pojok kiri atas, terdiri dari ikon emblem SPADA, nama sistem **"SPADA UPGRIS"**, dan sub-teks *"Portal Pembelajaran Digital & Inovasi Belajar"*.
-- **Search Input Field:** Kolom pencarian di tengah navbar dengan ikon *magnifying glass* (Placeholder: *"Cari mata kuliah atau panduan SPADA..."*).
+- **Brand Logo & Label:** Terletak di pojok kiri atas, terdiri dari ikon emblem E-Learning Kampus, nama sistem **"E-Learning Kampus"**, dan sub-teks *"Portal Pembelajaran Digital & Inovasi Belajar"*.
+- **Search Input Field:** Kolom pencarian di tengah navbar dengan ikon *magnifying glass* (Placeholder: *"Cari mata kuliah atau panduan E-Learning Kampus..."*).
 - **Navigation Links:** Menu navigasi horizontal: *Beranda*, *Fitur Pembelajaran*, *Panduan*, *Kontak*, dan *FAQ*.
 - **Navbar Action Button:** Tombol berbentuk kapsul (*pill*) bertuliskan **"MASUK SSO"** di bagian kanan atas.
 
@@ -124,20 +124,20 @@ Sistem tipografi menggunakan keluarga huruf **Sans-Serif Modern** (*Plus Jakarta
   - Placeholder: ••••••••••••
 - **Checkbox & Indikator Keamanan:**
   - Checkbox interaktif: *"Ingat sesi saya"*.
-  - Badge keamanan: Indikator *"SSL Terenkripsi"* dan badge *"Portal Resmi SPADA"* (Emerald Green `#10B981`).
+  - Badge keamanan: Indikator *"SSL Terenkripsi"* dan badge *"Portal Resmi E-Learning Kampus"* (Emerald Green `#10B981`).
 - **Primary Button ("Masuk Sekarang"):**
   - Type: Full-width Button
   - Background: Gradient Blue Accent (`#3B82F6` → `#4F46E5`), Teks Putih, Radius `8px`.
   - Icon: Right Arrow (→).
 
-#### C. Modul Statistik & Fitur Unggulan SPADA
+#### C. Modul Statistik & Fitur Unggulan E-Learning Kampus
 Tiga blok statistik ringkas di bawah teks utama hero landing:
 - **16 Pertemuan:** Silabus Terstruktur (UTS P-8 & UAS P-16)
-- **0–100 Skor:** Standar Penilaian Numerik SPADA Transparan
+- **0–100 Skor:** Standar Penilaian Numerik E-Learning Kampus Transparan
 - **24/7 Akses:** Central Timeline & Materi Pembelajaran
 
-#### D. Kontainer Badge Fitur SPADA
-Container horizontal di bagian bawah sisi kiri hero yang menampilkan 4 pilar arsitektur SPADA:
+#### D. Kontainer Badge Fitur E-Learning Kampus
+Container horizontal di bagian bawah sisi kiri hero yang menampilkan 4 pilar arsitektur E-Learning Kampus:
 - 🛡️ **Validasi Berkas:** Ketat .PDF, .DOCX, .XLSX, .ZIP (Limit 5MB–10MB)
 - 📅 **Central Timeline:** Sinkronisasi Waktu Server Nyata
 - ⏱️ **Presensi Digital:** Kontrol Buka/Tutup oleh Dosen Pengampu
@@ -146,11 +146,11 @@ Container horizontal di bagian bawah sisi kiri hero yang menampilkan 4 pilar ars
 #### E. Floating Action Button (FAB)
 - Tombol melayang di pojok kanan bawah halaman.
 - Background: Emerald Green (`#10B981`), Teks Putih, Ikon Support/Help Desk.
-- Label: **"PUSAT BANTUAN SPADA / HELP CENTER"**.
+- Label: **"PUSAT BANTUAN E-Learning Kampus / HELP CENTER"**.
 
 ---
 
-### 4.2 Komponen Operasional SPADA LMS (App Shell & Modul Belajar)
+### 4.2 Komponen Operasional E-Learning Kampus LMS (App Shell & Modul Belajar)
 
 #### A. Central Timeline Widget & Card
 - **Fungsi:** Menampilkan urutan kronologis batas waktu penyerahan tugas terdekat, jadwal kuis, sesi presensi, dan ujian.
@@ -181,7 +181,7 @@ Container horizontal di bagian bawah sisi kiri hero yang menampilkan 4 pilar ars
   - Jika ukuran > 10MB: Pesan merah: *"Ukuran berkas melebihi batas maksimal yang diizinkan (maks. 10MB)"*.
   - Jika valid: Progress bar unggah, nama file, ukuran file, icon centang hijau.
 
-#### D. Lembar Penilaian Skor SPADA (Dosen)
+#### D. Lembar Penilaian Skor E-Learning Kampus (Dosen)
 - **Komponen Input Skor:**
   - Input angka khusus dengan rentang ketat **0.00 s.d. 100.00**.
   - Font Monospace besar (18px, Bold).

@@ -1,5 +1,5 @@
 # Implementation Plan: Backend MVP 2
-# SPADA (Learning Management System) Universitas PGRI Semarang (UPGRIS)
+# E-Learning Kampus (Learning Management System) Universitas
 **Team Membangun Negeri — Rencana Eksekusi Teknis Backend: Ruang Kelas 16 Pertemuan, Distribusi Materi & Presensi Digital**
 
 ---
@@ -54,22 +54,24 @@ Rencana ini adalah **kelanjutan langsung** dari [IMPLEMENTATION_PLAN_MVP1_BACKEN
 2. **Penyimpanan Berkas Terproteksi:** File materi tidak diletakkan di public assets, melainkan di direktori privat terisolasi server (`storage/materials/`). Pengunduhan dilakukan melalui endpoint perantara yang memverifikasi JWT dan kepesertaan (*enrollment check*) sebelum melakukan pipe streaming (*res.download / res.sendFile*).
 3. **State Machine Sesi Presensi:** Sesi presensi berstatus `CLOSED` secara default. Transisi status dikendalikan oleh dosen: `CLOSED → OPEN → CLOSED`. Check-in mahasiswa hanya valid saat `status == 'OPEN'`.
 4. **Idempotensi & Pencegahan Konkurensi:** Pengecekan check-in ganda ditegakkan oleh unique composite constraint database `@@unique([session_id, student_id])` untuk menjamin tidak ada duplikasi data kehadiran.
+5. **Penutupan Sesi Manual, Bukan Otomatis:** Sesi hanya berpindah ke `CLOSED` melalui aksi eksplisit dosen (`POST /api/meetings/:id/attendance/close`). `tolerance_minutes` tersimpan sebagai konfigurasi sesi dan ditampilkan di antarmuka sebagai konteks bagi mahasiswa, tetapi **belum** memicu penutupan otomatis — timer auto-close adalah lingkup Fase 5. Sampai itu ada, sesi `OPEN` bertahan hingga dosen menutupnya.
+6. **Penanda ALPA Otomatis Terpisah dari Keputusan Dosen:** ALPA yang dibuat sistem saat penutupan sesi ditandai kolom `is_auto_generated = true`; setiap koreksi dosen menurunkannya menjadi `false`. Pembukaan ulang sesi hanya menghapus baris bertanda `true`, sehingga ALPA yang sengaja ditetapkan dosen tidak pernah ikut terhapus. Kolom `notes` **tidak** dipakai sebagai penanda karena ia juga diisi manusia.
 
 ---
 
-## 3. Desain Skema Database Tambahan (Migrasi `add_spada_mvp2_meetings_attendance`)
+## 3. Desain Skema Database Tambahan (Migrasi `add_elearning_mvp2_meetings_attendance`)
 
 ```prisma
 // ==========================================
-// 1. STRUKTUR 16 PERTEMUAN KELAS SPADA
+// 1. STRUKTUR 16 PERTEMUAN KELAS E-LEARNING KAMPUS
 // ==========================================
 
 model Meeting {
-  id             String        @id @default(uuid())
-  class_id       String
+  id             String        @id @default(uuid()) @db.Uuid
+  class_id       String        @db.Uuid
   meeting_number Int           // Angka 1 s.d. 16
-  title          String        // Judul topik perkuliahan
-  description    String?       // Ringkasan instruksi & capaian pembelajaran
+  title          String        @db.VarChar(150) // Judul topik perkuliahan
+  description    String?       @db.Text // Ringkasan instruksi & capaian pembelajaran
   is_exam        Boolean       @default(false)
   exam_type      ExamType      @default(NONE)
   is_published   Boolean       @default(true)
@@ -95,11 +97,11 @@ enum ExamType {
 // ==========================================
 
 model Material {
-  id          String   @id @default(uuid())
-  meeting_id  String
-  title       String   // Judul materi
-  description String?  // Deskripsi pengantar materi
-  file_id     String   // Relasi ke tabel File
+  id          String   @id @default(uuid()) @db.Uuid
+  meeting_id  String   @db.Uuid
+  title       String   @db.VarChar(150) // Judul materi
+  description String?  @db.Text // Deskripsi pengantar materi
+  file_id     String   @db.Uuid // Relasi ke tabel File
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
@@ -114,8 +116,8 @@ model Material {
 // ==========================================
 
 model AttendanceSession {
-  id                String           @id @default(uuid())
-  meeting_id        String           @unique // 1 Sesi Presensi per Pertemuan
+  id                String           @id @default(uuid()) @db.Uuid
+  meeting_id        String           @unique @db.Uuid // 1 Sesi Presensi per Pertemuan
   opened_at         DateTime?
   closed_at         DateTime?
   status            AttendanceStatus @default(CLOSED)
@@ -135,12 +137,13 @@ enum AttendanceStatus {
 }
 
 model AttendanceRecord {
-  id          String         @id @default(uuid())
-  session_id  String
-  student_id  String         // Relasi ke Mahasiswa
-  status      PresenceStatus @default(HADIR)
-  recorded_at DateTime       @default(now())
-  notes       String?        // Catatan khusus (misal alasan sakit/izin)
+  id                String         @id @default(uuid()) @db.Uuid
+  session_id        String         @db.Uuid
+  student_id        String         @db.Uuid // Relasi ke Mahasiswa
+  status            PresenceStatus @default(HADIR)
+  recorded_at       DateTime       @default(now())
+  notes             String?        @db.Text // Catatan khusus (misal alasan sakit/izin)
+  is_auto_generated Boolean        @default(false) // true = ALPA otomatis sistem, bukan keputusan dosen
 
   session AttendanceSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
   student Mahasiswa         @relation(fields: [student_id], references: [id], onDelete: Cascade)
@@ -156,6 +159,8 @@ enum PresenceStatus {
   ALPA
 }
 ```
+
+> **Catatan:** Model `Class` (MVP 1) telah diperluas dengan `meetings Meeting[]`, dan model `File` (MVP 1) dengan `materials Material[]`. Model `Mahasiswa` (MVP 1) dengan `attendance_records AttendanceRecord[]`. Semua relasi balik (*back-relation*) sudah dideklarasikan eksisitif sehingga `prisma validate` lolos.
 
 ---
 
@@ -210,47 +215,123 @@ backend/src/modules/
 
 ## 6. Tahapan Eksekusi Pengerjaan (Step-by-Step Roadmap MVP 2)
 
-### Fase 1: Migrasi Skema Database MVP 2 (Hari 1)
-- Menambahkan model `Meeting`, `Material`, `AttendanceSession`, `AttendanceRecord`, serta enum `ExamType`, `AttendanceStatus`, `PresenceStatus` pada `schema.prisma`.
-- Menjalankan migrasi database: `npx prisma migrate dev --name add_spada_mvp2_meetings_attendance`.
-- Menambahkan hook auto-generate 16 pertemuan saat kelas dibuat di service kelas MVP 1.
+### Peta Dependensi & Modalitas Paralelisasi
 
-### Fase 2: Service & API 16 Pertemuan Terstruktur (Hari 2–3)
-- Implementasi generator 16 pertemuan otomatis (Pertemuan 1 s.d. 16, P-8 UTS, P-16 UAS).
-- Implementasi endpoint `GET /api/classes/:classId/meetings` dan `GET /api/meetings/:id`.
-- Implementasi endpoint pembaruan topik oleh dosen `PUT /api/meetings/:id` dengan verifikasi kepemilikan kelas.
+Roadmap di bawah **tidak seluruhnya runtut**. Pola ketergantungannya:
+
+```text
+Fase 0 + 1  ──▶  Fase 2 ∥ Fase 3 ∥ Fase 4 ∥ (implementasi) Fase 5  ──▶  Fase 6
+ (gerbang keras)         (modul independen, berkas terpisah)          (penutup)
+```
+
+| Fase | Butuh Fase 1? | Butuh fase lain? | Dapat diparalelkan |
+|---|---|---|---|
+| 1 — Migrasi Skema | — | — | ❌ Wajib lebih dulu (gerbang keras) |
+| 2 — 16 Pertemuan | Ya (`Meeting`) | Tidak | ✅ |
+| 3 — Materi | Ya (`Meeting`, `Material`) | Tidak | ✅ |
+| 4 — Presensi | Ya (2 tabel presensi) | Tidak | ✅ |
+| 5 — Rekapitulasi | Ya (2 tabel presensi) | **Verifikasi** menunggu Fase 4 | ⚠️ Kode boleh duluan |
+| 6 — Pengujian & Handoff | Ya | Ya (seluruh fase) | ❌ Penutup |
+
+**Fase 1 bersifat blocking mutlak.** Tanpa keempat tabel pada `schema.prisma` beserta migrasinya, Prisma Client tidak memiliki delegate `prisma.meeting`, `prisma.material`, `prisma.attendanceSession`, dan `prisma.attendanceRecord` — kode Fase 2–5 gagal saat *import*, bukan sekadar belum lengkap. Karena `schema.prisma` adalah satu berkas dengan satu migrasi, keempat model **harus mendarat bersamaan**; fase ini dikerjakan satu orang dan menjadi titik serialisasi proyek.
+
+**Fase 2, 3, 4, dan implementasi Fase 5 tidak saling memanggil.** Fase 3 mengaitkan berkas ke `Meeting` dan memverifikasi kepesertaan dari data *enrollment* MVP 1; Fase 4 memverifikasi kepemilikan kelas melalui `meeting → class → lecturer` dan kepesertaan melalui *enrollment* yang sama; Fase 5 hanya membaca agregat tabel presensi. Tidak satu pun memanggil service fase lain, dan berkasnya terpisah (`modules/meetings/`, `modules/materials/`, `modules/attendance/`), sehingga konflik merge praktis nihil.
+
+> **Catatan verifikasi Fase 5:** untuk membuktikan persentase kehadiran benar, dibutuhkan data sesi yang pernah dibuka/ditutup oleh Fase 4. Kode rekapitulasi boleh dikerjakan paralel, tetapi pengujiannya baru dapat dijalankan setelah Fase 4 selesai.
+
+> **Penting — pengujian jangan ditumpuk ke Fase 6.** Setiap fase di bawah sudah memuat butir pengujiannya sendiri; itulah yang membuat paralelisasi aman. Fase 6 hanya untuk uji lintas-modul (isolasi antar kelas, RBAC gabungan) dan pemutakhiran OpenAPI.
+
+---
+
+### Fase 0: Prasyarat Bersama Sebelum Paralelisasi (Hari 1, bersama Fase 1) ✅ **SELESAI**
+
+Tiga komponen berikut dipakai berulang oleh Fase 2–5 namun **belum ada di MVP 1**. Telah diselesaikan dalam PR terpisah (merged ke `main`):
+
+1. **Helper terpusat pemeriksaan kepemilikan kelas (*ownership check*).** (`src/utils/ownership.js`)
+2. **Middleware `uploadMaterial`** pada `src/middlewares/upload.middleware.js` (batas 10MB, ekstensi `.pdf/.docx/.xlsx/.zip`).
+3. **Konvensi penamaan `entity` pada `audit_logs`.** (`src/constants/auditEntities.js` — `meetings`, `materials`, `attendance_sessions`).
+
+**Konvensi pengujian paralel:** suite memakai databases bersama `rpl_review` dengan `--test-concurrency=1`. `tests/setup.js` hanya menyapu sisa data kelas yang namanya berawalan `TEST-` atau `KAP-`.
+
+---
+
+### Fase 1: Migrasi Skema Database MVP 2 (Hari 1) ✅ **SELESAI**
+
+- [x] Menambahkan model `Meeting`, `Material`, `AttendanceSession`, `AttendanceRecord`, serta enum `ExamType`, `AttendanceStatus`, `PresenceStatus` pada `schema.prisma`.
+- [x] Menambahkan relasi balik yang diwajibkan Prisma: `meetings Meeting[]` pada model `Class`, `materials Material[]` pada model `File`, `attendance_records AttendanceRecord[]` pada model `Mahasiswa`.
+- [x] Menjalankan `npx prisma validate`, lalu migrasi database: `npx prisma migrate dev --name add_elearning_mvp2_meetings_attendance`.
+- [x] **Migrasi berhasil diterapkan** pada database `rpl_lms` (migration `20261113125204_add_elearning_mvp2_meetings_attendance`).
+- [x] Prisma Client ter-generate ulang dengan delegate baru: `prisma.meeting`, `prisma.material`, `prisma.attendanceSession`, `prisma.attendanceRecord`.
+
+---
+
+### Fase 2: Service & API 16 Pertemuan Terstruktur (Hari 2–3) ✅ **SELESAI**
+
+- [x] Implementasi hook auto-generate 16 pertemuan saat kelas dibuat di service kelas MVP 1 (di `ClassesService.createClass`).
+- [x] Implementasi endpoint `GET /api/classes/:classId/meetings` dan `GET /api/meetings/:id`.
+- [x] Implementasi endpoint pembaruan topik oleh dosen `PUT /api/meetings/:id` dengan verifikasi kepemilikan kelas (memakai helper Fase 0).
+
+> **Hindari duplikasi generator:** butir "implementasi generator 16 pertemuan" **tidak lagi dicantumkan di sini** karena hook auto-generate sudah dikerjakan pada Fase 1. Sumber kebenaran tunggal struktur 16 pertemuan sudah tersedia di MVP 1 pada `src/constants/academic.js` (`TOTAL_MEETINGS: 16` dan `EXAM_MEETINGS { 8: 'UTS', 16: 'UAS' }`). Fase 2 hanya **membaca** hasil generate tersebut dari tabel `meetings`, tidak membuat generator kedua.
+
+---
 
 ### Fase 3: Modul Unggah & Distribusi Materi Terproteksi (Hari 4–5)
-- Konfigurasi middleware upload file materi (penyimpanan direktori lokal terproteksi).
-- Implementasi endpoint `POST /api/meetings/:meetingId/materials` dan `DELETE /api/materials/:id`.
-- Implementasi endpoint aman `GET /api/materials/:id/download` dengan validasi:
+
+- [ ] Konfigurasi middleware upload file materi (penyimpanan direktori lokal terproteksi).
+- [ ] Implementasi endpoint `POST /api/meetings/:meetingId/materials` dan `DELETE /api/materials/:id`.
+- [ ] Implementasi endpoint aman `GET /api/materials/:id/download` dengan validasi:
   - Tolak (403) jika user bukan dosen pengampu atau bukan mahasiswa yang dienroll pada kelas tersebut.
   - Pipe streaming berkas dengan header `Content-Disposition`.
-- Pencatatan mutasi materi ke `audit_logs`.
+- [ ] Pencatatan mutasi materi ke `audit_logs`.
 
-### Fase 4: Sesi Presensi & Check-in Mandiri Mahasiswa (Hari 6–7)
-- Implementasi endpoint buka sesi presensi `POST /api/meetings/:meetingId/attendance/open` dan tutup sesi `close`.
-- Implementasi endpoint check-in mahasiswa `POST /api/attendance/:sessionId/check-in`:
+---
+
+### Fase 4: Sesi Presensi & Check-in Mandiri Mahasiswa (Hari 6–7) ✅ **SELESAI**
+
+- [x] Implementasi endpoint buka sesi presensi `POST /api/meetings/:meetingId/attendance/open` dan tutup sesi `close`.
+- [x] Implementasi endpoint check-in mahasiswa `POST /api/attendance/:sessionId/check-in`:
   - Pengecekan status sesi (`OPEN`). Jika `CLOSED`, tolak dengan status 400 Bad Request: *"Sesi presensi belum dibuka atau telah ditutup oleh Dosen Pengampu."*
   - Pengecekan kepesertaan: Mahasiswa wajib berstatus *enrolled* di kelas terkait.
   - Pencatatan kehadiran mandiri (`HADIR`).
-- Implementasi endpoint koreksi kehadiran oleh dosen `PUT /api/attendance/records/:id`.
+- [x] Implementasi endpoint koreksi kehadiran oleh dosen `PUT /api/attendance/records/:id`.
+- [x] Pelengkap: `GET /api/attendance/:sessionId/records` untuk dosen melihat roster kehadiran (termasuk mahasiswa yang belum check-in).
+- [x] **Penyetelan batas toleransi menit** saat membuka sesi (`tolerance_minutes`, rentang 1–180) — divalidasi Zod dan benar-benar tersimpan.
+- [x] **Pemisahan ALPA otomatis dari keputusan dosen** melalui kolom `is_auto_generated`, sehingga koreksi dosen tidak terhapus saat sesi dibuka ulang.
+- [ ] **Timer penutupan sesi otomatis** berdasarkan `tolerance_minutes` — lingkup Fase 5; sampai ada, sesi hanya ditutup manual oleh dosen.
+
+---
 
 ### Fase 5: Layanan Rekapitulasi Kehadiran & Kalkulasi Persentase (Hari 8)
-- Implementasi endpoint rekapitulasi kehadiran kelas `GET /api/classes/:classId/attendance-recap`.
-- Algoritma perhitungan persentase kehadiran mahasiswa:
+
+- [ ] Implementasi endpoint rekapitulasi kehadiran kelas `GET /api/classes/:classId/attendance-recap`.
+- [ ] Algoritma perhitungan persentase kehadiran mahasiswa:
   - Menghitung total pertemuan yang telah diselenggarakan (sesi presensi yang pernah dibuka).
   - Menghitung jumlah kehadiran status `HADIR` tiap mahasiswa.
   - Menghitung persentase kehadiran format desimal (`%`).
   - Mengembalikan daftar matrix kehadiran mahasiswa (Pertemuan 1 s.d. 16) untuk ditampilkan di tabel rekap dosen dan mahasiswa.
+- [ ] **Implementasi boleh dikerjakan paralel dengan Fase 2–4**, namun verifikasinya menunggu Fase 4 (butuh data sesi yang pernah dibuka/ditutup).
+
+---
 
 ### Fase 6: Pengujian Unit/Integration, Validasi Keamanan & Handoff (Hari 9–10)
-- Pengujian otomatis:
+
+- [ ] Pengujian otomatis:
   - Verifikasi auto-generate 16 pertemuan saat pembukaan kelas baru.
   - Verifikasi unduh materi: Mahasiswa terdaftar sukses mengunduh, mahasiswa luar kelas ditolak (403).
   - Verifikasi presensi: Check-in berhasil saat status `OPEN`, gagal saat status `CLOSED`.
   - Verifikasi akurasi persentase kehadiran pada rekapitulasi.
-- Dokumentasi API untuk frontend tim.
+- [ ] Dokumentasi API untuk frontend tim.
+
+---
+
+### Strategi Pengerjaan Menurut Ukuran Tim
+
+| Ukuran Tim | Strategi |
+|---|---|
+| **1 orang** | Kerjakan runtut Fase 0 → 1 → 2 → 3 → 4 → 5 → 6. Paralelisasi tidak memberi keuntungan; dokumen ini memang disusun untuk satu jalur eksekusi 10 hari. |
+| **3–4 orang** | Kerjakan **Fase 0 + Fase 1 bersama-sama lebih dulu** (satu orang sebagai pemilik `schema.prisma`), baru lepas Fase 2, 3, 4, dan implementasi Fase 5 secara paralel. Fase 6 dikerjakan bersama di akhir. |
+
+**Ringkasan ketergantungan:** Fase 1 adalah gerbang keras yang wajib diselesaikan lebih dulu; Fase 2–5 dapat berjalan paralel; verifikasi Fase 5 dan seluruh Fase 6 bersifat menunggu.
 
 ---
 

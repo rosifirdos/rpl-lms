@@ -1,5 +1,5 @@
 # Implementation Plan: Backend MVP 1
-# SPADA (Learning Management System) Universitas PGRI Semarang (UPGRIS)
+# E-Learning Kampus (Learning Management System) Universitas
 **Team Membangun Negeri — Rencana Eksekusi Teknis Backend: Fondasi, Akun, Master Data & Direct Enrollment**
 
 ---
@@ -17,7 +17,7 @@ Dokumen ini memuat rencana implementasi teknis sisi **Backend** untuk mencapai t
    - Penolakan akses secara otomatis untuk akun berstatus `INACTIVE` atau `SUSPENDED` (HTTP 403 Forbidden).
    - Pengelolaan sesi aman dengan JWT (Access Token umur pendek bertanda tangan kriptografis dan Refresh Token di database).
    - Fitur logout aman, pencabutan token, dan alur permohonan reset kata sandi (*forgot password*).
-2. **Otorisasi Berbasis Peran & Matriks Akses (3 Peran Resmi SPADA):**
+2. **Otorisasi Berbasis Peran & Matriks Akses (3 Peran Resmi E-Learning Kampus):**
    - Mendukung 3 peran resmi terstandar: `mahasiswa`, `dosen`, dan `admin` (*Role Tunggal*).
    - Middleware otorisasi berbasis Role Guard (`authenticateToken`, `requireRole('admin')`, `requireRole(['dosen', 'admin'])`).
    - Penegakan prinsip hak akses minimum (*least privilege*).
@@ -25,12 +25,12 @@ Dokumen ini memuat rencana implementasi teknis sisi **Backend** untuk mencapai t
    - Hak akses baca dan ubah data profil mandiri (`GET /api/profile` dan `PUT /api/profile`).
    - Unggah dan pembaharuan foto profil/avatar pengguna (`POST /api/profile/avatar`) dengan validasi format gambar (.jpg/.jpeg/.png) dan batasan ukuran maksimal 2MB.
    - Penggantian kata sandi mandiri (`PUT /api/profile/password`) dengan validasi kata sandi lama.
-4. **Layanan Dasbor Kontekstual SPADA LMS (`GET /api/dashboard`):**
+4. **Layanan Dasbor Kontekstual E-Learning Kampus (`GET /api/dashboard`):**
    - Endpoint agregasi ringkasan data dasbor yang disesuaikan secara presisi untuk 3 aktor:
      - **Mahasiswa:** semester aktif, status akademik, dan daftar kelas yang dienroll oleh Admin (id, nama mata kuliah, kode kelas, SKS, nama dosen pengampu).
      - **Dosen:** data profil dosen bergelar (NIDN), daftar kelas yang diampu pada semester aktif, dan jumlah mahasiswa terdaftar di tiap kelas.
      - **Admin:** ringkasan metrik statistik sistem (Total Mahasiswa, Total Dosen, Total Mata Kuliah, Total Kelas Pembelajaran, Total Enrollment Aktif).
-5. **Modul Master Data Akademik SPADA (Khusus Admin):**
+5. **Modul Master Data Akademik E-Learning Kampus (Khusus Admin):**
    - **Manajemen Akun Pengguna:** Endpoint CRUD akun (Mahasiswa, Dosen, Admin), pencarian multi-kolom, filter 3 role, filter status akun (`ACTIVE`, `INACTIVE`, `SUSPENDED`), dan endpoint ganti status/reset password.
    - **Master Mata Kuliah:** Endpoint CRUD mata kuliah (Kode MK unik, Nama Mata Kuliah, Beban SKS 1–6, Deskripsi Kompetensi).
    - **Pembukaan Kelas Perkuliahan:** Endpoint pembukaan kelas semester aktif (relasi ke Mata Kuliah, Dosen Pengampu, Kode/Nama Kelas, Tahun Akademik, Semester Ganjil/Genap, Kapasitas Kuota).
@@ -71,7 +71,7 @@ Dokumen ini memuat rencana implementasi teknis sisi **Backend** untuk mencapai t
 
 ```prisma
 // ==========================================
-// 1. PENGGUNA, PROFIL & RBAC SPADA LMS
+// 1. PENGGUNA, PROFIL & RBAC E-LEARNING KAMPUS
 // ==========================================
 
 model User {
@@ -282,7 +282,7 @@ model AuditLog {
 | `POST` | `/api/profile/avatar` | Unggah/ganti foto profil (validasi format .jpg/.jpeg/.png, maks 2MB) | Login (Semua Role) |
 | `PUT` | `/api/profile/password` | Ganti kata sandi mandiri dengan validasi kata sandi lama | Login (Semua Role) |
 
-### 4.3. Dasbor Kontekstual SPADA (`/api/dashboard`)
+### 4.3. Dasbor Kontekstual E-Learning Kampus (`/api/dashboard`)
 | Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
 |---|---|---|---|
 | `GET` | `/api/dashboard` | Ambil data agregasi dasbor spesifik peran: | Login (Semua Role) |
@@ -296,7 +296,7 @@ model AuditLog {
 | `GET` | `/api/classes` | Mahasiswa: list kelas yang dienroll; Dosen: list kelas yang diampu | Mahasiswa, Dosen |
 | `GET` | `/api/classes/:id` | Detail informasi kelas perkuliahan beserta dosen pengampu | Mahasiswa, Dosen, Admin |
 
-### 4.5. Manajemen Pengguna SPADA (`/api/admin/users`)
+### 4.5. Manajemen Pengguna E-Learning Kampus (`/api/admin/users`)
 | Method | Endpoint | Fungsi & Deskripsi | Hak Akses |
 |---|---|---|---|
 | `GET` | `/api/admin/users` | List akun pengguna (pagination, search, filter role 3 peran, filter status) | Admin |
@@ -341,7 +341,7 @@ model AuditLog {
 ```text
 backend/
 ├── prisma/
-│   ├── schema.prisma              # Definisi model database SPADA LMS MVP 1
+│   ├── schema.prisma              # Definisi model database E-Learning Kampus MVP 1
 │   ├── migrations/                # Riwayat migrasi database PostgreSQL
 │   └── seed.js                    # Seeder Admin awal, Dosen contoh, Mahasiswa contoh & MK awal
 ├── src/
@@ -382,7 +382,7 @@ backend/
 - Inisialisasi proyek Node.js backend (`package.json`, `.env.example`).
 - Konfigurasi Prisma ORM dengan database PostgreSQL.
 - Implementasi skema `schema.prisma` yang merefleksikan model User, Profile, Mahasiswa, Dosen, Course, Class, Enrollment, File, dan AuditLog.
-- Eksekusi migrasi awal database (`npx prisma migrate dev --name init_spada_mvp1`).
+- Eksekusi migrasi awal database (`npx prisma migrate dev --name init_elearning_mvp1`).
 - Pembuatan seeder awal (`seed.js`): Akun Admin utama, 3 akun Dosen contoh, 10 akun Mahasiswa contoh, 5 Master Mata Kuliah rintisan, dan 2 Pembukaan Kelas contoh.
 
 ### Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard (Hari 3–4)
@@ -398,7 +398,7 @@ backend/
 - Implementasi endpoint peninjau audit: `GET /api/admin/audit-logs` dan `GET /api/admin/audit-logs/:id`.
 - Konfigurasi hardening HTTP: Helmet, CORS terproteksi, dan *express-rate-limit*.
 
-### Fase 4: Master Data Akademik SPADA (Hari 6–7)
+### Fase 4: Master Data Akademik E-Learning Kampus (Hari 6–7)
 - Validasi Zod schema untuk entitas User, Course, dan Class.
 - Implementasi endpoint Manajemen Pengguna (`/api/admin/users`): list, search, filter role/status, create user, update status akun, reset password.
 - Implementasi endpoint Master Mata Kuliah (`/api/admin/courses`): list, create, update, delete.

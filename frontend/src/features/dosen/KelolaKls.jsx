@@ -440,7 +440,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
             className="hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">home</span>
-            <span>Dasbor</span>
+            <span>Dashboard</span>
           </button>
           <span className="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
           <button
@@ -1004,7 +1004,7 @@ export default function KelolaKls({ onNavigate, onRoleChange, courseId }) {
                   <span>Catatan Dosen Pengampu</span>
                 </div>
                 <p className="text-[11px] text-mvp-muted leading-relaxed">
-                  Toleransi keterlambatan baku SPADA UPGRIS adalah 15 menit. Mahasiswa yang mengisi
+                  Toleransi keterlambatan baku E-Learning Kampus adalah 15 menit. Mahasiswa yang mengisi
                   presensi di luar radius lab atau jaringan WiFi kampus akan ditandai label{' '}
                   <span className="text-mvp-body font-medium">Mobile</span> untuk ditinjau saat
                   evaluasi kehadiran mingguan.
@@ -1390,7 +1390,7 @@ function DownloadStatusCard({ state, onDismiss, onBackToDashboard }) {
           onClick={onBackToDashboard}
           className="px-3 py-1.5 rounded-lg bg-mvp-card border border-mvp-danger text-mvp-danger-strong text-xs font-semibold transition-colors cursor-pointer"
         >
-          Kembali ke Dasbor
+          Kembali ke Dashboard
         </button>
       </div>
     );

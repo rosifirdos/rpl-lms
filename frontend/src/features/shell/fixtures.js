@@ -1,7 +1,7 @@
 ﻿/**
  * features/shell/fixtures.js
  *
- * Mock data dan konfigurasi navigasi untuk App Shell SPADA LMS.
+ * Mock data dan konfigurasi navigasi untuk App Shell E-Learning Kampus.
  * Termasuk skema navigasi RBAC, metrik stat cards, linimasa perkuliahan, dan daftar mata kuliah.
  */
 
@@ -10,7 +10,7 @@ export const navSections = [
     title: 'Menu Utama',
     role: 'mahasiswa',
     items: [
-      { path: 'dasbor-mahasiswa', label: 'Dasbor', icon: 'grid_view' },
+      { path: 'dasbor-mahasiswa', label: 'Dashboard', icon: 'grid_view' },
       { path: 'kelas-saya-mahasiswa', label: 'Kelas Saya', icon: 'menu_book' },
       { path: 'ruang-kelas', label: 'Ruang Kelas', icon: 'school' },
       { path: 'panduan-belajar', label: 'Panduan Belajar', icon: 'explore' },
@@ -29,7 +29,7 @@ export const navSections = [
     title: 'Menu Dosen',
     role: 'dosen',
     items: [
-      { path: 'dasbor-dosen', label: 'Dasbor Dosen', icon: 'co_present' },
+      { path: 'dasbor-dosen', label: 'Dashboard Dosen', icon: 'co_present' },
       { path: 'kelas-diampu', label: 'Kelas Diampu', icon: 'class' },
       { path: 'kelola-kelas', label: 'Kelola Kelas', icon: 'settings_applications' },
       { path: 'daftar-hadir-koreksi', label: 'Daftar Hadir & Koreksi', icon: 'fact_check' },
@@ -40,10 +40,10 @@ export const navSections = [
     ],
   },
   {
-    title: 'Administrasi SPADA',
+    title: 'Administrasi E-Learning Kampus',
     role: 'admin',
     items: [
-      { path: 'dasbor-admin', label: 'Dasbor Admin', icon: 'space_dashboard' },
+      { path: 'dasbor-admin', label: 'Dashboard Admin', icon: 'space_dashboard' },
       { path: 'direct-enrollment', label: 'Direct Enrollment', icon: 'how_to_reg' },
       { path: 'manajemen-pengguna', label: 'Manajemen Pengguna', icon: 'group' },
       { path: 'master-mata-kuliah', label: 'Master Mata Kuliah', icon: 'local_library' },
@@ -78,8 +78,8 @@ export const statCards = [
     footnoteColor: 'text-error',
   },
   {
-    id: 'spada-score',
-    title: 'Rata-rata Skor SPADA',
+    id: 'elearning-score',
+    title: 'Rata-rata Skor E-Learning Kampus',
     value: '88.50',
     unit: '/ 100.00',
     valueColor: 'text-tertiary',
@@ -187,7 +187,7 @@ export const userFixtures = {
     identifier: 'NIM: 22670014',
     sub: 'Informatika',
     initials: 'DP',
-    email: 'dimas.arya@student.upgris.ac.id',
+    email: 'dimas.arya@student.kampus.ac.id',
   },
   dosen: {
     id: 'usr-dsn-01',
@@ -196,16 +196,16 @@ export const userFixtures = {
     identifier: 'NIDN: 0612345601',
     sub: 'Dosen Pengampu',
     initials: 'BP',
-    email: 'bayu.pratama@upgris.ac.id',
+    email: 'bayu.pratama@kampus.ac.id',
   },
   admin: {
     id: 'usr-adm-01',
-    name: 'Administrator SPADA',
+    name: 'Administrator E-Learning Kampus',
     role: 'admin',
     identifier: 'NIP: 19880101',
-    sub: 'Admin PTIK UPGRIS',
+    sub: 'Admin Kampus',
     initials: 'AD',
-    email: 'admin.spada@upgris.ac.id',
+    email: 'admin.elearning@kampus.ac.id',
   },
 };
 

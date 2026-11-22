@@ -24,7 +24,7 @@ export default function DaftarHadirKoreksi({ onNavigate, onRoleChange }) {
   const [students, setStudents] = useState([
     { id: 1, nim: '2024001001', name: 'Dimas Arya Pratama', time: '09:18 WIB', status: 'HADIR', note: 'Check-in mandiri mahasiswa via mobile web' },
     { id: 2, nim: '2024001002', name: 'Adinda Putri Maharani', time: '09:20 WIB', status: 'HADIR', note: 'Check-in mandiri laboratorium' },
-    { id: 3, nim: '2024001003', name: 'Rian Bagus Santoso', time: '-', status: 'SAKIT', note: 'Surat dokter terlampir (Klinik Pratama UPGRIS)' },
+    { id: 3, nim: '2024001003', name: 'Rian Bagus Santoso', time: '-', status: 'SAKIT', note: 'Surat dokter terlampir (Klinik Kampus)' },
     { id: 4, nim: '2024001004', name: 'Nabila Zahra Khairunnisa', time: '09:25 WIB', status: 'HADIR', note: 'Check-in mandiri mahasiswa' },
     { id: 5, nim: '2024001005', name: 'Fajar Kurniawan', time: '-', status: 'ALPA', note: 'Tidak hadir tanpa keterangan' },
     { id: 6, nim: '2024001006', name: 'Siti Nur Aisyah', time: '09:16 WIB', status: 'HADIR', note: 'Check-in mandiri laboratorium' },
@@ -178,7 +178,7 @@ export default function DaftarHadirKoreksi({ onNavigate, onRoleChange }) {
               className="hover:text-primary transition-colors flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[16px]">home</span>
-              Dasbor
+              Dashboard
             </button>
             <span>/</span>
             <button

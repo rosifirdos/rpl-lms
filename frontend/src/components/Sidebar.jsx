@@ -90,7 +90,7 @@ function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange, activeNavPath
           </span>
         </div>
         <span className="font-caption text-[11px] text-outline uppercase tracking-wider">
-          SPADA UPGRIS &bull; RBAC Mode
+          E-Learning Kampus &bull; RBAC Mode
         </span>
       </div>
 
@@ -114,16 +114,16 @@ function Sidebar({ isOpen, activeRole = 'mahasiswa', onRoleChange, activeNavPath
 
       <div className="p-space-md bg-surface-container-lowest/80 flex flex-col gap-space-sm border-t border-outline-variant/20">
         <div className="text-center font-caption text-caption text-outline">
-          SPADA UPGRIS v2.4 &bull; Standalone LMS
+          E-Learning Kampus v2.4 &bull; Standalone LMS
         </div>
         <a
-          href="https://upt-ptik.upgris.ac.id"
+          href="https://helpdesk.kampus.ac.id"
           target="_blank"
           rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-space-xs py-space-xs rounded-lg bg-surface-container-high hover:bg-surface-bright text-secondary hover:text-on-surface transition-colors font-label-sm text-label-sm"
         >
           <span className="material-symbols-outlined text-[16px]">support_agent</span>
-          <span>IT Helpdesk PTIK</span>
+          <span>IT Helpdesk Kampus</span>
         </a>
       </div>
     </aside>

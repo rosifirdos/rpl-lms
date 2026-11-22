@@ -357,7 +357,7 @@ export default function PembukaanKelas({ onNavigate }) {
             <span>Beranda</span>
           </a>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
-          <span>Administrasi SPADA</span>
+          <span>Administrasi E-Learning Kampus</span>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
           <span className="font-label-sm text-label-sm text-primary font-semibold">Pembukaan Kelas</span>
         </nav>

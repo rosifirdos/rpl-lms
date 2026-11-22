@@ -81,7 +81,7 @@ describe('Fase 3: Layanan Audit Trail Engine & Keamanan Server', () => {
       },
       create: {
         username: 'testuser_fase3',
-        email: 'testuser_fase3@upgris.ac.id',
+        email: 'testuser_fase3@kampus.ac.id',
         password_hash: pwdHash,
         status: 'ACTIVE',
         role: 'mahasiswa',
@@ -195,12 +195,12 @@ describe('Fase 3: Layanan Audit Trail Engine & Keamanan Server', () => {
       const req = {
         headers: {
           'x-forwarded-for': '182.253.10.45, 10.0.0.1',
-          'user-agent': 'Mozilla/5.0 SPADA-Test-Client',
+          'user-agent': 'Mozilla/5.0 E-Learning-Test-Client',
         },
       };
       const info = extractClientInfo(req);
       assert.equal(info.ipAddress, '182.253.10.45');
-      assert.equal(info.userAgent, 'Mozilla/5.0 SPADA-Test-Client');
+      assert.equal(info.userAgent, 'Mozilla/5.0 E-Learning-Test-Client');
     });
 
     test('extractClientInfo menggunakan req.ip ketika x-forwarded-for tidak tersedia', () => {
@@ -655,7 +655,7 @@ describe('Fase 3: Layanan Audit Trail Engine & Keamanan Server', () => {
     test('Admin membuat pengguna baru (POST /api/admin/users) otomatis mencatat CREATE_USER di AuditLog', async () => {
       const newUserPayload = {
         username: 'user_audit_create_test',
-        email: 'user_audit_create_test@upgris.ac.id',
+        email: 'user_audit_create_test@kampus.ac.id',
         password: 'password123',
         role: 'mahasiswa',
         full_name: 'Mahasiswa Audit Test',

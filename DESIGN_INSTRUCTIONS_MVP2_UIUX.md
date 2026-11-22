@@ -1,12 +1,12 @@
 # Instruksi Desain UI/UX: MVP 2
-# SPADA (Learning Management System) Universitas PGRI Semarang (UPGRIS)
+# E-Learning Kampus (Learning Management System) Universitas
 **Team Membangun Negeri — Panduan Perancangan Antarmuka Berbasis Google Stitch (100% Prompt-Driven UI Generation & Handoff)**
 **Lanjutan Langsung dari [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md)**
 
 ---
 
 ## 📌 Ringkasan Dokumen
-- **Target Deliverable:** Rancangan Desain Antarmuka UI/UX High-Fidelity, Screen Generation, Interaksi Komponen, State Presensi Real-Time, dan Desain Responsif untuk MVP 2 SPADA LMS UPGRIS yang **100% Dikerjakan di Google Stitch melalui rekayasa prompt (Prompt-Driven Design)** tanpa menggunakan Figma.
+- **Target Deliverable:** Rancangan Desain Antarmuka UI/UX High-Fidelity, Screen Generation, Interaksi Komponen, State Presensi Real-Time, dan Desain Responsif untuk MVP 2 E-Learning Kampus yang **100% Dikerjakan di Google Stitch melalui rekayasa prompt (Prompt-Driven Design)** tanpa menggunakan Figma.
 - **Acuan Utama:** [PRD.md](PRD.md) (*Bab 2, 4, 5, 7*), [SRS.md](SRS.md) (*Bab 5, 6, 7.3, 7.7, 8, 15, 16, 20, 21, 22*), [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) (Spesifikasi Ruang Kelas 16 Pertemuan, Dropzone Validasi Berkas, Indikator Presensi & Gatekeeping), [IMPLEMENTATION_PLAN_MVP2_BACKEND.md](IMPLEMENTATION_PLAN_MVP2_BACKEND.md), serta melanjutkan token & komponen hasil **MVP 1**.
 - **Fokus Rilis MVP 2:** Ruang Kelas berbasis silabus **16 Pertemuan terstruktur** (P-8 UTS, P-16 UAS), Modul **Distribusi Materi Pembelajaran** (unggah dosen, unduh mahasiswa terproteksi), Modul **Presensi Digital Terkendali** (buka/tutup sesi oleh dosen, check-in mandiri mahasiswa, koreksi kehadiran, rekapitulasi persentase kehadiran).
 - **Status Prasyarat:** MVP 1 **telah selesai** (autentikasi, app shell, dasbor 3 peran, profil, master data, direct enrollment, audit trail). Seluruh token, komponen dasar, dan pola layout MVP 1 **diwarisi langsung** dan tidak boleh dirancang ulang dari nol.
@@ -159,11 +159,11 @@ Sebelum membuat layar baru, Stitch **wajib** menampilkan komponen MVP 1 yang sud
 
 ## 4. Master Context Prompt (System Prompt Lanjutan untuk Google Stitch)
 
-Daftarkan prompt berikut **setelah** Master Context MVP 1 pada project environment Google Stitch yang sama (`SPADA-LMS-UPGRIS-MVP1` → diperluas menjadi `SPADA-LMS-UPGRIS`):
+Daftarkan prompt berikut **setelah** Master Context MVP 1 pada project environment Google Stitch yang sama (`ELEARNING-KAMPUS-MVP1` → diperluas menjadi `E-LEARNING KAMPUS`):
 
 ```text
-[GOOGLE STITCH SYSTEM PROMPT: SPADA LMS UPGRIS — MVP 2 EXTENSION]
-You are continuing the production design system of "SPADA (Learning Management System) Universitas PGRI Semarang (UPGRIS) - Team Membangun Negeri".
+[GOOGLE STITCH SYSTEM PROMPT: E-Learning Kampus — MVP 2 EXTENSION]
+You are continuing the production design system of "E-Learning Kampus (Learning Management System) Universitas - Team Membangun Negeri".
 All MVP 1 rules remain in force. Apply these ADDITIONAL constraints for MVP 2.
 
 CRITICAL ARCHITECTURE RULES (MVP 2):
@@ -212,7 +212,7 @@ Acknowledge and extend the existing design tokens with the MVP 2 semantic tokens
 #### Layar 1: Daftar Kelas Saya / Kelas Diampu (`/classes`)
 **Template Prompt Google Stitch:**
 ```text
-Generate the "Kelas Saya" list page for Mahasiswa and the "Kelas Diampu" list page for Dosen inside the existing SPADA LMS UPGRIS App Shell (Light Clean Surface).
+Generate the "Kelas Saya" list page for Mahasiswa and the "Kelas Diampu" list page for Dosen inside the existing E-Learning Kampus App Shell (Light Clean Surface).
 
 PAGE HEADER:
 - Breadcrumb: "Dasbor / Kelas Saya" (Mahasiswa) or "Dasbor / Kelas Diampu" (Dosen).
@@ -244,7 +244,7 @@ SHARED STATES:
 #### Layar 2: Halaman Ruang Kelas — Mahasiswa (`/classes/:classId`)
 **Template Prompt Google Stitch:**
 ```text
-Generate the Mahasiswa Classroom page (Ruang Kelas) for SPADA LMS UPGRIS.
+Generate the Mahasiswa Classroom page (Ruang Kelas) for E-Learning Kampus.
 
 CLASS HEADER CARD (white, radius 12px, padding 24px):
 - Left: Course code pill "TI-A" + SKS pill "3 SKS".
@@ -288,7 +288,7 @@ MOBILE (375px):
 #### Layar 3: Halaman Ruang Kelas — Dosen (`/classes/:classId`)
 **Template Prompt Google Stitch:**
 ```text
-Generate the Dosen Classroom management page (Ruang Kelas — Mode Kelola) for SPADA LMS UPGRIS.
+Generate the Dosen Classroom management page (Ruang Kelas — Mode Kelola) for E-Learning Kampus.
 
 CLASS HEADER CARD:
 - Title "Rekayasa Perangkat Lunak" + code pill "TI-A" + SKS pill.
@@ -326,7 +326,7 @@ MOBILE:
 #### Layar 4: Detail Pertemuan (`/classes/:classId/meetings/:meetingId`)
 **Template Prompt Google Stitch:**
 ```text
-Generate the Meeting Detail page for SPADA LMS UPGRIS (Light Clean Surface).
+Generate the Meeting Detail page for E-Learning Kampus (Light Clean Surface).
 
 PAGE HEADER:
 - Breadcrumb: "Dasbor / Kelas Saya / Rekayasa Perangkat Lunak (TI-A) / Pertemuan 3".
@@ -359,7 +359,7 @@ DOSEN VARIANT:
 #### Layar 5: Modal Unggah Materi (Dosen) & State Validasi Berkas
 **Template Prompt Google Stitch:**
 ```text
-Generate the "Unggah Materi Pembelajaran" modal dialog for Dosen in SPADA LMS UPGRIS.
+Generate the "Unggah Materi Pembelajaran" modal dialog for Dosen in E-Learning Kampus.
 
 MODAL SHELL:
 - Overlay: rgba(15, 23, 42, 0.45) with 4px backdrop blur.
@@ -391,7 +391,7 @@ ACCESSIBILITY NOTES TO RENDER:
 #### Layar 6: Modal Konfirmasi Hapus Materi & State Unduh Terproteksi
 **Template Prompt Google Stitch:**
 ```text
-Generate two related states for SPADA LMS UPGRIS materials.
+Generate two related states for E-Learning Kampus materials.
 
 STATE 1 — DELETE MATERIAL CONFIRMATION MODAL:
 - Container: white, max-width 480px, radius 16px, padding 24px.
@@ -419,7 +419,7 @@ STATE 3 — SECURE DOWNLOAD IN PROGRESS:
 #### Layar 7: Kartu Presensi Mahasiswa (3 State)
 **Template Prompt Google Stitch:**
 ```text
-Generate three explicit attendance card states for Mahasiswa in SPADA LMS UPGRIS. Render them side by side for comparison, each labeled.
+Generate three explicit attendance card states for Mahasiswa in E-Learning Kampus. Render them side by side for comparison, each labeled.
 
 ALL CARDS: white #FFFFFF, border #E2E8F0, radius 12px, padding 20px, consistent height.
 
@@ -455,7 +455,7 @@ MOBILE: cards are full-width; primary button height 48px to exceed the 44px touc
 #### Layar 8: Tabel Kehadiran Pertemuan & Modal Koreksi (Dosen)
 **Template Prompt Google Stitch:**
 ```text
-Generate the per-meeting attendance table and correction modal for Dosen in SPADA LMS UPGRIS.
+Generate the per-meeting attendance table and correction modal for Dosen in E-Learning Kampus.
 
 ATTENDANCE TABLE CARD:
 - Header: "Daftar Kehadiran — Pertemuan 3" + session status badge ("Sesi Presensi Aktif" green pulse) + right-side buttons "Tutup Sesi" (destructive outline) and "Ekspor" (disabled with tooltip "Tersedia pada MVP 5").
@@ -479,13 +479,13 @@ CORRECTION MODAL DIALOG:
 - Selected tile: 2px #2563EB border + #EFF6FF background + check indicator.
 - Textarea: Label "CATATAN KETERANGAN" placeholder "Contoh: Surat dokter terlampir (No. 421/SK/2026)" + counter.
 - Footer: "Batal" + "Simpan Koreksi" (primary).
-- Audit note under footer: "Perubahan akan tercatat pada Jejak Audit SPADA." (12px, #64748B).
+- Audit note under footer: "Perubahan akan tercatat pada Jejak Audit E-Learning Kampus." (12px, #64748B).
 ```
 
 #### Layar 9: Rekapitulasi Kehadiran Kelas (`/classes/:classId/attendance-recap`)
 **Template Prompt Google Stitch:**
 ```text
-Generate the Class Attendance Recap (Rekapitulasi Kehadiran) screen for Dosen and Mahasiswa in SPADA LMS UPGRIS.
+Generate the Class Attendance Recap (Rekapitulasi Kehadiran) screen for Dosen and Mahasiswa in E-Learning Kampus.
 
 HEADER:
 - Breadcrumb: "Dasbor / Kelas Diampu / Rekayasa Perangkat Lunak (TI-A) / Rekap Kehadiran".
@@ -549,7 +549,7 @@ Update the existing MVP 1 screens with MVP 2 additions only — do not redesign 
 Berikut pembagian tugas dan rincian pekerjaan (*detailed jobdesk*) UI/UX Designer beserta **Prompt Siap Kirim (Ready-to-Send Prompts)** untuk setiap fase MVP 2. Seluruh eksekusi **100% melalui Google Stitch**, meneruskan project MVP 1.
 
 ```text
-Alur Eksekusi 6 Fase Desain UI/UX MVP 2 SPADA LMS via Google Stitch:
+Alur Eksekusi 6 Fase Desain UI/UX MVP 2 E-Learning Kampus LMS via Google Stitch:
 ┌────────────────────────────────────────────────────────────────────────┐
 │ Fase 1: Reaktivasi Proyek Stitch, Master Context Extension & Sitemap   │
 └───────────────────────────────────┬────────────────────────────────────┘
@@ -581,7 +581,7 @@ Alur Eksekusi 6 Fase Desain UI/UX MVP 2 SPADA LMS via Google Stitch:
 
 * **Tujuan Fase:** Membuka kembali proyek Stitch MVP 1, menginjeksi aturan MVP 2, memetakan rute ruang kelas, dan memastikan tidak ada regenerasi komponen lama.
 * **Rincian Jobdesk Designer:**
-  1. **Reaktivasi Proyek:** Membuka project `SPADA-LMS-UPGRIS` dan memverifikasi seluruh token, halaman MVP 1, serta UI Kit masih utuh. Mengganti nama project menjadi `SPADA-LMS-UPGRIS-MVP2`.
+  1. **Reaktivasi Proyek:** Membuka project `E-LEARNING KAMPUS` dan memverifikasi seluruh token, halaman MVP 1, serta UI Kit masih utuh. Mengganti nama project menjadi `ELEARNING-KAMPUS-MVP2`.
   2. **Injeksi Master Context Extension:** Menambahkan aturan 16 pertemuan, state machine presensi, dan kebijakan validasi berkas ke project setting (Bab 4 dokumen ini).
   3. **Pemetaan Rute Baru:** Menyusun penambahan sitemap:
      - `/classes` (Daftar Kelas Saya / Kelas Diampu)
@@ -595,7 +595,7 @@ Alur Eksekusi 6 Fase Desain UI/UX MVP 2 SPADA LMS via Google Stitch:
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 1.1: PROJECT REACTIVATION & MVP 2 SYSTEM RULES]
-Reactivate the existing project "SPADA LMS UPGRIS" and extend it for MVP 2.
+Reactivate the existing project "E-Learning Kampus" and extend it for MVP 2.
 
 Confirm the following MVP 1 assets remain untouched: Portal Login (/login), Password Recovery (/forgot-password), App Shell, Mahasiswa/Dosen/Admin dashboards, User Profile, User Management, Master Courses, Class Opening, Direct Enrollment, Audit Trail, and the full UI Kit.
 
@@ -612,7 +612,7 @@ Acknowledge and list the reusable MVP 1 components before generating anything ne
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 1.2: MVP 2 SITEMAP & NAVIGATION FLOW]
-Generate an interactive visual sitemap and user-flow diagram for SPADA LMS UPGRIS MVP 2, showing only the NEW routes integrated with the existing shell.
+Generate an interactive visual sitemap and user-flow diagram for E-Learning Kampus MVP 2, showing only the NEW routes integrated with the existing shell.
 
 Roles and flows:
 1. MAHASISWA: Dasbor -> Kelas Saya (/classes) -> Ruang Kelas (/classes/:classId) -> Detail Pertemuan (/classes/:classId/meetings/:meetingId) -> [Unduh Materi | Isi Kehadiran (only when OPEN)] ; plus Rekap Kehadiran Saya (/classes/:classId/attendance-recap).
@@ -649,7 +649,7 @@ Render as a clean structured UI flowchart, not a code block.
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 2.1: MVP 2 SEMANTIC TOKENS & ATOMS]
-Extend the existing SPADA LMS UPGRIS design system catalog with MVP 2 tokens and atoms. Do not regenerate MVP 1 atoms.
+Extend the existing E-Learning Kampus design system catalog with MVP 2 tokens and atoms. Do not regenerate MVP 1 atoms.
 
 1. PRESENCE STATUS BADGES (color + icon + uppercase 11px label, radius full, padding 4px 10px):
    - HADIR: text #16A34A, fill #DCFCE7, border #BBF7D0, icon check-circle.
@@ -678,7 +678,7 @@ Render as a labeled token + atom sheet with exact hex values under each swatch.
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 2.2: MVP 2 MOLECULES]
-Extend the SPADA LMS UPGRIS component library with these MVP 2 molecules. Show every state side by side with labels.
+Extend the E-Learning Kampus component library with these MVP 2 molecules. Show every state side by side with labels.
 
 1. MEETING ACCORDION ROW (collapsed / hover / expanded) × (Mahasiswa read-only / Dosen kelola):
    - White card, radius 12px, border #E2E8F0, padding 16px 20px.
@@ -727,7 +727,7 @@ Render the full sheet on a Light Clean Surface (#F8FAFC) with state labels benea
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 3.1: CLASS LIST (/classes)]
-Generate the class list page for SPADA LMS UPGRIS in two role variants (Mahasiswa "Kelas Saya" and Dosen "Kelas Diampu") inside the existing App Shell.
+Generate the class list page for E-Learning Kampus in two role variants (Mahasiswa "Kelas Saya" and Dosen "Kelas Diampu") inside the existing App Shell.
 
 Header: breadcrumb, title, semester subtitle, semester filter select, and Grid/List view toggle.
 
@@ -749,7 +749,7 @@ Include empty states for both roles and a 3-card skeleton loading variant.
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 3.2: MAHASISWA CLASSROOM (/classes/:classId)]
-Generate the Mahasiswa Classroom page for SPADA LMS UPGRIS.
+Generate the Mahasiswa Classroom page for E-Learning Kampus.
 
 Header card: course code + SKS pills, "Rekayasa Perangkat Lunak" 24px bold, meta row (lecturer, semester, "16 Pertemuan Terstruktur"), and a 96px progress ring on the right labeled "75% Kehadiran Saya • 12 dari 16 pertemuan". Below it, a class progress bar "Progres Kelas: 3 / 16 Pertemuan Selesai". Tabs: "Pertemuan" (active), "Rekap Kehadiran Saya".
 
@@ -765,7 +765,7 @@ Adapt to 375px: header stacks, ring moves below the title, sticky bottom sheet "
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 3.3: DOSEN CLASSROOM MANAGEMENT (/classes/:classId)]
-Generate the Dosen Classroom management page for SPADA LMS UPGRIS.
+Generate the Dosen Classroom management page for E-Learning Kampus.
 
 Header card: title + code/SKS pills, meta "38 Mahasiswa Terdaftar • Ganjil 2026/2027 • 16 Pertemuan", actions "Unggah Materi" and "Rekap Kehadiran" (outline), tabs "Pertemuan" (active) / "Rekap Kehadiran" / "Daftar Mahasiswa".
 
@@ -786,7 +786,7 @@ On mobile, collapse the control panel into a sticky bottom bar showing the sessi
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 3.4: MEETING DETAIL (/classes/:classId/meetings/:meetingId)]
-Generate the Meeting Detail page for SPADA LMS UPGRIS with two role variants.
+Generate the Meeting Detail page for E-Learning Kampus with two role variants.
 
 Header: breadcrumb "Dasbor / Kelas Saya / Rekayasa Perangkat Lunak (TI-A) / Pertemuan 3", back link, meeting number badge "P3", title "Analisis Kebutuhan Sistem" 24px bold, type badge "Pembelajaran Pra-UTS", meta "Diperbarui 6 Okt 2026 • 09:12 WIB", publication chip "Terbit".
 
@@ -817,7 +817,7 @@ Dosen variant: description becomes inline editable with "Simpan"; add a disabled
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 4.1: UPLOAD MATERIAL MODAL & FILE VALIDATION STATES]
-Generate the "Unggah Materi Pembelajaran" modal for Dosen in SPADA LMS UPGRIS.
+Generate the "Unggah Materi Pembelajaran" modal for Dosen in E-Learning Kampus.
 
 Shell: overlay rgba(15,23,42,0.45) + 4px blur; white container max-width 640px, radius 16px, elevation-4, padding 24px. Header "Unggah Materi Baru" + subtitle "Pertemuan 3 • Rekayasa Perangkat Lunak (TI-A)" + close button. Footer "Batal" (ghost) + "Unggah Materi" (primary, upload icon).
 
@@ -834,7 +834,7 @@ Dropzone must be keyboard-focusable with a visible 2px #3B82F6 focus ring. Error
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 4.2: EDIT & DELETE MATERIAL, PROTECTED DOWNLOAD STATES]
-Generate the edit/delete material flows and protected download states for SPADA LMS UPGRIS.
+Generate the edit/delete material flows and protected download states for E-Learning Kampus.
 
 1. EDIT MATERIAL MODAL:
    - Same shell as the upload modal, title "Edit Materi Pembelajaran".
@@ -871,7 +871,7 @@ Generate the edit/delete material flows and protected download states for SPADA 
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 5.1: STUDENT ATTENDANCE CARD (4 STATES)]
-Generate four explicit attendance card states for Mahasiswa in SPADA LMS UPGRIS. Render side by side, each labeled.
+Generate four explicit attendance card states for Mahasiswa in E-Learning Kampus. Render side by side, each labeled.
 
 All cards: white #FFFFFF, border #E2E8F0, radius 12px, padding 20px, equal height.
 
@@ -885,7 +885,7 @@ On mobile, all primary buttons are 48px tall to exceed the 44px touch target.
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 5.2: DOSEN SESSION CONTROL & LIVE ATTENDANCE TABLE]
-Generate the Dosen attendance session control and per-meeting attendance table for SPADA LMS UPGRIS.
+Generate the Dosen attendance session control and per-meeting attendance table for E-Learning Kampus.
 
 1. ATTENDANCE TABLE CARD:
    - Header "Daftar Kehadiran — Pertemuan 3" + session status badge + right actions "Tutup Sesi" (destructive outline) and "Ekspor" (disabled, tooltip "Tersedia pada MVP 5").
@@ -899,7 +899,7 @@ Generate the Dosen attendance session control and per-meeting attendance table f
    - White, max-width 520px, radius 16px, padding 24px. Header "Koreksi Status Kehadiran" + subtitle "Ahmad Fauzi • NIM 24670001".
    - Four selectable radio CARDS (not plain radios): HADIR (green check-circle), SAKIT (blue hospital), IZIN (amber file-text), ALPA (red x-circle). Selected card: 2px #2563EB border, #EFF6FF background, check indicator.
    - Textarea "CATATAN KETERANGAN" with placeholder "Contoh: Surat dokter terlampir (No. 421/SK/2026)".
-   - Footer "Batal" + "Simpan Koreksi"; footnote "Perubahan akan tercatat pada Jejak Audit SPADA."
+   - Footer "Batal" + "Simpan Koreksi"; footnote "Perubahan akan tercatat pada Jejak Audit E-Learning Kampus."
 
 3. SESSION CONTROL PANEL:
    - Show the three states (NOT_OPENED with tolerance input, OPEN with live counter and elapsed timer, CLOSED with summary counters) as separate labeled frames.
@@ -907,7 +907,7 @@ Generate the Dosen attendance session control and per-meeting attendance table f
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 5.3: ATTENDANCE RECAP & 16-MEETING MATRIX (/classes/:classId/attendance-recap)]
-Generate the class attendance recap screen for SPADA LMS UPGRIS (Dosen variant).
+Generate the class attendance recap screen for E-Learning Kampus (Dosen variant).
 
 Header: breadcrumb, title "Rekapitulasi Kehadiran Kelas", subtitle "Pertemuan yang telah diselenggarakan: 12 dari 16", right actions class selector + "Unduh Rekap" (disabled with tooltip "Ekspor tersedia pada MVP 5").
 
@@ -941,7 +941,7 @@ Mobile: matrix becomes a per-student list; tapping a student opens a bottom shee
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 6.1: MVP 2 EMPTY, LOADING & RACE-CONDITION STATES]
-Generate the edge-case states specific to SPADA LMS UPGRIS MVP 2:
+Generate the edge-case states specific to E-Learning Kampus MVP 2:
 
 1. EMPTY STATES:
    - No materials: dashed-border panel, document illustration, "Belum Ada Materi untuk Pertemuan Ini", subtext "Dosen Pengampu belum mengunggah materi. Silakan periksa kembali nanti." + "Muat Ulang" ghost button.
@@ -964,7 +964,7 @@ Generate the edge-case states specific to SPADA LMS UPGRIS MVP 2:
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 6.2: WCAG 2.1 AA ACCESSIBILITY AUDIT FOR MVP 2]
-Perform a comprehensive accessibility audit and refinement pass on all MVP 2 screens for SPADA LMS UPGRIS:
+Perform a comprehensive accessibility audit and refinement pass on all MVP 2 screens for E-Learning Kampus:
 
 1. CONTRAST: Verify every presence badge passes 4.5:1 text-to-fill contrast: HADIR #16A34A on #DCFCE7, SAKIT #0284C7 on #E0F2FE, IZIN #D97706 on #FEF3C7, ALPA #DC2626 on #FEE2E2. If any fails, switch to #0F172A text while keeping the colored icon. Verify UAS #9F1239 on #FFE4E6 as well.
 2. NON-COLOR INDICATORS: Every attendance status, session status, meeting type, and file-validation state must include a distinct ICON and a TEXT label. Matrix cells need tooltips or an accessible label describing the meeting and status.
@@ -976,7 +976,7 @@ Perform a comprehensive accessibility audit and refinement pass on all MVP 2 scr
 
 ```text
 [PROMPT SIAP KIRIM - GOOGLE STITCH FASE 6.3: CODE & ASSET EXPORT HANDOFF (MVP 2)]
-Export clean, production-ready frontend code and asset structures from Google Stitch for SPADA LMS UPGRIS MVP 2:
+Export clean, production-ready frontend code and asset structures from Google Stitch for E-Learning Kampus MVP 2:
 
 1. Export semantic HTML5 + Tailwind CSS only — no inline hardcoded styles. Reuse the existing MVP 1 tokens for colors, spacing, and typography.
 2. Structure React JSX components to match this frontend architecture:

@@ -9,7 +9,7 @@ const INITIAL_USERS = [
     initials: 'DA',
     avatarBg: 'bg-primary/20 text-primary',
     subtext: 'S1 Teknik Informatika • Angkatan 2024',
-    email: 'dimas.arya@upgris.ac.id',
+    email: 'dimas.arya@kampus.ac.id',
     phone: '+62 812-3490-1122',
     role: 'MAHASISWA',
     status: 'ACTIVE',
@@ -24,8 +24,8 @@ const INITIAL_USERS = [
     name: 'Dr. Bayu Pratama, M.Kom.',
     initials: 'BP',
     avatarBg: 'bg-secondary-container/30 text-secondary',
-    subtext: 'Lektor Kepala • FPTIK',
-    email: 'bayu.pratama@upgris.ac.id',
+    subtext: 'Lektor Kepala • Fakultas Teknologi Informasi',
+    email: 'bayu.pratama@kampus.ac.id',
     phone: '+62 813-8821-9003',
     role: 'DOSEN',
     status: 'ACTIVE',
@@ -37,18 +37,18 @@ const INITIAL_USERS = [
   {
     id: 'usr-3',
     nim: '19820512',
-    name: 'Admin Utama SPADA',
+    name: 'Admin Utama E-Learning Kampus',
     initials: 'AD',
     avatarBg: 'bg-tertiary-container/40 text-tertiary',
     subtext: 'UPT Teknologi Informasi & Pangkalan Data',
-    email: 'admin.spada@upgris.ac.id',
+    email: 'admin.elearning@kampus.ac.id',
     phone: '+62 24-8711-209',
     role: 'ADMIN',
     status: 'ACTIVE',
     lastLogin: '13 Okt 2026, 08:30 WIB',
-    device: '10.10.1.5 • Internal UPGRIS Net',
+    device: '10.10.1.5 • Internal Kampus Net',
     prodi: 'UPT',
-    username: 'admin.spada'
+    username: 'admin.elearning'
   },
   {
     id: 'usr-4',
@@ -57,7 +57,7 @@ const INITIAL_USERS = [
     initials: 'SA',
     avatarBg: 'bg-secondary-container/30 text-secondary',
     subtext: 'Lektor • Rekayasa Perangkat Lunak',
-    email: 'siti.aminah@upgris.ac.id',
+    email: 'siti.aminah@kampus.ac.id',
     phone: '+62 815-6672-001',
     role: 'DOSEN',
     status: 'ACTIVE',
@@ -73,7 +73,7 @@ const INITIAL_USERS = [
     initials: 'AF',
     avatarBg: 'bg-primary/20 text-primary',
     subtext: 'S1 Teknik Informatika • Angkatan 2024',
-    email: 'ahmad.fauzi@upgris.ac.id',
+    email: 'ahmad.fauzi@kampus.ac.id',
     phone: '+62 822-1092-4411',
     role: 'MAHASISWA',
     status: 'ACTIVE',
@@ -89,7 +89,7 @@ const INITIAL_USERS = [
     initials: 'BS',
     avatarBg: 'bg-secondary-container/30 text-secondary',
     subtext: 'Asisten Ahli • Kecerdasan Komputasi',
-    email: 'budi.santoso@upgris.ac.id',
+    email: 'budi.santoso@kampus.ac.id',
     phone: '+62 812-7788-3410',
     role: 'DOSEN',
     status: 'ACTIVE',
@@ -105,7 +105,7 @@ const INITIAL_USERS = [
     initials: 'RW',
     avatarBg: 'bg-surface-container-highest text-outline',
     subtext: 'S1 Sistem Informasi • Cuti Akademik',
-    email: 'rina.wulan@upgris.ac.id',
+    email: 'rina.wulan@kampus.ac.id',
     phone: '+62 857-9901-2299',
     role: 'MAHASISWA',
     status: 'INACTIVE',
@@ -121,7 +121,7 @@ const INITIAL_USERS = [
     initials: 'KS',
     avatarBg: 'bg-error-container/30 text-error',
     subtext: 'Akun Terkunci (Pelanggaran Presensi & Ujian)',
-    email: 'kevin.s@upgris.ac.id',
+    email: 'kevin.s@kampus.ac.id',
     phone: '+62 821-4450-8902',
     role: 'MAHASISWA',
     status: 'SUSPENDED',
@@ -137,7 +137,7 @@ const INITIAL_USERS = [
     initials: 'PA',
     avatarBg: 'bg-primary/20 text-primary',
     subtext: 'S1 Pendidikan Bahasa Inggris • Angkatan 2024',
-    email: 'putri.ayu@upgris.ac.id',
+    email: 'putri.ayu@kampus.ac.id',
     phone: '+62 819-0128-4455',
     role: 'MAHASISWA',
     status: 'ACTIVE',
@@ -153,7 +153,7 @@ const INITIAL_USERS = [
     initials: 'FA',
     avatarBg: 'bg-primary/20 text-primary',
     subtext: 'S1 PGSD • Angkatan 2024',
-    email: 'fajar.a@upgris.ac.id',
+    email: 'fajar.a@kampus.ac.id',
     phone: '+62 812-9988-1234',
     role: 'MAHASISWA',
     status: 'ACTIVE',
@@ -197,7 +197,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formSendEmail, setFormSendEmail] = useState(true);
-  const [formPassword, setFormPassword] = useState('UPGRIS#2026Secure!');
+  const [formPassword, setFormPassword] = useState('Kampus#2026Secure!');
   const [formInitialStatus, setFormInitialStatus] = useState('ACTIVE');
   const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -294,7 +294,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
     setFormUsername('');
     setFormEmail('');
     setFormPhone('');
-    setFormPassword('UPGRIS#2026Secure!');
+    setFormPassword('Kampus#2026Secure!');
     setFormInitialStatus('ACTIVE');
     setIsModalOpen(true);
   };
@@ -457,7 +457,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
     setIsExporting(true);
     setTimeout(() => {
       setIsExporting(false);
-      showToast(`Berkas data_pengguna_spada_${filteredUsers.length}.xlsx berhasil diunduh.`);
+      showToast(`Berkas data_pengguna_${filteredUsers.length}.xlsx berhasil diunduh.`);
     }, 1200);
   };
 
@@ -496,14 +496,14 @@ export default function ManajemenPengguna({ onRoleChange }) {
               <span>Beranda</span>
             </a>
             <span>/</span>
-            <span className="text-on-surface-variant">Administrasi SPADA</span>
+            <span className="text-on-surface-variant">Administrasi E-Learning Kampus</span>
             <span>/</span>
             <span className="text-primary font-semibold">Manajemen Pengguna</span>
           </nav>
 
           <div className="flex items-baseline gap-space-sm flex-wrap">
             <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
-              Manajemen Pengguna SPADA
+              Manajemen Pengguna E-Learning Kampus
             </h1>
             <span className="px-space-sm py-0.5 rounded-full bg-surface-container-high text-secondary font-label-sm text-label-sm border border-outline-variant/30">
               Role Tunggal & RBAC Terpusat
@@ -511,7 +511,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
           </div>
 
           <p className="font-body-md text-body-md text-on-surface-variant">
-            Pengelolaan terpusat akun mahasiswa, dosen, dan administrator sistem SPADA LMS Universitas PGRI Semarang.
+            Pengelolaan terpusat akun mahasiswa, dosen, dan administrator sistem E-Learning Kampus.
           </p>
         </div>
 
@@ -970,7 +970,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
                     {modalMode === 'EDIT' ? 'Ubah Data Pengguna' : 'Tambah Pengguna Baru'}
                   </h2>
                   <span className="font-caption text-caption text-on-surface-variant">
-                    Pendaftaran Akun Terpusat Civitas Academica UPGRIS
+                    Pendaftaran Akun Terpusat Civitas Academica
                   </span>
                 </div>
               </div>
@@ -1041,7 +1041,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
                       ? 'Data Akademik Mahasiswa'
                       : formRole === 'Dosen'
                       ? 'Data Kepegawaian & Akademik Dosen'
-                      : 'Data Staf Administrator SPADA'}
+                      : 'Data Staf Administrator E-Learning Kampus'}
                   </span>
                 </div>
 
@@ -1148,14 +1148,14 @@ export default function ManajemenPengguna({ onRoleChange }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md">
                   <div className="flex flex-col gap-1">
                     <label className="font-label-sm text-label-sm text-on-surface">
-                      Email Kampus Resmi (@upgris.ac.id) <span className="text-error">*</span>
+                      Email Kampus Resmi (@kampus.ac.id) <span className="text-error">*</span>
                     </label>
                     <input
                       required
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
                       className="w-full bg-surface-container rounded-lg px-3 py-2 font-body-sm text-body-sm text-on-surface border border-outline-variant/40 focus:outline-none focus:border-primary"
-                      placeholder="bagas.kurniawan@upgris.ac.id"
+                      placeholder="bagas.kurniawan@kampus.ac.id"
                       type="email"
                     />
                   </div>
@@ -1230,7 +1230,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
 
               <div className="flex items-center justify-between pt-space-md border-t border-outline-variant/20">
                 <span className="font-caption text-caption text-outline hidden sm:inline">
-                  Data akan disinkronkan ke SIAKAD Utama UPGRIS
+                  Data akan disinkronkan ke SIAKAD Utama
                 </span>
                 <div className="flex items-center gap-space-sm ml-auto">
                   <button
@@ -1287,7 +1287,7 @@ export default function ManajemenPengguna({ onRoleChange }) {
                 Apakah Anda yakin ingin menghapus akun pengguna <strong className="text-on-surface font-semibold text-primary">{deleteModalUser.name}</strong> ({deleteModalUser.nim})?
               </p>
               <p className="font-caption text-caption text-error bg-error-container/20 p-2.5 rounded-lg border border-error/20">
-                Data akun, riwayat sesi login, dan hak akses SPADA LMS civitas ini akan dihapus dari basis data.
+                Data akun, riwayat sesi login, dan hak akses E-Learning Kampus civitas ini akan dihapus dari basis data.
               </p>
             </div>
 

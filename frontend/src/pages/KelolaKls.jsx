@@ -1,7 +1,7 @@
 /**
  * pages/KelolaKls.jsx
  *
- * Halaman-level wrapper untuk Kelola Ruang Kelas (Dosen) SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Kelola Ruang Kelas (Dosen) E-Learning Kampus.
  */
 import KelolaKls from '../features/dosen/KelolaKls';
 

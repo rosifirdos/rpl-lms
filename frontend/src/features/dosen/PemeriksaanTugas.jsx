@@ -199,7 +199,7 @@ export default function PemeriksaanTugas({ onRoleChange, onNavigate }) {
           className="hover:text-primary transition-colors flex items-center gap-1"
         >
           <span className="material-symbols-outlined text-[16px]">home</span>
-          <span>Dasbor Dosen</span>
+          <span>Dashboard Dosen</span>
         </a>
         <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
         <span className="text-secondary font-semibold">Pemeriksaan Rubrik Tugas</span>
@@ -211,7 +211,7 @@ export default function PemeriksaanTugas({ onRoleChange, onNavigate }) {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-[12px] font-bold">
-                Penilaian OBE SPADA
+                Penilaian OBE E-Learning
               </span>
               <span className="font-caption text-caption text-on-surface-variant">
                 Semester Ganjil 2026/2027

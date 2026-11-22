@@ -10,6 +10,7 @@ export function errorHandler(err, req, res, next) {
       statusCode: err.statusCode,
       message: err.message,
       errors: err.errors,
+      code: err.code,
     });
   }
 
@@ -60,6 +61,7 @@ export function errorHandler(err, req, res, next) {
     const target = Array.isArray(err.meta?.target) ? err.meta.target.join(', ') : err.meta?.target || 'field';
     return apiResponse.error(res, {
       statusCode: 409,
+      code: 'DUPLICATE_ENTRY',
       message: `Konflik data: Nilai pada ${target} sudah terdaftar dalam sistem`,
     });
   }
@@ -67,6 +69,7 @@ export function errorHandler(err, req, res, next) {
   if (err.code === 'P2003') {
     return apiResponse.error(res, {
       statusCode: 409,
+      code: 'FOREIGN_KEY_CONFLICT',
       message: 'Gagal memproses relasi data: Referensi entitas tidak valid atau data masih digunakan oleh entitas lain',
     });
   }
@@ -74,7 +77,16 @@ export function errorHandler(err, req, res, next) {
   if (err.code === 'P2025') {
     return apiResponse.error(res, {
       statusCode: 404,
+      code: 'NOT_FOUND',
       message: 'Data yang diminta tidak ditemukan di database',
+    });
+  }
+
+  if (err.code === 'P2034') {
+    return apiResponse.error(res, {
+      statusCode: 409,
+      code: 'CONCURRENCY_CONFLICT',
+      message: 'Konflik transaksi database. Silakan coba kembali permintaan ini.',
     });
   }
 

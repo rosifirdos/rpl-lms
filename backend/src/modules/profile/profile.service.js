@@ -8,7 +8,7 @@ import { AuditLogService } from '../audit-log/audit-log.service.js';
 import { AuthService } from '../auth/auth.service.js';
 
 /**
- * Layanan Profil SPADA LMS (FR-005 s/d FR-008)
+ * Layanan Profil E-Learning Kampus (FR-005 s/d FR-008)
  *
  * Menggunakan model Profile tunggal (full_name, phone, bio, avatar_file_id),
  * serta menyertakan identitas peran (Mahasiswa: NIM, prodi, angkatan; Dosen: NIDN, NIP, gelar).

@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -7,13 +7,24 @@ import { apiResponse } from './utils/apiResponse.js';
 import { AppError } from './utils/errors.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import profileRoutes from './modules/profile/profile.routes.js';
+import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
+import userClassesRoutes from './modules/classes/user-classes.routes.js';
 import auditLogRoutes from './modules/audit-log/audit-log.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
 import coursesRoutes from './modules/courses/courses.routes.js';
 import classesRoutes from './modules/classes/classes.routes.js';
+import enrollmentsRoutes from './modules/enrollments/enrollments.routes.js';
+import {
+  meetingAttendanceRoutes,
+  attendanceRoutes,
+} from './modules/attendance/attendance.routes.js';
+import {
+  classMeetingsRoutes,
+  meetingRoutes,
+} from './modules/meetings/meeting.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
-import { generalLimiter, authLimiter, publicApiLimiter } from './middlewares/rateLimit.middleware.js';
+import { generalLimiter, authLimiter } from './middlewares/rateLimit.middleware.js';
 
 const app = express();
 
@@ -53,13 +64,16 @@ if (ENV.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Health check endpoint
+// Health check endpoint (FIX F13: Hapus publicApiLimiter ganda, cukup generalLimiter global)
 app.get('/health', (req, res) => {
   return apiResponse.success(res, {
-    message: 'SPADA LMS Backend API is operational',
+    message: 'E-Learning Kampus Backend API is operational',
     data: {
       timestamp: new Date().toISOString(),
       env: ENV.NODE_ENV,
+      status: 'healthy',
+      service: 'E-Learning Kampus Backend API',
+      version: '1.0.0',
     },
   });
 });
@@ -67,16 +81,19 @@ app.get('/health', (req, res) => {
 // Root API welcome (flat /api per SRS Bab 21)
 app.get('/api', (req, res) => {
   return apiResponse.success(res, {
-    message: 'Selamat datang di API SPADA LMS — Universitas PGRI Semarang',
+    message: 'Selamat datang di API E-Learning Kampus — Universitas',
     data: {
       version: '1.0.0 (MVP 1)',
       status: 'active',
       endpoints: {
         auth: '/api/auth',
         profile: '/api/profile',
+        dashboard: '/api/dashboard',
+        classes: '/api/classes',
         admin_users: '/api/admin/users',
         admin_courses: '/api/admin/courses',
         admin_classes: '/api/admin/classes',
+        admin_enrollments: '/api/admin/enrollments',
         admin_audit_logs: '/api/admin/audit-logs',
       },
     },
@@ -87,24 +104,23 @@ app.get('/api', (req, res) => {
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 
-// Health Check Endpoint (public, rate limited lebih longgar)
-app.get('/health', publicApiLimiter, (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    service: 'SPADA LMS Backend API',
-    version: '1.0.0',
-  });
-});
-
-// === Modul Inti SPADA LMS (flat /api paths per SRS Bab 21) ===
+// === Modul Inti E-Learning Kampus (flat /api paths per SRS Bab 21) ===
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/classes', classMeetingsRoutes);
+app.use('/api/classes', userClassesRoutes);
 app.use('/api/admin/users', usersRoutes);
 app.use('/api/admin/courses', coursesRoutes);
 app.use('/api/admin/classes', classesRoutes);
+app.use('/api/admin/enrollments', enrollmentsRoutes);
 app.use('/api/admin/audit-logs', auditLogRoutes);
 app.use('/api/audit-logs', auditLogRoutes); // Alias kemudahan akses
+
+// === Presensi Digital MVP 2 (Fase 4) ===
+app.use('/api/meetings', meetingRoutes);
+app.use('/api/meetings', meetingAttendanceRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // 404 Handler untuk rute tak terdefinisi
 app.use((req, res) => {

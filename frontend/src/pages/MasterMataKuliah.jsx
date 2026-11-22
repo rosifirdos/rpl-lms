@@ -1,7 +1,7 @@
 /**
  * pages/MasterMataKuliah.jsx
  *
- * Halaman-level wrapper untuk Master Mata Kuliah SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Master Mata Kuliah E-Learning Kampus.
  * Menggunakan AppShell terpusat dengan RBAC enforcement.
  */
 import MasterMataKuliah from '../features/admin/MasterMataKuliah';

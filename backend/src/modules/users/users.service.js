@@ -5,7 +5,7 @@ import { AuditLogService } from '../audit-log/audit-log.service.js';
 import { ROLES } from '../../constants/roles.js';
 
 /**
- * Layanan Manajemen Pengguna SPADA LMS (FR-044 s/d FR-048)
+ * Layanan Manajemen Pengguna E-Learning Kampus (FR-044 s/d FR-048)
  *
  * Revised: role adalah enum tunggal pada User (ADMIN/DOSEN/MAHASISWA).
  */

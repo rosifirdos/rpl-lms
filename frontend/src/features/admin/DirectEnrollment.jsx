@@ -14,34 +14,34 @@ const INITIAL_CLASSES = [
     room: 'Lab Komputasi 3 (Gedung B Lt. 3)',
     maxCapacity: 40,
     enrolledInitial: [
-      { nim: '24670001', name: 'Dimas Arya Pratama', email: 'dimas.arya@upgris.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:15', by: 'Oleh Admin Utama', tagType: 'admin' },
-      { nim: '24670002', name: 'Ahmad Fauzi', email: 'ahmad.fauzi@upgris.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:15', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670008', name: 'Siti Nurhaliza', email: 'siti.nur@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:20', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670014', name: 'Bagas Saputra', email: 'bagas.s@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:22', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670019', name: 'Kevin Sanjaya', email: 'kevin.s@upgris.ac.id', prodi: 'S1 SI (2023 - Ulang)', time: '12 Okt 2026, 10:05', by: 'Oleh Admin Utama', tagType: 'admin' },
-      { nim: '24670025', name: 'Rina Wulandari', email: 'rina.w@upgris.ac.id', prodi: 'S1 SI (2024)', time: '12 Okt 2026, 10:07', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670003', name: 'Alif Kurniawan', email: 'alif.k@upgris.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:20', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670004', name: 'Bima Satria', email: 'bima.s@upgris.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:20', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670005', name: 'Cynthia Dewi', email: 'cynthia.d@upgris.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:22', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670006', name: 'Danang Prasetyo', email: 'danang.p@upgris.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:25', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670007', name: 'Eka Wijaya', email: 'eka.w@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 10:10', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670009', name: 'Fandi Achmad', email: 'fandi.a@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:25', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670010', name: 'Gilang Ramadhan', email: 'gilang.r@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:30', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670011', name: 'Hafiz Baihaqi', email: 'hafiz.b@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:32', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670012', name: 'Indah Puspita', email: 'indah.p@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:35', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670013', name: 'Joko Susilo', email: 'joko.s@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:40', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670015', name: 'Kurnia Mega', email: 'kurnia.m@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 15:00', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670016', name: 'Lukman Hakim', email: 'lukman.h@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 15:05', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670017', name: 'Mega Utami', email: 'mega.u@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 15:10', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670018', name: 'Naufal Farhan', email: 'naufal.f@upgris.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 15:15', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670020', name: 'Oki Setiawan', email: 'oki.s@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:10', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670021', name: 'Panji Gumilang', email: 'panji.g@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:15', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670022', name: 'Qonita Az-Zahra', email: 'qonita.a@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:20', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670023', name: 'Raditya Dika', email: 'raditya.d@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:25', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670024', name: 'Salma Salsabila', email: 'salma.s@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:30', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670026', name: 'Taufik Hidayat', email: 'taufik.h@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 11:00', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670027', name: 'Umar Bakri', email: 'umar.b@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 11:15', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670028', name: 'Vina Panduwinata', email: 'vina.p@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 11:30', by: 'Auto BR-002', tagType: 'system' }
+      { nim: '24670001', name: 'Dimas Arya Pratama', email: 'dimas.arya@kampus.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:15', by: 'Oleh Admin Utama', tagType: 'admin' },
+      { nim: '24670002', name: 'Ahmad Fauzi', email: 'ahmad.fauzi@kampus.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:15', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670008', name: 'Siti Nurhaliza', email: 'siti.nur@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:20', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670014', name: 'Bagas Saputra', email: 'bagas.s@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:22', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670019', name: 'Kevin Sanjaya', email: 'kevin.s@kampus.ac.id', prodi: 'S1 SI (2023 - Ulang)', time: '12 Okt 2026, 10:05', by: 'Oleh Admin Utama', tagType: 'admin' },
+      { nim: '24670025', name: 'Rina Wulandari', email: 'rina.w@kampus.ac.id', prodi: 'S1 SI (2024)', time: '12 Okt 2026, 10:07', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670003', name: 'Alif Kurniawan', email: 'alif.k@kampus.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:20', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670004', name: 'Bima Satria', email: 'bima.s@kampus.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:20', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670005', name: 'Cynthia Dewi', email: 'cynthia.d@kampus.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:22', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670006', name: 'Danang Prasetyo', email: 'danang.p@kampus.ac.id', prodi: 'S1 TI (2024)', time: '10 Okt 2026, 09:25', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670007', name: 'Eka Wijaya', email: 'eka.w@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 10:10', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670009', name: 'Fandi Achmad', email: 'fandi.a@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:25', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670010', name: 'Gilang Ramadhan', email: 'gilang.r@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:30', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670011', name: 'Hafiz Baihaqi', email: 'hafiz.b@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:32', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670012', name: 'Indah Puspita', email: 'indah.p@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:35', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670013', name: 'Joko Susilo', email: 'joko.s@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 14:40', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670015', name: 'Kurnia Mega', email: 'kurnia.m@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 15:00', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670016', name: 'Lukman Hakim', email: 'lukman.h@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 15:05', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670017', name: 'Mega Utami', email: 'mega.u@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 15:10', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670018', name: 'Naufal Farhan', email: 'naufal.f@kampus.ac.id', prodi: 'S1 TI (2024)', time: '11 Okt 2026, 15:15', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670020', name: 'Oki Setiawan', email: 'oki.s@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:10', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670021', name: 'Panji Gumilang', email: 'panji.g@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:15', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670022', name: 'Qonita Az-Zahra', email: 'qonita.a@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:20', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670023', name: 'Raditya Dika', email: 'raditya.d@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:25', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670024', name: 'Salma Salsabila', email: 'salma.s@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 10:30', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670026', name: 'Taufik Hidayat', email: 'taufik.h@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 11:00', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670027', name: 'Umar Bakri', email: 'umar.b@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 11:15', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670028', name: 'Vina Panduwinata', email: 'vina.p@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 11:30', by: 'Auto BR-002', tagType: 'system' }
     ]
   },
   {
@@ -56,8 +56,8 @@ const INITIAL_CLASSES = [
     room: 'Ruang Teori 402 (Gedung Utama Lt. 4)',
     maxCapacity: 40,
     enrolledInitial: [
-      { nim: '24670060', name: 'Wawan Hermawan', email: 'wawan.h@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 08:00', by: 'Auto BR-002', tagType: 'system' },
-      { nim: '24670061', name: 'Yulia Safitri', email: 'yulia.s@upgris.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 08:15', by: 'Auto BR-002', tagType: 'system' }
+      { nim: '24670060', name: 'Wawan Hermawan', email: 'wawan.h@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 08:00', by: 'Auto BR-002', tagType: 'system' },
+      { nim: '24670061', name: 'Yulia Safitri', email: 'yulia.s@kampus.ac.id', prodi: 'S1 TI (2024)', time: '12 Okt 2026, 08:15', by: 'Auto BR-002', tagType: 'system' }
     ]
   },
   {
@@ -72,25 +72,25 @@ const INITIAL_CLASSES = [
     room: 'Lab Database (Gedung B Lt. 2)',
     maxCapacity: 35,
     enrolledInitial: [
-      { nim: '24670001', name: 'Dimas Arya Pratama', email: 'dimas.arya@upgris.ac.id', prodi: 'S1 TI (2024)', time: '09 Okt 2026, 10:00', by: 'Auto BR-002', tagType: 'system' }
+      { nim: '24670001', name: 'Dimas Arya Pratama', email: 'dimas.arya@kampus.ac.id', prodi: 'S1 TI (2024)', time: '09 Okt 2026, 10:00', by: 'Auto BR-002', tagType: 'system' }
     ]
   }
 ];
 
 // Data Mahasiswa Eligible Awal
 const INITIAL_AVAILABLE = [
-  { id: '24670031', nim: '24670031', name: 'Putri Ayu Lestari', city: 'Semarang, Jawa Tengah', email: 'putri.ayu@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670032', nim: '24670032', name: 'Rizky Pratama', city: 'Kudus, Jawa Tengah', email: 'rizky.p@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670035', nim: '24670035', name: 'Anisa Rahmawati', city: 'Demak, Jawa Tengah', email: 'anisa.r@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670040', nim: '24670040', name: 'Dwi Cahyo Nugroho', city: 'Kendal, Jawa Tengah', email: 'dwi.cahyo@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670044', nim: '24670044', name: 'Maya Indah Permata', city: 'Pati, Jawa Tengah', email: 'maya.indah@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670051', nim: '24670051', name: 'Fajar Ramadhan', city: 'Salatiga, Jawa Tengah', email: 'fajar.r@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670058', nim: '24670058', name: 'Nadia Eka Putri', city: 'Batang, Jawa Tengah', email: 'nadia.eka@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670062', nim: '24670062', name: 'Hendra Gunawan', city: 'Pekalongan, Jawa Tengah', email: 'hendra.g@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670063', nim: '24670063', name: 'Tasya Kamila', city: 'Semarang, Jawa Tengah', email: 'tasya.k@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '24670064', nim: '24670064', name: 'Yoga Pratama', city: 'Ungaran, Jawa Tengah', email: 'yoga.p@upgris.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
-  { id: '23670012', nim: '23670012', name: 'Bayu Tri Laksono', city: 'Solo, Jawa Tengah', email: 'bayu.tri@upgris.ac.id', prodi: 'S1 TI', year: '2023', status: 'Aktif' },
-  { id: '23670015', nim: '23670015', name: 'Cahya Ramadhani', city: 'Boyolali, Jawa Tengah', email: 'cahya.r@upgris.ac.id', prodi: 'S1 TI', year: '2023', status: 'Aktif' }
+  { id: '24670031', nim: '24670031', name: 'Putri Ayu Lestari', city: 'Semarang, Jawa Tengah', email: 'putri.ayu@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670032', nim: '24670032', name: 'Rizky Pratama', city: 'Kudus, Jawa Tengah', email: 'rizky.p@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670035', nim: '24670035', name: 'Anisa Rahmawati', city: 'Demak, Jawa Tengah', email: 'anisa.r@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670040', nim: '24670040', name: 'Dwi Cahyo Nugroho', city: 'Kendal, Jawa Tengah', email: 'dwi.cahyo@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670044', nim: '24670044', name: 'Maya Indah Permata', city: 'Pati, Jawa Tengah', email: 'maya.indah@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670051', nim: '24670051', name: 'Fajar Ramadhan', city: 'Salatiga, Jawa Tengah', email: 'fajar.r@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670058', nim: '24670058', name: 'Nadia Eka Putri', city: 'Batang, Jawa Tengah', email: 'nadia.eka@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670062', nim: '24670062', name: 'Hendra Gunawan', city: 'Pekalongan, Jawa Tengah', email: 'hendra.g@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670063', nim: '24670063', name: 'Tasya Kamila', city: 'Semarang, Jawa Tengah', email: 'tasya.k@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '24670064', nim: '24670064', name: 'Yoga Pratama', city: 'Ungaran, Jawa Tengah', email: 'yoga.p@kampus.ac.id', prodi: 'S1 TI', year: '2024', status: 'Aktif' },
+  { id: '23670012', nim: '23670012', name: 'Bayu Tri Laksono', city: 'Solo, Jawa Tengah', email: 'bayu.tri@kampus.ac.id', prodi: 'S1 TI', year: '2023', status: 'Aktif' },
+  { id: '23670015', nim: '23670015', name: 'Cahya Ramadhani', city: 'Boyolali, Jawa Tengah', email: 'cahya.r@kampus.ac.id', prodi: 'S1 TI', year: '2023', status: 'Aktif' }
 ];
 
 // Data Audit Log Sinkronisasi
@@ -98,7 +98,7 @@ const INITIAL_AUDIT_LOGS = [
   { id: 'LOG-8821', time: '29 Okt 2026, 08:15 WIB', actor: 'Auto BR-002', event: 'Sinkronisasi Rombel Otomatis TI-A Rekayasa Perangkat Lunak', affected: '24 Mahasiswa', status: 'Berhasil' },
   { id: 'LOG-8819', time: '28 Okt 2026, 14:10 WIB', actor: 'Admin Utama (Dimas)', event: 'Direct Batch Enrollment via CSV Import', affected: '4 Mahasiswa', status: 'Berhasil' },
   { id: 'LOG-8815', time: '28 Okt 2026, 11:02 WIB', actor: 'Admin Utama (Dimas)', event: 'Pencabutan Kepesertaan (Unenroll) NIM: 24670099', affected: '1 Mahasiswa', status: 'Dikeluarkan' },
-  { id: 'LOG-8802', time: '27 Okt 2026, 09:00 WIB', actor: 'Sistem SPADA', event: 'Validasi Kuota Kelas & Jadwal Tanpa Bentrok', affected: '48 Kelas', status: 'Sinkron' }
+  { id: 'LOG-8802', time: '27 Okt 2026, 09:00 WIB', actor: 'Sistem E-Learning', event: 'Validasi Kuota Kelas & Jadwal Tanpa Bentrok', affected: '48 Kelas', status: 'Sinkron' }
 ];
 
 export default function DirectEnrollment({ onRoleChange }) {
@@ -282,7 +282,7 @@ export default function DirectEnrollment({ onRoleChange }) {
             id: targetNim,
             nim: targetNim,
             name: targetStudent.name,
-            city: 'Civitas SPADA UPGRIS',
+            city: 'Civitas E-Learning Kampus',
             email: targetStudent.email,
             prodi: targetStudent.prodi.includes('SI') ? 'S1 SI' : 'S1 TI',
             year: targetStudent.prodi.includes('2023') ? '2023' : '2024',
@@ -303,8 +303,8 @@ export default function DirectEnrollment({ onRoleChange }) {
 
   const handleProcessCsvImport = () => {
     const dummyNewStudents = [
-      { nim: '24670088', name: 'Zulfa Azzahra', email: 'zulfa.a@upgris.ac.id', prodi: 'S1 TI (2024)', time: 'Hari ini', by: 'Impor CSV Admin', tagType: 'admin' },
-      { nim: '24670089', name: 'Zidane Al-Faris', email: 'zidane.f@upgris.ac.id', prodi: 'S1 TI (2024)', time: 'Hari ini', by: 'Impor CSV Admin', tagType: 'admin' }
+      { nim: '24670088', name: 'Zulfa Azzahra', email: 'zulfa.a@kampus.ac.id', prodi: 'S1 TI (2024)', time: 'Hari ini', by: 'Impor CSV Admin', tagType: 'admin' },
+      { nim: '24670089', name: 'Zidane Al-Faris', email: 'zidane.f@kampus.ac.id', prodi: 'S1 TI (2024)', time: 'Hari ini', by: 'Impor CSV Admin', tagType: 'admin' }
     ];
 
     if (availableSeats < dummyNewStudents.length) {
@@ -356,7 +356,7 @@ export default function DirectEnrollment({ onRoleChange }) {
             <span>Beranda</span>
           </a>
           <span className="material-symbols-outlined text-[13px] text-outline">chevron_right</span>
-          <span className="text-on-surface-variant">Administrasi SPADA</span>
+          <span className="text-on-surface-variant">Administrasi E-Learning Kampus</span>
           <span className="material-symbols-outlined text-[13px] text-outline">chevron_right</span>
           <span className="text-secondary font-semibold">Direct Enrollment Kelas</span>
         </nav>

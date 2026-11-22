@@ -1,5 +1,5 @@
 # Jobdesk Divisi Tester / QA
-# SPADA (Learning Management System) Universitas PGRI Semarang (UPGRIS)
+# E-Learning Kampus (Learning Management System) Universitas
 **Team Membangun Negeri — Panduan Kerja Quality Assurance: Pengujian Manual & Pengujian Berbantuan AI Agent**
 
 ---
@@ -151,11 +151,11 @@ Password seluruh akun: `password123`
 
 | Role | Identifier | Alternatif |
 | --- | --- | --- |
-| Admin | `admin` | `admin@upgris.ac.id` |
-| Dosen | `198501152010121002` (NIDN) | `budi.santoso@upgris.ac.id` |
-| Dosen | `199003202015042001` | `siti.aminah@upgris.ac.id` |
-| Dosen | `197805102003122001` | `hadi.wijaya@upgris.ac.id` |
-| Mahasiswa | `2024001001` … `2024001010` (NIM) | `<nim>@mhs.upgris.ac.id` |
+| Admin | `admin` | `admin@kampus.ac.id` |
+| Dosen | `198501152010121002` (NIDN) | `budi.santoso@kampus.ac.id` |
+| Dosen | `199003202015042001` | `siti.aminah@kampus.ac.id` |
+| Dosen | `197805102003122001` | `hadi.wijaya@kampus.ac.id` |
+| Mahasiswa | `2024001001` … `2024001010` (NIM) | `<nim>@mhs.kampus.ac.id` |
 
 Master: 5 mata kuliah (`TIF101`–`TIF105`), 2 kelas (`TI-A`, `SI-B`), tahun akademik `2026/2027` semester `ganjil`.
 
@@ -236,12 +236,12 @@ Jika salah satu gagal → **hentikan sesi**, eskalasi sebagai *blocker*.
 | TC ID | Judul | Prasyarat | Langkah | Ekspektasi |
 | --- | --- | --- | --- | --- |
 | **AUTH-01** | Login dengan username admin | Seeder dijalankan | `POST /api/auth/login` body `{"identifier":"admin","password":"password123"}` | `200`; `success:true`; `data.accessToken` & `data.refreshToken` string; `data.user.role = "admin"` |
-| **AUTH-02** | Login dengan email | — | Ganti `identifier` → `admin@upgris.ac.id` | `200`, sama seperti AUTH-01 |
+| **AUTH-02** | Login dengan email | — | Ganti `identifier` → `admin@kampus.ac.id` | `200`, sama seperti AUTH-01 |
 | **AUTH-03** | Login dengan NIDN dosen | — | `identifier: "198501152010121002"` | `200`; `data.user.dosen.nidn` terisi |
 | **AUTH-04** | Login dengan NIP dosen | — | Gunakan nilai `nip` dosen (sama dengan NIDN pada seed) | `200`; `data.user.dosen` terisi |
 | **AUTH-05** | Login dengan NIM mahasiswa | — | `identifier: "2024001001"` | `200`; `data.user.mahasiswa.nim = "2024001001"` |
 | **AUTH-06** | Login memakai field `username` (bukan `identifier`) | — | body `{"username":"admin","password":"password123"}` | `200` (skema me-*transform* `username` → `identifier`) |
-| **AUTH-07** | Login memakai field `email` | — | body `{"email":"admin@upgris.ac.id","password":"password123"}` | `200` |
+| **AUTH-07** | Login memakai field `email` | — | body `{"email":"admin@kampus.ac.id","password":"password123"}` | `200` |
 | **AUTH-08** | Password salah | — | `identifier:"admin"`, `password:"salah123"` | `401`; pesan menyebut kredensial tidak valid; **tidak** membocorkan apakah user ada |
 | **AUTH-09** | Identifier tidak dikenal | — | `identifier:"tidakada999"` | `401` (pesan setara AUTH-08) |
 | **AUTH-10** | Body kosong | — | `POST /api/auth/login` body `{}` | `400`; `errors[]` memuat field `identifier` dan/atau `password` |
@@ -330,7 +330,7 @@ Jika salah satu gagal → **hentikan sesi**, eskalasi sebagai *blocker*.
 | **USR-03** | Filter status | `?status=SUSPENDED` | Semua item `status=SUSPENDED` |
 | **USR-04** | Pencarian multi-kolom | `?search=2024001001`; ulangi dengan nama, email, NIDN | Hasil relevan di tiap variasi |
 | **USR-05** | Limit invalid | `?limit=0` dan `?limit=101` | `400` (skema membatasi 1–100) |
-| **USR-06** | Buat admin baru | `POST /api/admin/users` `{"username":"qa.admin","email":"qa.admin@upgris.ac.id","password":"Rahasia123!","role":"admin","full_name":"QA Admin"}` | `201`; `data.role="admin"`; `profile.full_name` terisi |
+| **USR-06** | Buat admin baru | `POST /api/admin/users` `{"username":"qa.admin","email":"qa.admin@kampus.ac.id","password":"Rahasia123!","role":"admin","full_name":"QA Admin"}` | `201`; `data.role="admin"`; `profile.full_name` terisi |
 | **USR-07** | Buat mahasiswa tanpa NIM | `role:"mahasiswa"` tanpa `nim/prodi/angkatan` | `400`; `errors[]` menunjuk `nim`,`prodi`,`angkatan` |
 | **USR-08** | Buat dosen tanpa NIDN & NIP | `role:"dosen"` | `400`; pesan NIDN/NIP wajib |
 | **USR-09** | Username/email duplikat | Ulangi USR-06 | `409` |
@@ -564,7 +564,7 @@ batasan yang menghalangi, jangan mencari jalan pintas.
 ### 9.3 Prompt 0 — Kontrak Perilaku Sesi (kirim pertama)
 
 ```text
-Kamu adalah QA Reviewer untuk repositori SPADA LMS (Express + Prisma + React).
+Kamu adalah QA Reviewer untuk repositori E-Learning Kampus (Express + Prisma + React).
 Tugasmu: MEMBACA dan MENGUJI saja. Kamu tidak punya hak mengubah kode.
 
 [Tempel blok KONTRAK BATASAN di sini]

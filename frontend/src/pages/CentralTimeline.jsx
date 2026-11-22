@@ -1,7 +1,7 @@
 ﻿/**
  * pages/CentralTimeline.jsx
  *
- * Halaman-level wrapper untuk Central Timeline Perkuliahan & Batas Waktu Akademik SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Central Timeline Perkuliahan & Batas Waktu Akademik E-Learning Kampus.
  */
 import CentralTimeline from '../features/akademik/CentralTimeline';
 

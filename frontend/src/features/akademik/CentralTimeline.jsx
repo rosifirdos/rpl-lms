@@ -70,7 +70,7 @@ export default function CentralTimeline({ onRoleChange, onNavigate, activeRole =
       courseName: 'TI-A • Basis Data Terdistribusi',
       title: 'Kuis Evaluasi CPMK-1: Sharding & Replikasi Horizontal Database',
       lecturer: 'Dr. Supriyono, M.Kom.',
-      room: 'Daring via SPADA LMS',
+      room: 'Daring via E-Learning Kampus',
       actionText: 'Lihat Kisi-kisi Kuis',
       actionIcon: 'quiz',
       actionRoute: 'ruang-kelas?course=rpl-ti-a',

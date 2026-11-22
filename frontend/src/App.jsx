@@ -163,7 +163,7 @@ function App() {
     (pathname.includes('/admin') ? 'admin' : pathname.includes('/dosen') ? 'dosen' : 'mahasiswa');
   const [activeRole, setActiveRole] = useState(initialRole);
 
-  // Dukungan routing reaktif untuk seluruh halaman SPADA
+  // Dukungan routing reaktif untuk seluruh halaman E-Learning Kampus
   // SSR-safe: gunakan lazy initializer dengan check typeof window
   const [currentRoute, setCurrentRoute] = useState(() => {
     if (typeof window === 'undefined') return 'dasbor-mahasiswa';

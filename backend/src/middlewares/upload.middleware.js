@@ -61,3 +61,63 @@ export function uploadAvatar(req, res, next) {
     return next();
   });
 }
+
+// File filter untuk materi pembelajaran sesuai BR-007: .pdf, .docx, .xlsx, .zip, maks 10MB
+const materialFileFilter = (req, file, cb) => {
+  const ext = getFileExtension(file.originalname);
+  const isAllowedExt = STORAGE.DOC_ALLOWED_EXTENSIONS.includes(ext);
+
+  if (!isAllowedExt) {
+    return cb(
+      new AppError(
+        'Format berkas tidak didukung. Harap unggah file berformat .pdf, .docx, .xlsx, atau .zip',
+        400
+      ),
+      false
+    );
+  }
+
+  return cb(null, true);
+};
+
+const uploadMaterialMulter = multer({
+  storage,
+  limits: {
+    fileSize: STORAGE.DOC_MAX_SIZE, // 10MB
+  },
+  fileFilter: materialFileFilter,
+});
+
+/**
+ * Middleware untuk penanganan unggah berkas materi pembelajaran (BR-007, BR-009)
+ * Membaca field `file` dari multipart/form-data.
+ *
+ * Berkas ditahan di memory storage agar controller dapat memvalidasi ukuran dan
+ * ekstensi sebelum menulis ke direktori privat `storage/private/materials/`.
+ * Nama field `file` mengikuti konvensi `multipart/form-data` pada dokumentasi
+ * OpenAPI (satu berkas per entri materi).
+ */
+export function uploadMaterial(req, res, next) {
+  uploadMaterialMulter.single('file')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return next(
+            new AppError(
+              'Ukuran berkas melebihi batas maksimal yang diizinkan (maksimal 10MB)',
+              400
+            )
+          );
+        }
+        return next(new AppError(`Kesalahan unggah berkas: ${err.message}`, 400));
+      }
+      return next(err);
+    }
+
+    if (!req.file) {
+      return next(new AppError('Berkas materi pembelajaran wajib diunggah', 400));
+    }
+
+    return next();
+  });
+}

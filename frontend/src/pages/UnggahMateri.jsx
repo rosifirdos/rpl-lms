@@ -1,7 +1,7 @@
 /**
  * pages/UnggahMateri.jsx
  *
- * Halaman-level wrapper untuk Unggah Materi Pembelajaran (Dosen) SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Unggah Materi Pembelajaran (Dosen) E-Learning Kampus.
  */
 import UnggahMateri from '../features/dosen/UnggahMateri';
 

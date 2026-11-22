@@ -1,7 +1,7 @@
 /**
  * pages/JejakAudit.jsx
  *
- * Halaman-level wrapper untuk Jejak Audit SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Jejak Audit E-Learning Kampus.
  * Menggunakan AppShell terpusat dengan RBAC enforcement.
  */
 import JejakAudit from '../features/admin/JejakAudit';

@@ -11,11 +11,14 @@ export const apiResponse = {
     return res.status(statusCode).json(payload);
   },
 
-  error(res, { message = 'Internal Server Error', statusCode = 500, errors = null }) {
+  error(res, { message = 'Internal Server Error', statusCode = 500, errors = null, code = null }) {
     const payload = {
       success: false,
       message,
     };
+    if (code) {
+      payload.code = code;
+    }
     if (errors) {
       payload.errors = errors;
     }

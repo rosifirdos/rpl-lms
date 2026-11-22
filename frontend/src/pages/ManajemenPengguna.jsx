@@ -1,7 +1,7 @@
 ﻿/**
  * pages/ManajemenPengguna.jsx
  *
- * Halaman-level wrapper untuk Manajemen Pengguna SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Manajemen Pengguna E-Learning Kampus.
  * Menggunakan AppShell terpusat dengan RBAC enforcement.
  */
 import ManajemenPengguna from '../features/admin/ManajemenPengguna';

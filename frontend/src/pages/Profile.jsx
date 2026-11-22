@@ -1,7 +1,7 @@
 ﻿/**
  * pages/Profile.jsx
  *
- * Halaman-level wrapper untuk modul Profil Pengguna & Keamanan SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk modul Profil Pengguna & Keamanan E-Learning Kampus.
  * Menghubungkan fitur features/profile/Profile dengan sistem routing.
  */
 import Profile from '../features/profile/Profile';

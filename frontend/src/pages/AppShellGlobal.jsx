@@ -1,7 +1,7 @@
 ﻿/**
  * pages/AppShellGlobal.jsx
  *
- * Halaman-level wrapper untuk App Shell Global SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk App Shell Global E-Learning Kampus.
  * Membungkus komponen fitur dari features/shell/AppShellGlobal.
  */
 import AppShellGlobal from '../features/shell/AppShellGlobal';

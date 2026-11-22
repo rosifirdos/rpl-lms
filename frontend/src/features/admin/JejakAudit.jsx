@@ -30,7 +30,7 @@ const initialLogs = [
     entityTarget: 'Enrollment: ENR-2026-881',
     entitySubtitle: 'Class: TI-A • Rekayasa Perangkat Lunak',
     ip: '10.15.2.46',
-    networkType: 'VPN Internal UPGRIS',
+    networkType: 'VPN Internal Kampus',
     networkIcon: 'vpn_key',
     networkColor: 'text-tertiary',
     device: 'Chrome 132 • Windows 11',
@@ -52,8 +52,8 @@ const initialLogs = [
         enrolled_by: '19820512',
         enrolled_at: '2026-10-13T08:24:12Z',
       },
-      ip: '10.15.2.46 (Kampus 4 UPGRIS)',
-      worker: 'spada-core-worker-01.upgris.ac.id',
+      ip: '10.15.2.46 (Kampus 4)',
+      worker: 'elearning-core-worker-01.kampus.ac.id',
       prevHash: '7c4d12...a901',
       sha256: 'f4a821e90bc34589d89012aefbc67190348710abc124ef98762341098dfbac78',
     },
@@ -118,8 +118,8 @@ const initialLogs = [
         submission_file: 'Tugas01_24670001_Dimas_Rev.pdf',
         similarity_score: 12.4,
       },
-      ip: '10.15.4.12 (Kampus 4 UPGRIS)',
-      worker: 'spada-core-worker-02.upgris.ac.id',
+      ip: '10.15.4.12 (Kampus 4)',
+      worker: 'elearning-core-worker-02.kampus.ac.id',
       prevHash: '9a2c41...b730',
       sha256: 'e8b941a57e3f4c65e8a011cd098a5d3f9b23f81e84a29d5b78c93a02bb49c014',
     },
@@ -143,7 +143,7 @@ const initialLogs = [
     entityTarget: 'Config: security.upload_policy',
     entitySubtitle: 'Scope: System-Wide Global',
     ip: '10.15.2.46',
-    networkType: 'VPN Internal UPGRIS',
+    networkType: 'VPN Internal Kampus',
     networkIcon: 'vpn_key',
     networkColor: 'text-tertiary',
     device: 'Firefox 130 • Linux Ubuntu',
@@ -172,8 +172,8 @@ const initialLogs = [
         virus_scan_enabled: true,
         updated_at: '2026-10-13T07:50:45Z',
       },
-      ip: '10.15.2.46 (Kampus 4 UPGRIS)',
-      worker: 'spada-core-worker-01.upgris.ac.id',
+      ip: '10.15.2.46 (Kampus 4)',
+      worker: 'elearning-core-worker-01.kampus.ac.id',
       prevHash: '6d12f4...e882',
       sha256: '99bf4321acb9876543210fedcba9876543210abcdef0123456789abcdef01234',
     },
@@ -197,7 +197,7 @@ const initialLogs = [
     entityTarget: 'Enrollment: ENR-2026-773',
     entitySubtitle: 'NIM: 23670019 (Cuti Akademik)',
     ip: '10.15.2.46',
-    networkType: 'VPN Internal UPGRIS',
+    networkType: 'VPN Internal Kampus',
     networkIcon: 'vpn_key',
     networkColor: 'text-tertiary',
     device: 'Chrome 132 • Windows 11',
@@ -223,11 +223,11 @@ const initialLogs = [
     entityTarget: 'User: Kevin Sanjaya',
     entitySubtitle: 'NIM: 23670019',
     ip: '10.15.2.46',
-    networkType: 'VPN Internal UPGRIS',
+    networkType: 'VPN Internal Kampus',
     networkIcon: 'vpn_key',
     networkColor: 'text-tertiary',
     device: 'Chrome 132 • Windows 11',
-    summary: 'Penonaktifan akun (Pelanggaran Presensi & Kode Etik Integritas Akademik Surat No 811/UPGRIS/2026).',
+    summary: 'Penonaktifan akun (Pelanggaran Presensi & Kode Etik Integritas Akademik Surat No 811/UNIV/2026).',
   },
   {
     id: 'aud-6',
@@ -247,13 +247,13 @@ const initialLogs = [
     actionBadgeClass: 'bg-surface-container-highest text-secondary',
     entityType: 'User',
     entityTarget: 'Auth: Session 9912',
-    entitySubtitle: 'Token: JWT-UPGRIS-OIDC',
+    entitySubtitle: 'Token: JWT-KAMPUS-OIDC',
     ip: '180.252.164.88',
     networkType: 'Telkomsel ISP Seluler',
     networkIcon: 'cell_tower',
     networkColor: 'text-on-surface-variant',
     device: 'Edge 131 • Android 15',
-    summary: 'Login berhasil via SSO Kampus UPGRIS Central Identity Server (OAuth 2.0 PKCE).',
+    summary: 'Login berhasil via SSO Kampus Central Identity Server (OAuth 2.0 PKCE).',
   },
   {
     id: 'aud-7',
@@ -274,7 +274,7 @@ const initialLogs = [
     entityTarget: 'Class: TIF-402 TI-A',
     entitySubtitle: 'Course: Arsitektur PL Enterprise',
     ip: '10.15.2.46',
-    networkType: 'VPN Internal UPGRIS',
+    networkType: 'VPN Internal Kampus',
     networkIcon: 'vpn_key',
     networkColor: 'text-tertiary',
     device: 'Chrome 132 • Windows 11',
@@ -344,7 +344,7 @@ export default function JejakAudit({ onNavigate }) {
             Beranda
           </a>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
-          <span>Administrasi SPADA</span>
+          <span>Administrasi E-Learning Kampus</span>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
           <span className="text-primary font-bold">Jejak Audit</span>
         </nav>
@@ -360,7 +360,7 @@ export default function JejakAudit({ onNavigate }) {
               </span>
             </div>
             <p className="font-body-md text-body-md text-on-surface-variant mt-1 max-w-4xl">
-              Pelacakan immutable log mutasi data, histori otentikasi, pergeseran nilai, dan aktivitas administratif terpusat SPADA LMS UPGRIS.
+              Pelacakan immutable log mutasi data, histori otentikasi, pergeseran nilai, dan aktivitas administratif terpusat E-Learning Kampus.
             </p>
           </div>
 

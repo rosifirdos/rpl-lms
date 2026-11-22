@@ -1,7 +1,7 @@
 /**
  * pages/DasborAdmin.jsx
  *
- * Halaman-level wrapper untuk Dasbor Administrator SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Dasbor Administrator E-Learning Kampus.
  * Membungkus komponen fitur dari features/admin/DasborAdmin.
  */
 import DasborAdmin from '../features/admin/DasborAdmin';

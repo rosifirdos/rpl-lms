@@ -1,7 +1,7 @@
 /**
  * stores/authStore.ts
  *
- * Store manajemen sesi otentikasi pengguna SPADA LMS UPGRIS.
+ * Store manajemen sesi otentikasi pengguna E-Learning Kampus.
  * Mengimplementasikan pattern store kompatibel Zustand tanpa dependensi eksternal,
  * mendukung normalisasi peran RBAC (mahasiswa | dosen | admin).
  */

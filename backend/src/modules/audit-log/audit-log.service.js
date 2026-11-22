@@ -1,8 +1,11 @@
-﻿import prisma from '../../config/prisma.js';
+﻿import fs from 'node:fs';
+import path from 'node:path';
+import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
+import { normalizeAuditEntity } from '../../constants/auditEntities.js';
 
 /**
- * Layanan terpusat Audit Trail Engine SPADA LMS (SRS Bab 15 & Bab 35)
+ * Layanan terpusat Audit Trail Engine E-Learning Kampus (SRS Bab 15 & Bab 35)
  */
 export class AuditLogService {
   /**
@@ -32,17 +35,37 @@ export class AuditLogService {
     newValues = null,
     ipAddress = null,
     userAgent = null,
+    dbClient = prisma,
+    throwOnFailure = false,
   }) {
     const payload = {
       user_id: userId || null,
       action: String(action).toUpperCase(),
-      entity: String(entity).toLowerCase(),
+      entity: normalizeAuditEntity(entity),
       entity_id: entityId ? String(entityId) : null,
       old_values: oldValues ? this.#sanitizeValues(oldValues) : null,
       new_values: newValues ? this.#sanitizeValues(newValues) : null,
       ip_address: ipAddress || null,
       user_agent: userAgent || null,
     };
+
+    const isTransactional = Boolean(dbClient && dbClient !== prisma);
+
+    if (isTransactional || throwOnFailure) {
+      try {
+        return await dbClient.auditLog.create({ data: payload });
+      } catch (error) {
+        console.error('[AuditLogService] Gagal merekam audit dalam transaksi:', {
+          action: payload.action,
+          entity: payload.entity,
+          error: error?.message,
+        });
+        throw new AppError(
+          `Gagal mencatat jejak audit (${payload.action} ${payload.entity}): ${error.message}`,
+          500
+        );
+      }
+    }
 
     // Cek circuit breaker
     if (this.#circuitBreaker.isOpen) {
@@ -65,7 +88,7 @@ export class AuditLogService {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const result = await prisma.auditLog.create({ data: payload });
+        const result = await dbClient.auditLog.create({ data: payload });
 
         // Reset failure count jika berhasil
         if (this.#circuitBreaker.failureCount > 0) {
@@ -130,10 +153,6 @@ export class AuditLogService {
    */
   static #fallbackLog(payload) {
     try {
-      // Coba tulis ke file system sebagai fallback
-      const fs = require('fs');
-      const path = require('path');
-
       const logDir = path.join(process.cwd(), 'logs', 'audit-fallback');
       if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true });
@@ -195,7 +214,7 @@ export class AuditLogService {
     }
 
     if (entity) {
-      where.entity = { contains: entity.trim().toLowerCase(), mode: 'insensitive' };
+      where.entity = { contains: normalizeAuditEntity(entity), mode: 'insensitive' };
     }
 
     if (userId) {
@@ -440,9 +459,10 @@ export class AuditLogService {
     studentId,
     classId,
     oldValues = null,
-    newValues = null,
+    newValues = undefined,
     ipAddress,
     userAgent,
+    dbClient = prisma,
   }) {
     return this.record({
       userId,
@@ -450,13 +470,16 @@ export class AuditLogService {
       entity: 'enrollments',
       entityId: enrollmentId,
       oldValues,
-      newValues: {
-        student_id: studentId,
-        class_id: classId,
-        ...(newValues || {}),
-      },
+      newValues: newValues === null
+        ? null
+        : {
+            student_id: studentId,
+            class_id: classId,
+            ...(newValues || {}),
+          },
       ipAddress,
       userAgent,
+      dbClient,
     });
   }
 

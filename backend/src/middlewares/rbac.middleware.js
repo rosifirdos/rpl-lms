@@ -3,7 +3,7 @@ import { apiResponse } from '../utils/apiResponse.js';
 /**
  * Middleware untuk membatasi endpoint berdasarkan satu atau lebih Role.
  *
- * Revised SPADA LMS: role adalah enum tunggal pada `req.user.role` (bukan array).
+ * Revised E-Learning Kampus: role adalah enum tunggal pada `req.user.role` (bukan array).
  * Tidak ada SUPER_ADMIN bypass — hanya 3 role: ADMIN, DOSEN, MAHASISWA.
  *
  * @param  {...string} allowedRoles  Daftar role yang diizinkan

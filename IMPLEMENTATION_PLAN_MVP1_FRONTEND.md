@@ -1,5 +1,5 @@
 # Implementation Plan: Frontend MVP 1 (Pembaruan Status Eksekusi)
-# SPADA (Learning Management System) Universitas PGRI Semarang (UPGRIS)
+# E-Learning Kampus (Learning Management System) Universitas
 **Team Membangun Negeri — Rencana & Status Eksekusi Teknis Frontend: Fondasi, Akun, Master Data & Direct Enrollment**
 
 > **Pembaruan terakhir:** 1 November 2026. Dokumen ini **diselaraskan dengan kondisi riil repository `main`** (45 berkas sumber di `frontend/src/`, build produksi sukses) dan dengan status pengerjaan desain: **seluruh 6 fase desain MVP 1 maupun MVP 2 di Google Stitch telah selesai (Delivered)** — lihat [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md) dan [DESIGN_INSTRUCTIONS_MVP2_UIUX.md](DESIGN_INSTRUCTIONS_MVP2_UIUX.md). Input kode HTML design UI dari kedua dokumen tersebut adalah satu-satunya acuan visual yang dikonversi menjadi kode React.
@@ -7,7 +7,7 @@
 ---
 
 ## 📌 Ringkasan Eksekutif
-- **Target Rilis:** Frontend Web Client MVP 1 SPADA LMS UPGRIS.
+- **Target Rilis:** Frontend Web Client MVP 1 E-Learning Kampus.
 - **Acuan Utama:** [PRD.md](PRD.md) (*Bab 2, 3, 5, 7*), [SRS.md](SRS.md), [DESIGN_INSTRUCTIONS_MVP1_UIUX.md](DESIGN_INSTRUCTIONS_MVP1_UIUX.md) (**status desain: ✅ 6/6 fase Delivered**), [DESIGN_INSTRUCTIONS_MVP2_UIUX.md](DESIGN_INSTRUCTIONS_MVP2_UIUX.md) (**status desain: ✅ 6/6 fase Delivered**), [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), dan [IMPLEMENTATION_PLAN_MVP1_BACKEND.md](IMPLEMENTATION_PLAN_MVP1_BACKEND.md).
 - **Metodologi & Workflow Utama:** **Stitch HTML-to-React Conversion Pipeline.** Tim UI/UX merancang antarmuka 100% melalui prompt Google Stitch pada tiap fase (MVP 1 & MVP 2 selesai seluruhnya) dan mengekspor HTML semantik + Tailwind CSS. Tim Frontend Developer mengonversi, memodularisasi, dan menghubungkannya ke *tech stack* Vite + React 18 serta REST API Backend.
 - **Kondisi Repository:** *multi-folder workspace* — `backend/` (Node.js/Express port 5000) berdampingan dengan `frontend/` (Vite port 5173 dengan reverse proxy `/api` → `http://localhost:5000`).
@@ -30,7 +30,7 @@
 ## 1. Tujuan, Ruang Lingkup & Kondisi Repository Eksisting
 
 ### 1.1 Tujuan
-Membangun antarmuka Single Page Application (SPA) yang berkinerja tinggi, intuitif, berintegritas data tinggi, bebas friksi birokrasi non-LMS, dan responsif. Aplikasi ini melayani sivitas akademika Universitas PGRI Semarang dalam mengakses gerbang pembelajaran digital, mengelola master data akademik SPADA, pendaftaran kepesertaan kelas (*direct enrollment* BR-002), manajemen profil mandiri, serta peninjau jejak audit untuk 3 peran resmi: **Mahasiswa**, **Dosen**, dan **Admin**.
+Membangun antarmuka Single Page Application (SPA) yang berkinerja tinggi, intuitif, berintegritas data tinggi, bebas friksi birokrasi non-LMS, dan responsif. Aplikasi ini melayani sivitas akademika Universitas dalam mengakses gerbang pembelajaran digital, mengelola master data akademik E-Learning Kampus, pendaftaran kepesertaan kelas (*direct enrollment* BR-002), manajemen profil mandiri, serta peninjau jejak audit untuk 3 peran resmi: **Mahasiswa**, **Dosen**, dan **Admin**.
 
 ### 1.2 Kondisi Repository Saat Ini (Aktual)
 1. **Workspace Multi-Folder:**
@@ -56,7 +56,7 @@ Membangun antarmuka Single Page Application (SPA) yang berkinerja tinggi, intuit
    - Penolakan akun `INACTIVE`/`SUSPENDED`, *remember me*: menunggu integrasi API.
    - Logout aman: **✅ terintegrasi** (`POST /api/auth/logout` + bersihkan token di `AppShell`).
    - *Silent refresh token*: **❌ belum** — interceptor Axios baru memasang Bearer token (lihat §5.2).
-2. **App Shell & Navigasi Terstruktur SPADA — ✅ Selesai:**
+2. **App Shell & Navigasi Terstruktur E-Learning Kampus — ✅ Selesai:**
    - `AppShell` tunggal (*single source of truth*): Header (logo, badge **"🟢 Semester Ganjil 2026/2027"**, pencarian, notifikasi, dropdown profil dengan aksi *Profil Saya* / *Ganti Kata Sandi* / *Keluar*), Sidebar lebar 260px dengan menu adaptif per RBAC, modal Ganti Password, dan Toast.
    - Navigasi per peran didefinisikan pada `features/shell/fixtures.js` (`navSections`): Mahasiswa (Dasbor, Kelas Saya, Panduan Belajar), Dosen (Kelas Diampu, Pemeriksaan Tugas), Admin (Direct Enrollment, Manajemen Pengguna, Master Mata Kuliah, Pembukaan Kelas, Jejak Audit, Konfigurasi Sistem), plus bagian Akademik bersama.
 3. **Dasbor Kontekstual 3 Peran — ✅ Selesai:**
@@ -66,7 +66,7 @@ Membangun antarmuka Single Page Application (SPA) yang berkinerja tinggi, intuit
 4. **Modul Pengelolaan Profil Pengguna Mandiri (`/profile`) — ❌ Belum dikerjakan:**
    - Tab Biodata Diri, upload avatar, Tab Ganti Password mandiri.
    - *Catatan:* fitur **Ganti Password** sudah tersedia lebih dulu sebagai `ChangePasswordModal` yang terhubung ke `PUT /api/profile/password` (fallback `/api/auth/change-password`) dan dipanggil dari menu Header — tinggal dipindahkan/diturunkan ke halaman `/profile`.
-5. **Modul Master Data Akademik SPADA (Admin) — ✅ UI Selesai:**
+5. **Modul Master Data Akademik E-Learning Kampus (Admin) — ✅ UI Selesai:**
    - **Manajemen Pengguna (`/admin/users`):** tabel + *server-style pagination*, search multi-kolom, filter role & status (`ACTIVE`/`INACTIVE`/`SUSPENDED`), modal tambah pengguna dinamis per role, modal ganti status, modal reset password. Data lokal `INITIAL_USERS` (1.315 baris kode).
    - **Master Mata Kuliah (`/admin/courses`):** tabel + modal CRUD (Kode MK, Nama, SKS 1–6, deskripsi).
    - **Pembukaan Kelas (`/admin/classes`):** tabel penawaran kelas + modal buka kelas (Mata Kuliah, Dosen Pengampu, kode kelas, tahun akademik, semester, kapasitas).
@@ -413,7 +413,7 @@ export interface ApiError {
 2. **Sesi Kedaluwarsa (HTTP 401):** interceptor mencoba *silent refresh*; bila gagal → toast/modal sesi berakhir + redirect `/login?expired=1`.
 3. **Hak Akses (HTTP 403):** toast merah *"Akses Ditolak: Anda tidak memiliki wewenang untuk menjalankan aksi ini."* (+ halaman 403).
 4. **Konflik Data (HTTP 409):** toast peringatan oranye *"Data Duplikat: Identitas, kode mata kuliah, atau NIM/NIDN sudah terdaftar di sistem."*
-5. **Server (HTTP 500):** toast merah *"Terjadi kendala teknis pada server SPADA. Silakan coba beberapa saat lagi."*
+5. **Server (HTTP 500):** toast merah *"Terjadi kendala teknis pada server E-Learning Kampus. Silakan coba beberapa saat lagi."*
 
 ---
 

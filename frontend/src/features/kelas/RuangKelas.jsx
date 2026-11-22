@@ -200,7 +200,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
               className="hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">home</span>
-              <span>Dasbor</span>
+              <span>Dashboard</span>
             </button>
             <span className="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
             <button
@@ -647,7 +647,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                 <div>
                   <h2 className="text-lg font-bold text-mvp-ink">Rekapitulasi Kehadiran Mahasiswa</h2>
                   <p className="text-xs text-mvp-muted">
-                    Rekor presensi terintegrasi sistem server SPADA LMS UPGRIS.
+                    Rekor presensi terintegrasi sistem server E-Learning Kampus.
                   </p>
                 </div>
                 <button
@@ -827,8 +827,7 @@ export default function RuangKelas({ onNavigate, onRoleChange, courseId }) {
                 </span>
               </div>
               <p className="text-xs text-mvp-body">
-                Kehadiran Anda tercatat <strong>HADIR</strong> dan tervalidasi melalui IP kampus
-                UPGRIS.
+                Kehadiran Anda tercatat <strong>HADIR</strong> dan tervalidasi melalui IP kampus.
               </p>
               <div className="w-full py-2 px-4 rounded-lg bg-mvp-success-soft text-mvp-success-strong font-label-md text-label-md font-bold flex items-center justify-center gap-2">
                 <span className="material-symbols-outlined text-[18px]">verified</span>

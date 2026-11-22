@@ -1,5 +1,5 @@
 /**
- * Permission codes untuk SPADA LMS
+ * Permission codes untuk E-Learning Kampus
  *
  * Catatan: Dengan 3-role enum, permission-based access control bersifat opsional.
  * File ini dipertahankan untuk backward-compatibility dan granularity di masa depan.

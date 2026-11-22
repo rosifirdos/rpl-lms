@@ -102,7 +102,7 @@ function Header({
             </div>
             <div className="hidden sm:flex flex-col">
               <span className="font-title-md text-title-md text-on-surface tracking-tight leading-tight font-bold">
-                SPADA UPGRIS
+                E-Learning Kampus
               </span>
               <span className="font-caption text-caption text-on-surface-variant leading-none hidden md:block">
                 Sistem Pembelajaran Daring

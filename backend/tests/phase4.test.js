@@ -2,8 +2,9 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import prisma from '../src/config/prisma.js';
+import { cleanupTestArtifacts } from './setup.js';
 
-describe('Fase 4: Master Data Akademik SPADA', () => {
+describe('Fase 4: Master Data Akademik E-Learning Kampus', () => {
   let server;
   let baseUrl;
   let adminToken;
@@ -74,6 +75,9 @@ describe('Fase 4: Master Data Akademik SPADA', () => {
       await prisma.user.deleteMany({ where: { id: testUser.id } });
     }
     if (server) await new Promise((resolve) => server.close(resolve));
+
+    // Jaring pengaman: sapu sisa kelas uji bila suite terhenti sebelum blok di atas tuntas.
+    await cleanupTestArtifacts(prisma);
   });
 
   test('endpoint master data menerapkan autentikasi, role admin, dan validasi Zod', async () => {
@@ -93,7 +97,7 @@ describe('Fase 4: Master Data Akademik SPADA', () => {
       method: 'POST',
       body: {
         username: `invalid${suffix}`,
-        email: `invalid${suffix}@test.upgris.ac.id`,
+        email: `invalid${suffix}@test.kampus.ac.id`,
         password: 'TestAccount123!',
         role: 'mahasiswa',
       },
@@ -153,7 +157,7 @@ describe('Fase 4: Master Data Akademik SPADA', () => {
         lecturer_id: lecturer.id,
         academic_year: '2026/2027',
         semester: 'ganjil',
-        name: `F${suffix.slice(-4)}`,
+        name: `TEST-F${suffix.slice(-4)}`,
         capacity: 2,
       },
     });
@@ -213,7 +217,7 @@ describe('Fase 4: Master Data Akademik SPADA', () => {
       method: 'POST',
       body: {
         username: nim,
-        email: `${nim}@test.upgris.ac.id`,
+        email: `${nim}@test.kampus.ac.id`,
         password: 'TestAccount123!',
         role: 'mahasiswa',
         full_name: 'Mahasiswa Fase Empat',

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { ACADEMIC } from '../src/constants/academic.js';
 
 const prisma = new PrismaClient();
 
@@ -8,7 +9,7 @@ const SEMESTER = 'ganjil';
 const DEFAULT_PASSWORD = 'password123';
 
 /**
- * Seeder awal SPADA LMS — MVP 1 (IMPLEMENTATION_PLAN Bab 6, Fase 1)
+ * Seeder awal E-Learning Kampus — MVP 1 (IMPLEMENTATION_PLAN Bab 6, Fase 1)
  *
  * Membuat: 1 Admin, 3 Dosen, 10 Mahasiswa, 5 Master Mata Kuliah,
  * dan 2 Pembukaan Kelas perkuliahan contoh.
@@ -16,7 +17,7 @@ const DEFAULT_PASSWORD = 'password123';
  * Idempoten: menggunakan upsert berdasarkan identifier unik (NIM/NIDN/username/code).
  */
 async function main() {
-  console.log('🌱 Memulai seeding database SPADA LMS (MVP 1)...');
+  console.log('🌱 Memulai seeding database E-Learning Kampus (MVP 1)...');
 
   const defaultPassword = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
@@ -26,13 +27,13 @@ async function main() {
     update: {},
     create: {
       username: 'admin',
-      email: 'admin@upgris.ac.id',
+      email: 'admin@kampus.ac.id',
       password_hash: defaultPassword,
       role: 'admin',
       status: 'ACTIVE',
       profile: {
         create: {
-          full_name: 'Administrator SPADA',
+          full_name: 'Administrator E-Learning Kampus',
         },
       },
     },
@@ -44,26 +45,26 @@ async function main() {
     {
       nidn: '198501152010121002',
       nip: '198501152010121002',
-      full_name: 'Dr. Budi Santoso, M.Kom.',
+      full_name: 'Budi Santoso',
       gelar_depan: 'Dr.',
       gelar_belakang: 'M.Kom.',
-      email: 'budi.santoso@upgris.ac.id',
+      email: 'budi.santoso@kampus.ac.id',
     },
     {
       nidn: '199003202015042001',
       nip: '199003202015042001',
-      full_name: 'Siti Aminah, S.Kom., M.T.',
+      full_name: 'Siti Aminah',
       gelar_depan: '',
       gelar_belakang: 'S.Kom., M.T.',
-      email: 'siti.aminah@upgris.ac.id',
+      email: 'siti.aminah@kampus.ac.id',
     },
     {
       nidn: '197805102003122001',
       nip: '197805102003122001',
-      full_name: 'Prof. Hadi Wijaya, M.Sc.',
+      full_name: 'Hadi Wijaya',
       gelar_depan: 'Prof.',
       gelar_belakang: 'M.Sc.',
-      email: 'hadi.wijaya@upgris.ac.id',
+      email: 'hadi.wijaya@kampus.ac.id',
     },
   ];
 
@@ -119,7 +120,7 @@ async function main() {
       update: {},
       create: {
         username: nim,
-        email: `${nim}@mhs.upgris.ac.id`,
+        email: `${nim}@mhs.kampus.ac.id`,
         password_hash: defaultPassword,
         role: 'mahasiswa',
         status: 'ACTIVE',
@@ -228,6 +229,23 @@ async function main() {
     });
 
     if (existing) {
+      // Kelas sudah ada: pastikan tetap memiliki 16 pertemuan (BR-004).
+      // Kelas lama hasil seed sebelum hook auto-generate ada dapat kosong,
+      // jadi idempoten tanpa menimpa topik yang sudah disunting dosen.
+      const meetingCount = await prisma.meeting.count({ where: { class_id: existing.id } });
+      if (meetingCount === 0) {
+        await prisma.meeting.createMany({
+          data: ACADEMIC.generate16Meetings().map((m) => ({
+            class_id: existing.id,
+            meeting_number: m.meeting_number,
+            title: m.title,
+            description: m.description,
+            is_exam: m.is_exam,
+            exam_type: m.exam_type || 'NONE',
+            is_published: m.is_published ?? true,
+          })),
+        });
+      }
       classes.push(existing);
       continue;
     }
@@ -240,6 +258,16 @@ async function main() {
         semester: SEMESTER,
         name: cl.name,
         capacity: cl.capacity,
+        meetings: {
+          create: ACADEMIC.generate16Meetings().map((m) => ({
+            meeting_number: m.meeting_number,
+            title: m.title,
+            description: m.description,
+            is_exam: m.is_exam,
+            exam_type: m.exam_type || 'NONE',
+            is_published: m.is_published ?? true,
+          })),
+        },
       },
     });
     classes.push(newClass);
@@ -253,7 +281,7 @@ async function main() {
   console.log('');
   console.log('🎉 Seeding selesai!');
   console.log(`   Default password untuk seluruh akun: ${DEFAULT_PASSWORD}`);
-  console.log('   Login Admin     : admin / admin@upgris.ac.id');
+  console.log('   Login Admin     : admin / admin@kampus.ac.id');
   console.log('   Login Dosen     : <NIDN> (mis. 198501152010121002)');
   console.log('   Login Mahasiswa : <NIM>  (mis. 2024001001)');
 }

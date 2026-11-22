@@ -1,7 +1,7 @@
 /**
  * pages/DirectEnrollment.jsx
  *
- * Halaman-level wrapper untuk Direct Enrollment Mahasiswa SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Direct Enrollment Mahasiswa E-Learning Kampus.
  * Menggunakan AppShell terpusat dengan RBAC enforcement.
  */
 import DirectEnrollment from '../features/admin/DirectEnrollment';

@@ -3,7 +3,7 @@ import { useToast, useKeyboardShortcuts } from '@features/hooks/useToast';
 import Toast from '@features/components/Toast';
 import { generatePrefixedId } from '@features/utils/uuid';
 
-// Initial dataset matching SPADA UPGRIS Master Data
+// Initial dataset matching E-Learning Kampus Master Data
 const initialCoursesData = [
   {
     id: 'mk-1',
@@ -92,12 +92,12 @@ const initialCoursesData = [
   {
     id: 'mk-7',
     kode: 'UPG-101',
-    nama: 'Pendidikan Karakter & PGRI',
+    nama: 'Pendidikan Karakter',
     semester: 1,
     kategori: 'Wajib Universitas',
     sks: 2,
     deskripsi:
-      'Pembentukan jati diri pendidik berintegritas, sejarah dan nilai kejuangan PGRI, etika profesi keilmuan, dan integritas akademik civitas UPGRIS.',
+      'Pembentukan jati diri pendidik berintegritas, etika profesi keilmuan, dan integritas akademik civitas kampus.',
     silabusStatus: 'Silabus 16 Sesi Terisi',
     kelasDibuka: 4,
     status: 'aktif',
@@ -271,7 +271,7 @@ export default function MasterMataKuliah({ onNavigate }) {
             <span>Beranda</span>
           </a>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
-          <span className="text-on-surface-variant">Administrasi SPADA</span>
+          <span className="text-on-surface-variant">Administrasi E-Learning Kampus</span>
           <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
           <span className="text-primary font-bold">Master Mata Kuliah</span>
         </nav>
@@ -298,12 +298,12 @@ export default function MasterMataKuliah({ onNavigate }) {
           <div className="flex flex-col gap-space-xs max-w-2xl">
             <div className="flex items-center gap-space-sm">
               <span className="px-space-xs py-0.5 rounded bg-primary-container/20 text-primary font-label-sm text-label-sm tracking-wider uppercase border border-primary/20">
-                FPTIK UPGRIS
+                Fakultas Teknologi Informasi
               </span>
               <span className="text-outline font-caption text-caption">Katalog Kurikulum Terpusat</span>
             </div>
             <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
-              Master Mata Kuliah SPADA
+              Master Mata Kuliah E-Learning Kampus
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
               Katalog kurikulum akademik terpusat, alokasi bobot SKS, dan konfigurasi silabus 16 pertemuan terintegrasi Standar Nasional Pendidikan Tinggi (SN-Dikti).
@@ -593,13 +593,13 @@ export default function MasterMataKuliah({ onNavigate }) {
               <div className="flex flex-col">
                 <div className="flex items-center gap-space-xs text-primary font-label-sm text-label-sm font-semibold uppercase">
                   <span className="material-symbols-outlined text-[16px]">school</span>
-                  <span>Kurikulum SPADA 2024</span>
+                  <span>Kurikulum E-Learning Kampus 2024</span>
                 </div>
                 <h2 id="modal-course-heading" className="text-2xl font-bold text-on-surface tracking-tight font-title-lg">
                   {editingCourse ? `Ubah Mata Kuliah ${editingCourse.kode}` : 'Tambah Mata Kuliah Baru'}
                 </h2>
                 <p className="text-sm text-outline font-body-sm mt-0.5">
-                  Daftarkan kurikulum baru ke master data akademik SPADA UPGRIS.
+                  Daftarkan kurikulum baru ke master data akademik E-Learning Kampus.
                 </p>
               </div>
               <button

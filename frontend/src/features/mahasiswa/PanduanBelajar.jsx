@@ -51,7 +51,7 @@ export default function PanduanBelajar({ onRoleChange, onNavigate, activeRole = 
         'Klik judul materi untuk mengunduh modul PDF, tayangan presentasi PPTX, atau membuka tautan video pembelajaran.',
         'Gunakan fitur penanda "Tandai Telah Dipelajari" untuk memantau progres belajar mandiri Anda.',
       ],
-      tip: 'Seluruh materi perkuliahan terikat hak cipta akademik UPGRIS dan diperuntukkan bagi mahasiswa terdaftar.',
+      tip: 'Seluruh materi perkuliahan terikat hak cipta akademik dan diperuntukkan bagi mahasiswa terdaftar.',
     },
     {
       id: 'tugas',
@@ -65,7 +65,7 @@ export default function PanduanBelajar({ onRoleChange, onNavigate, activeRole = 
         'Klik "Kirim Berkas Tugas" dan tunggu konfirmasi tanda terima sistem.',
         'Dosen akan memeriksa tugas berdasarkan rubrik CPMK dan memberikan nilai 0-100 beserta catatan evaluator.',
       ],
-      tip: 'Pengumpulan tugas setelah tenggat waktu akan otomatis diberi label "Terlambat" oleh sistem SPADA.',
+      tip: 'Pengumpulan tugas setelah tenggat waktu akan otomatis diberi label "Terlambat" oleh sistem E-Learning Kampus.',
     },
     {
       id: 'syarat-ujian',
@@ -73,7 +73,7 @@ export default function PanduanBelajar({ onRoleChange, onNavigate, activeRole = 
       icon: 'verified',
       badge: 'Akademik',
       steps: [
-        'Berdasarkan SK Rektor UPGRIS dan aturan BR-012, mahasiswa wajib memiliki persentase kehadiran minimal 75.0% dari total 16 pertemuan.',
+        'Berdasarkan SK Rektor dan aturan BR-012, mahasiswa wajib memiliki persentase kehadiran minimal 75.0% dari total 16 pertemuan.',
         'Pantau rasio kehadiran Anda melalui menu "Rekap Nilai & Presensi" atau kartu metrik dasbor.',
         'Jika persentase kehadiran berada di bawah 75%, status kelayakan ujian akan ditandai "Beresiko / Tidak Memenuhi Syarat".',
         'Segera hubungi dosen pengampu atau ketua program studi apabila membutuhkan klarifikasi kehadiran.',
@@ -120,7 +120,7 @@ export default function PanduanBelajar({ onRoleChange, onNavigate, activeRole = 
           className="hover:text-primary transition-colors flex items-center gap-1"
         >
           <span className="material-symbols-outlined text-[16px]">home</span>
-          <span>Dasbor Mahasiswa</span>
+          <span>Dashboard Mahasiswa</span>
         </a>
         <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
         <span className="text-secondary font-semibold">Panduan Belajar Mahasiswa</span>
@@ -132,10 +132,10 @@ export default function PanduanBelajar({ onRoleChange, onNavigate, activeRole = 
           <div className="flex flex-col gap-1 max-w-2xl">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-[12px] font-bold">
-                Pusat Bantuan SPADA
+                Pusat Bantuan E-Learning Kampus
               </span>
               <span className="font-caption text-caption text-on-surface-variant">
-                Panduan Operasional Mahasiswa UPGRIS
+                Panduan Operasional Mahasiswa
               </span>
             </div>
             <h1 className="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">
@@ -148,7 +148,7 @@ export default function PanduanBelajar({ onRoleChange, onNavigate, activeRole = 
 
           <button
             type="button"
-            onClick={() => showToast('Memulai pengunduhan Buku Pedoman Mahasiswa SPADA UPGRIS (PDF 4.2 MB)...')}
+            onClick={() => showToast('Memulai pengunduhan Buku Pedoman Mahasiswa E-Learning Kampus (PDF 4.2 MB)...')}
             className="px-5 py-2.5 rounded-xl bg-primary text-on-primary font-label-md text-label-md font-bold hover:bg-primary/90 transition-all shadow-md flex items-center gap-2 self-start md:self-center shrink-0"
           >
             <span className="material-symbols-outlined text-[20px]">download</span>
@@ -230,7 +230,7 @@ export default function PanduanBelajar({ onRoleChange, onNavigate, activeRole = 
         })}
       </div>
 
-      {/* IT Helpdesk PTIK Card */}
+      {/* IT Helpdesk Kampus Card */}
       <div className="p-space-lg rounded-2xl bg-surface-container-low border border-outline-variant/20 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-space-md">
         <div className="flex items-center gap-space-md text-center sm:text-left">
           <div className="w-12 h-12 rounded-xl bg-secondary-container/20 text-secondary flex items-center justify-center shrink-0">
@@ -239,19 +239,19 @@ export default function PanduanBelajar({ onRoleChange, onNavigate, activeRole = 
           <div>
             <h3 className="font-title-md font-bold text-on-surface">Mengalami Kendala Teknis di Luar Jam Kuliah?</h3>
             <p className="font-body-sm text-on-surface-variant">
-              Hubungi Unit PTIK UPGRIS Gedung B Lt. 2 atau kirim pesan melalui layanan helpdesk resmi.
+              Hubungi Unit IT Kampus Gedung B Lt. 2 atau kirim pesan melalui layanan helpdesk resmi.
             </p>
           </div>
         </div>
 
         <a
-          href="https://upt-ptik.upgris.ac.id"
+          href="https://helpdesk.kampus.ac.id"
           target="_blank"
           rel="noopener noreferrer"
           className="px-5 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-bright text-on-surface font-label-md text-label-md font-semibold transition-all border border-outline-variant/30 flex items-center gap-1.5 shrink-0 shadow-sm"
         >
           <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-          <span>Buka Tiket Helpdesk PTIK</span>
+          <span>Buka Tiket Helpdesk Kampus</span>
         </a>
       </div>
     </AppShell>

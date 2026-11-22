@@ -1,12 +1,12 @@
 /**
  * stores/themeStore.ts
  *
- * Store preferensi tema (cerah/gelap) SPADA LMS UPGRIS.
+ * Store preferensi tema (cerah/gelap) E-Learning Kampus.
  * Mengikuti pattern store kompatibel Zustand di `authStore.ts` (useSyncExternalStore)
  * tanpa dependensi eksternal.
  *
  * Default adalah CERAH. Preferensi disimpan di localStorage dengan key
- * `spada-theme` dan dibaca lebih dulu oleh skrip anti-flash di index.html,
+ * `elearning-theme` dan dibaca lebih dulu oleh skrip anti-flash di index.html,
  * sehingga tidak ada kedipan tema saat halaman dimuat.
  */
 
@@ -14,7 +14,7 @@ import { useSyncExternalStore } from 'react';
 
 export type Theme = 'light' | 'dark';
 
-export const THEME_STORAGE_KEY = 'spada-theme';
+export const THEME_STORAGE_KEY = 'elearning-theme';
 export const DEFAULT_THEME: Theme = 'light';
 
 interface ThemeState {

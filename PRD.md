@@ -1,17 +1,17 @@
-# Product Requirements Document (PRD) - SPADA (Learning Management System)
+# Product Requirements Document (PRD) - E-Learning Kampus (Learning Management System)
 
-- **Nama Produk:** SPADA (Learning Management System)
-- **Institusi:** Universitas PGRI Semarang (UPGRIS)
+- **Nama Produk:** E-Learning Kampus (Learning Management System)
+- **Institusi:** Universitas
 - **Tim Pengembang:** Team Membangun Negeri
 - **Target Pengguna (Aktor):** Mahasiswa, Dosen, dan Admin (Role Tunggal)
-- **Status Dokumen:** Revisi Produk Final — Fokus Eksklusif pada Modul SPADA LMS Standalone (Sesuai SRS.md & Arahan System Analyst)
+- **Status Dokumen:** Revisi Produk Final — Fokus Eksklusif pada Modul E-Learning Kampus Standalone (Sesuai SRS.md & Arahan System Analyst)
 
 ---
 
 ## 1. Latar Belakang & Visi Produk
 
 ### 1.1 Visi Produk
-Menyediakan platform **Learning Management System (SPADA LMS)** yang mandiri (*standalone*), tangkas, dan andal bagi civitas akademika Universitas PGRI Semarang. Sistem dirancang untuk menyederhanakan dan mengoptimalkan seluruh proses pembelajaran digital (daring maupun bauran/*blended learning*) tanpa ketergantungan pada birokrasi modul administrasi kampus yang kompleks.
+Menyediakan platform **Learning Management System (E-Learning Kampus)** yang mandiri (*standalone*), tangkas, dan andal bagi civitas akademika Universitas. Sistem dirancang untuk menyederhanakan dan mengoptimalkan seluruh proses pembelajaran digital (daring maupun bauran/*blended learning*) tanpa ketergantungan pada birokrasi modul administrasi kampus yang kompleks.
 
 ### 1.2 Latar Belakang & Perubahan Ruang Lingkup
 Berdasarkan arahan revisi analis sistem (*System Analyst*) dan penyesuaian pada dokumen **SRS.md**, seluruh modul dan portal eksternal yang berada di luar kegiatan pembelajaran digital—meliputi:
@@ -23,11 +23,11 @@ Berdasarkan arahan revisi analis sistem (*System Analyst*) dan penyesuaian pada 
 
 **resmi ditiadakan dan dikeluarkan dari ruang lingkup produk**.
 
-Sistem SPADA kini beroperasi secara independen dan terfokus pada:
+Sistem E-Learning Kampus kini beroperasi secara independen dan terfokus pada:
 1. **Pengelolaan Profil Pengguna Mandiri:** Pembaruan data diri, kontak, foto profil, dan kata sandi akun secara mandiri.
 2. **Central Timeline Pembelajaran:** Pusat visualisasi agenda dan tenggat waktu (*deadline*) tugas terdekat, jadwal kuis, pertemuan, dan ujian yang disinkronisasi waktu server.
 3. **Sistem Validasi Berkas Keamanan (File Security):** Penolakan otomatis berkas unggahan di luar format `.pdf`, `.docx`, `.xlsx`, `.zip` atau melebihi batas ukuran (default 5MB–10MB) serta penyimpanan terproteksi (*private storage*).
-4. **Standar Penilaian Tugas Berbasis Skor SPADA (0–100):** Evaluasi tugas mahasiswa menggunakan skor numerik transparan (0–100) disertai feedback dosen.
+4. **Standar Penilaian Tugas Berbasis Skor E-Learning Kampus (0–100):** Evaluasi tugas mahasiswa menggunakan skor numerik transparan (0–100) disertai feedback dosen.
 5. **Direct Enrollment Mahasiswa oleh Admin:** Penataan kepesertaan kelas dilakukan secara langsung oleh Admin tanpa alur pengisian/persetujuan KRS.
 6. **Struktur Pembelajaran 16 Pertemuan Terstruktur:** Silabus perkuliahan baku yang membagi semester menjadi Pertemuan 1–7 (pembelajaran pra-UTS), Pertemuan 8 (UTS), Pertemuan 9–15 (pembelajaran pasca-UTS), dan Pertemuan 16 (UAS).
 7. **Presensi Digital Terkendali:** Dosen memegang kendali pembukaan dan penutupan sesi kehadiran; akumulasi persentase kehadiran dihitung otomatis.
@@ -39,7 +39,7 @@ Sistem SPADA kini beroperasi secara independen dan terfokus pada:
 ## 2. Ruang Lingkup Produk (Product Scope)
 
 ### 2.1 Modul Dalam Ruang Lingkup (In-Scope)
-Produk SPADA LMS mencakup 13 modul fungsional inti:
+Produk E-Learning Kampus mencakup 13 modul fungsional inti:
 
 1. **Modul Autentikasi & Akun:** Login terproteksi, logout, reset kata sandi, dan penegakan peran (*Role-Based Access Control*).
 2. **Modul Profil Pengguna:** Pengelolaan informasi akun, identitas pribadi, foto profil (maks 2MB, format gambar), dan penggantian kata sandi.
@@ -49,14 +49,14 @@ Produk SPADA LMS mencakup 13 modul fungsional inti:
 6. **Modul Ruang Kelas 16 Pertemuan:** Organisasi silabus terstruktur Pertemuan 1 s.d. Pertemuan 16 (P-8 untuk UTS, P-16 untuk UAS).
 7. **Modul Materi Pembelajaran:** Unggah bahan ajar, modul, dokumen perkuliahan oleh dosen, serta pengunduhan aman oleh mahasiswa terdaftar.
 8. **Modul Tugas & Validasi Berkas:** Penerbitan penugasan, batas waktu, pengumpulan submission mahasiswa dengan validasi ketat (.pdf/.docx/.xlsx/.zip, 5MB–10MB), serta status keterlambatan (*Late Submission*).
-9. **Modul Penilaian Tugas SPADA (Skor 0–100):** Lembar penilaian bagi dosen untuk menginput skor numerik (0–100) dan catatan feedback evaluasi.
+9. **Modul Penilaian Tugas E-Learning Kampus (Skor 0–100):** Lembar penilaian bagi dosen untuk menginput skor numerik (0–100) dan catatan feedback evaluasi.
 10. **Modul Presensi Digital:** Pembukaan dan penutupan sesi presensi oleh dosen, pencatatan status kehadiran mahasiswa (Hadir, Izin, Sakit, Alpa), serta kalkulasi persentase kehadiran per kelas.
 11. **Modul Kuis & Evaluasi Ujian (UTS/UAS):** Pengerjaan kuis interaktif dengan timer, serta ujian UTS (P-8) dan UAS (P-16) dengan sistem penguncian otomatis berbasis syarat presensi.
 12. **Modul Notifikasi & Pelaporan:** Pemberitahuan sistem untuk deadline tugas, pembukaan presensi, publikasi skor nilai, serta rekapitulasi nilai dan kehadiran kelas.
 13. **Modul Konfigurasi Global & Audit Trail:** Pengaturan kebijakan berkas, ambang presensi ujian, serta pencatatan mutasi data kritis sistem ke dalam Audit Log.
 
 ### 2.2 Modul di Luar Ruang Lingkup (Out-of-Scope)
-Fitur-fitur berikut secara eksplisit **tidak termasuk** dalam sistem SPADA LMS:
+Fitur-fitur berikut secara eksplisit **tidak termasuk** dalam sistem E-Learning Kampus:
 - Sistem Penerimaan Mahasiswa Baru (PMB) dan seleksi calon mahasiswa.
 - Pemilihan mata kuliah mandiri, pengajuan draf KRS, dan persetujuan KRS oleh Dosen Wali/PA.
 - Penerbitan Kartu Hasil Studi (KHS) dan pencetakan Transkrip Akademik kumulatif institusi.
@@ -71,8 +71,8 @@ Sistem menyederhanakan hak akses secara tegas ke dalam **3 peran utama**:
 
 | Peran Pengguna | Deskripsi & Tanggung Jawab Utama | Akses Fungsional Utama |
 |---|---|---|
-| **Mahasiswa** | Peserta didik yang mengikuti proses pembelajaran pada kelas-kelas SPADA yang telah didaftarkan. | - Memperbarui profil pribadi dan foto profil.<br>- Memantau Central Timeline (deadline tugas, kuis, ujian, pertemuan).<br>- Mengakses kelas hasil *enrollment* Admin.<br>- Mengunduh materi perkuliahan.<br>- Mengunggah berkas tugas yang lolos validasi ekstensi & ukuran.<br>- Mengisi presensi saat sesi dibuka dosen.<br>- Mengerjakan kuis interaktif.<br>- Mengikuti UTS & UAS jika memenuhi syarat kehadiran $\ge 70\%$.<br>- Melihat perolehan skor tugas (0–100) dan catatan feedback dosen. |
-| **Dosen** | Tenaga pendidik yang mengampu kelas perkuliahan di SPADA. | - Memperbarui profil pribadi dan foto profil.<br>- Memantau Timeline agenda kelas yang diampu.<br>- Mengelola isi Pertemuan 1 sampai 16.<br>- Mengunggah materi perkuliahan.<br>- Menerbitkan tugas, mengatur bobot, instruksi, dan deadline.<br>- Mengunduh berkas jawaban mahasiswa.<br>- Menilai tugas dengan format skor numerik 0–100 dan feedback.<br>- Membuka dan menutup sesi presensi perkuliahan.<br>- Mengelola kuis dan evaluasi UTS (P-8) serta UAS (P-16).<br>- Melihat rekapitulasi nilai dan kehadiran mahasiswa di kelasnya. |
+| **Mahasiswa** | Peserta didik yang mengikuti proses pembelajaran pada kelas-kelas E-Learning Kampus yang telah didaftarkan. | - Memperbarui profil pribadi dan foto profil.<br>- Memantau Central Timeline (deadline tugas, kuis, ujian, pertemuan).<br>- Mengakses kelas hasil *enrollment* Admin.<br>- Mengunduh materi perkuliahan.<br>- Mengunggah berkas tugas yang lolos validasi ekstensi & ukuran.<br>- Mengisi presensi saat sesi dibuka dosen.<br>- Mengerjakan kuis interaktif.<br>- Mengikuti UTS & UAS jika memenuhi syarat kehadiran $\ge 70\%$.<br>- Melihat perolehan skor tugas (0–100) dan catatan feedback dosen. |
+| **Dosen** | Tenaga pendidik yang mengampu kelas perkuliahan di E-Learning Kampus. | - Memperbarui profil pribadi dan foto profil.<br>- Memantau Timeline agenda kelas yang diampu.<br>- Mengelola isi Pertemuan 1 sampai 16.<br>- Mengunggah materi perkuliahan.<br>- Menerbitkan tugas, mengatur bobot, instruksi, dan deadline.<br>- Mengunduh berkas jawaban mahasiswa.<br>- Menilai tugas dengan format skor numerik 0–100 dan feedback.<br>- Membuka dan menutup sesi presensi perkuliahan.<br>- Mengelola kuis dan evaluasi UTS (P-8) serta UAS (P-16).<br>- Melihat rekapitulasi nilai dan kehadiran mahasiswa di kelasnya. |
 | **Admin** *(Role Tunggal)* | Pengelola teknis dan operasional sistem (peleburan peran Super Admin, Admin LMS, dan Admin Akademik). | - Mengelola data master pengguna (Mahasiswa, Dosen, Admin).<br>- Mengelola master mata kuliah dan pembukaan kelas perkuliahan.<br>- Menetapkan dosen pengampu pada kelas.<br>- Melakukan **enrollment mahasiswa ke kelas secara langsung**.<br>- Mengonfigurasi parameter sistem (ekstensi file, batas ukuran berkas, ambang kehadiran ujian).<br>- Memantau aktivitas pembelajaran dan audit log keamanan. |
 
 ---
@@ -113,7 +113,7 @@ Sistem menyederhanakan hak akses secara tegas ke dalam **3 peran utama**:
 - **Validasi Berkas Materi:** Berkas materi wajib mematuhi aturan validasi tipe berkas dan batas ukuran maksimal.
 - **Pengunduhan Aman:** Mahasiswa yang terdaftar dalam kelas dapat membaca ringkasan materi dan mengunduh berkas lampiran secara aman.
 
-### Epic 6: Manajemen Tugas, Validasi File Ketat & Penilaian Skor SPADA (0–100)
+### Epic 6: Manajemen Tugas, Validasi File Ketat & Penilaian Skor E-Learning Kampus (0–100)
 - **Penerbitan Tugas:** Dosen membuat tugas baru dengan parameter: judul, instruksi pengerjaan, berkas soal (PDF), persentase bobot nilai, tenggat waktu (*deadline*), dan opsi toleransi keterlambatan (*allow late*).
 - **Sistem Validasi Berkas Keamanan (File Security):**
   - **Format Berkas yang Diizinkan:** Sistem hanya menerima format `.pdf`, `.docx`, `.xlsx`, dan `.zip`. Berkas di luar whitelist ditolak otomatis dengan pesan galat yang jelas.
@@ -122,7 +122,7 @@ Sistem menyederhanakan hak akses secara tegas ke dalam **3 peran utama**:
   - **Penyimpanan Terproteksi:** Berkas disimpan di direktori privat (*private storage*) dengan nama ter-hash unik tanpa akses tautan publik langsung.
 - **Pengumpulan Tugas Mahasiswa:** Mahasiswa mengunggah jawaban; sistem mencatat stempel waktu server (*timestamp*) dan menandai status pengumpulan (*On-time* atau *Late Submission*).
 - **Pembaruan Berkas Jawaban:** Mahasiswa dapat mengganti berkas jawaban selama belum melewati batas deadline.
-- **Lembar Penilaian Skor SPADA (0–100):** Dosen mengunduh berkas jawaban dan menginputkan evaluasi dengan format **skor numerik (skor angka 0 s.d. 100)** beserta komentar feedback perbaikan. Nilai di luar rentang 0–100 ditolak oleh sistem.
+- **Lembar Penilaian Skor E-Learning Kampus (0–100):** Dosen mengunduh berkas jawaban dan menginputkan evaluasi dengan format **skor numerik (skor angka 0 s.d. 100)** beserta komentar feedback perbaikan. Nilai di luar rentang 0–100 ditolak oleh sistem.
 - **Transparansi Nilai:** Mahasiswa dapat melihat perolehan skor angka dan catatan feedback dosen secara langsung.
 
 ### Epic 7: Presensi Digital & Pengendalian Sesi Perkuliahan
@@ -170,12 +170,12 @@ Sistem menyederhanakan hak akses secara tegas ke dalam **3 peran utama**:
 
 | ID Aturan | Nama Aturan | Deskripsi & Penegakan Sistem |
 |---|---|---|
-| **BR-001** | **Independensi SPADA LMS** | Sistem beroperasi murni dan independen sebagai Learning Management System. Seluruh modul administratif di luar LMS (SIA, PMB, KRS, KHS, Transkrip, Sidang) resmi ditiadakan. |
+| **BR-001** | **Independensi E-Learning Kampus** | Sistem beroperasi murni dan independen sebagai Learning Management System. Seluruh modul administratif di luar LMS (SIA, PMB, KRS, KHS, Transkrip, Sidang) resmi ditiadakan. |
 | **BR-002** | **Direct Enrollment oleh Admin** | Pendaftaran mahasiswa ke kelas dikelola secara langsung oleh Admin. Alur pengisian draf dan persetujuan KRS oleh Dosen Wali/PA ditiadakan. |
 | **BR-003** | **Otoritas Akses Kelas** | Mahasiswa hanya dapat mengakses ruang kelas, materi, dan aktivitas pada kelas di mana ia telah didaftarkan (*enrolled*) oleh Admin. |
 | **BR-004** | **Struktur 16 Pertemuan Wajib** | Setiap kelas perkuliahan wajib memiliki struktur 16 pertemuan: Pertemuan 1–7 (pembelajaran pra-UTS), Pertemuan 8 (UTS), Pertemuan 9–15 (pembelajaran pasca-UTS), dan Pertemuan 16 (UAS). |
 | **BR-005** | **Fleksibilitas Aktivitas Belajar** | Materi, Tugas, Kuis, dan Presensi bersifat opsional pada pertemuan pembelajaran (1–7 dan 9–15). Aktivitas yang belum diterbitkan tidak tampil pada antarmuka mahasiswa. |
-| **BR-006** | **Standar Penilaian Skor SPADA (0–100)** | Format evaluasi penugasan mahasiswa wajib direpresentasikan menggunakan angka numerik bulat atau desimal dalam rentang 0.00 hingga 100.00 sesuai standar SPADA. |
+| **BR-006** | **Standar Penilaian Skor E-Learning Kampus (0–100)** | Format evaluasi penugasan mahasiswa wajib direpresentasikan menggunakan angka numerik bulat atau desimal dalam rentang 0.00 hingga 100.00 sesuai standar E-Learning Kampus. |
 | **BR-007** | **Whitelist Ekstensi Berkas** | Sistem wajib menolak otomatis unggahan berkas yang ekstensinya berada di luar format yang diizinkan: `.pdf`, `.docx`, `.xlsx`, `.zip`. |
 | **BR-008** | **Limit Ukuran Berkas (Size Limit)** | Sistem wajib menolak otomatis unggahan berkas yang ukurannya melebihi batas konfigurasi (default 5MB s.d. 10MB). |
 | **BR-009** | **Penyimpanan Berkas Terproteksi** | Seluruh berkas penyerahan tugas mahasiswa wajib disimpan pada penyimpanan privat (*private storage*) dan hanya dapat diunduh melalui endpoint terautentikasi oleh dosen pengampu dan mahasiswa bersangkutan. |
@@ -218,14 +218,14 @@ Sistem menyederhanakan hak akses secara tegas ke dalam **3 peran utama**:
 
 ## 7. Strategi Peluncuran Produk (MVP Roadmap)
 
-Mengacu pada Bab 27 Dokumen SRS, pengembangan SPADA LMS dibagi ke dalam 5 fase rilis bertahap:
+Mengacu pada Bab 27 Dokumen SRS, pengembangan E-Learning Kampus dibagi ke dalam 5 fase rilis bertahap:
 
 ```
 [ MVP 1 ] -> Fondasi, Autentikasi, Profil Pengguna & Direct Enrollment (Admin)
     |
 [ MVP 2 ] -> Ruang Kelas 16 Pertemuan, Distribusi Materi & Presensi Digital
     |
-[ MVP 3 ] -> Manajemen Tugas, Validasi File Ketat & Penilaian Skor SPADA (0–100)
+[ MVP 3 ] -> Manajemen Tugas, Validasi File Ketat & Penilaian Skor E-Learning Kampus (0–100)
     |
 [ MVP 4 ] -> Central Timeline Pembelajaran, Widget Dasbor & Kuis Interaktif
     |
@@ -244,7 +244,7 @@ Mengacu pada Bab 27 Dokumen SRS, pengembangan SPADA LMS dibagi ke dalam 5 fase r
   - Antarmuka Ruang Kelas berbasis silabus 16 Pertemuan terstruktur.
   - Modul Materi Pembelajaran (unggah dosen, unduh mahasiswa).
   - Modul Presensi Digital (buka sesi, pengisian kehadiran, tutup sesi, rekapitulasi).
-- **MVP 3 (Tugas, Validasi Berkas & Penilaian SPADA):**
+- **MVP 3 (Tugas, Validasi Berkas & Penilaian E-Learning Kampus):**
   - Modul Tugas Perkuliahan (instruksi, file soal, bobot, batas waktu deadline).
   - Sistem Validasi Berkas Keamanan (whitelist .pdf/.docx/.xlsx/.zip dan limit ukuran 5MB–10MB).
   - Pengumpulan jawaban mahasiswa, pencatatan timestamp, dan private storage.
@@ -269,13 +269,13 @@ Mengacu pada Bab 27 Dokumen SRS, pengembangan SPADA LMS dibagi ke dalam 5 fase r
 Seluruh poin keputusan bisnis yang sebelumnya berstatus terbuka kini telah **ditetapkan secara final** sesuai dengan hasil analisis sistem pada **SRS.md (Bab 30)**:
 
 1. **Cakupan Sistem Mandiri (Standalone LMS):**
-   - **Keputusan:** Sistem resmi beroperasi murni sebagai SPADA Learning Management System. Seluruh modul SIA (KRS, KHS, Transkrip, Sidang) dan PMB ditiadakan dari ruang lingkup.
+   - **Keputusan:** Sistem resmi beroperasi murni sebagai E-Learning Kampus (Learning Management System). Seluruh modul SIA (KRS, KHS, Transkrip, Sidang) dan PMB ditiadakan dari ruang lingkup.
 2. **Penyederhanaan Peran & Penghapusan Dosen PA:**
    - **Keputusan:** Hak akses disederhanakan menjadi 3 peran: **Mahasiswa**, **Dosen**, dan **Admin (Role Tunggal)**. Peran Dosen Wali/PA dan varian admin multirangkap resmi ditiadakan.
 3. **Mekanisme Enrollment Kelas:**
    - **Keputusan:** Pendaftaran mahasiswa ke kelas dilakukan secara langsung (*direct enrollment*) oleh Admin tanpa proses pengisian draf atau persetujuan KRS manual.
 4. **Standar Penilaian Tugas:**
-   - **Keputusan:** Penilaian tugas wajib direpresentasikan menggunakan format **skor numerik berstandar SPADA (0–100)** disertai catatan feedback dosen.
+   - **Keputusan:** Penilaian tugas wajib direpresentasikan menggunakan format **skor numerik berstandar E-Learning Kampus (0–100)** disertai catatan feedback dosen.
 5. **Kebijakan Keamanan & Format Berkas Tugas:**
    - **Keputusan:** Berkas unggahan wajib dibatasi pada ekstensi `.pdf`, `.docx`, `.xlsx`, `.zip` dengan batasan ukuran maksimal 5MB–10MB. Berkas di luar kriteria ditolak secara otomatis oleh sistem.
 6. **Struktur Siklus Pertemuan:**
@@ -289,4 +289,4 @@ Seluruh poin keputusan bisnis yang sebelumnya berstatus terbuka kini telah **dit
 
 ---
 
-*Dokumen PRD ini disahkan sebagai pedoman acuan produk resmi yang selaras 100% dengan Software Requirements Specification (SRS.md) Universitas PGRI Semarang.*
+*Dokumen PRD ini disahkan sebagai pedoman acuan produk resmi yang selaras 100% dengan Software Requirements Specification (SRS.md) Universitas.*

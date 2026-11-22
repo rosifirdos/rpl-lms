@@ -35,7 +35,7 @@ describe('Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard', () => {
       },
       create: {
         username: 'testuser_fase2',
-        email: 'testuser_fase2@upgris.ac.id',
+        email: 'testuser_fase2@kampus.ac.id',
         password_hash: passwordHash,
         status: 'ACTIVE',
         role: 'mahasiswa',
@@ -115,7 +115,7 @@ describe('Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          identifier: 'admin@upgris.ac.id',
+          identifier: 'admin@kampus.ac.id',
           password: 'password123',
         }),
       });
@@ -309,7 +309,7 @@ describe('Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          identifier: 'testuser_fase2@upgris.ac.id',
+          identifier: 'testuser_fase2@kampus.ac.id',
         }),
       });
 
@@ -393,7 +393,7 @@ describe('Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard', () => {
         body: JSON.stringify({
           full_name: 'Ahmad Mahasiswa Terupdate',
           phone: '081234567890',
-          bio: 'Mahasiswa aktif Teknik Informatika UPGRIS',
+          bio: 'Mahasiswa aktif Teknik Informatika',
         }),
       });
 
@@ -402,7 +402,7 @@ describe('Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard', () => {
       assert.equal(json.success, true);
       assert.equal(json.data.profile.full_name, 'Ahmad Mahasiswa Terupdate');
       assert.equal(json.data.profile.phone, '081234567890');
-      assert.equal(json.data.profile.bio, 'Mahasiswa aktif Teknik Informatika UPGRIS');
+      assert.equal(json.data.profile.bio, 'Mahasiswa aktif Teknik Informatika');
     });
 
     test('PUT /api/profile menolak jika email baru sudah digunakan orang lain (409)', async () => {
@@ -413,7 +413,7 @@ describe('Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard', () => {
           Authorization: `Bearer ${mahasiswaToken}`,
         },
         body: JSON.stringify({
-          email: 'admin@upgris.ac.id', // Sudah dipakai oleh admin
+          email: 'admin@kampus.ac.id', // Sudah dipakai oleh admin
         }),
       });
 

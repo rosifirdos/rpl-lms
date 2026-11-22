@@ -3,8 +3,8 @@ import AppShell from '../../components/AppShell';
 import { dosenApi } from '../../services/api';
 
 /**
- * DasborDosen â€” Feature Component
- * Implementasi React untuk Dasbor Dosen SPADA LMS UPGRIS
+ * DasborDosen — Feature Component
+ * Implementasi React untuk Dashboard Dosen E-Learning Kampus
  * Memanfaatkan AppShell tunggal modular dengan penegakan RBAC.
  * Mendukung kurikulum 16 Pertemuan Terstruktur, sinkronisasi SIAKAD,
  * pengelolaan presensi, dan penilaian rubrik tugas.
@@ -184,11 +184,11 @@ export default function DasborDosen({ onRoleChange, onNavigate }) {
             <span>Beranda</span>
           </a>
           <span className="text-outline-variant font-bold">/</span>
-          <span className="text-on-surface font-label-sm">Dasbor Dosen</span>
+          <span className="text-on-surface font-label-sm">Dashboard Dosen</span>
         </div>
         <div className="inline-flex items-center gap-2 bg-surface-container-high px-space-sm py-1 rounded-full text-secondary font-label-sm border border-outline-variant/30">
           <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-ping" />
-          <span>Koneksi SIAKAD UPGRIS: Terhubung Penuh</span>
+          <span>Koneksi SIAKAD: Terhubung Penuh</span>
         </div>
       </div>
 
@@ -439,7 +439,7 @@ export default function DasborDosen({ onRoleChange, onNavigate }) {
           <div className="p-space-md rounded-xl bg-surface-container-low border border-outline-variant/20 flex flex-col gap-2">
             <div className="flex items-center gap-2 text-secondary font-semibold text-xs">
               <span className="material-symbols-outlined text-[18px]">verified_user</span>
-              <span>Proteksi Berkas &amp; Integritas SPADA</span>
+              <span>Proteksi Berkas &amp; Integritas E-Learning Kampus</span>
             </div>
             <p className="font-caption text-caption text-on-surface-variant leading-relaxed">
               Seluruh berkas materi perkuliahan divalidasi MIME ganda (.pdf, .docx, .xlsx, .zip) maks. 10MB untuk menjaga integritas penyimpanan institusi.

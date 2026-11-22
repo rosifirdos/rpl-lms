@@ -1,7 +1,7 @@
 ﻿/**
  * pages/KonfigurasiSistem.jsx
  *
- * Halaman-level wrapper untuk Konfigurasi Sistem & Kebijakan SPADA (Admin).
+ * Halaman-level wrapper untuk Konfigurasi Sistem & Kebijakan E-Learning Kampus (Admin).
  */
 import KonfigurasiSistem from '../features/admin/KonfigurasiSistem';
 

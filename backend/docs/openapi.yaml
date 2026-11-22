@@ -1,0 +1,1011 @@
+openapi: 3.0.3
+info:
+  title: E-Learning Kampus Backend API
+  version: 1.0.0
+  description: Dokumentasi resmi API MVP 1 untuk sistem pembelajaran daring E-Learning Kampus.
+servers:
+  - url: http://localhost:5000/api
+    description: Server Lokal Pengembangan
+tags:
+  - name: Auth
+    description: Autentikasi multi-kredensial dan manajemen sesi JWT
+  - name: Profile
+    description: Manajemen profil mandiri dan foto avatar
+  - name: Users
+    description: Manajemen akun pengguna 3 peran (Admin)
+  - name: Courses
+    description: Master katalog mata kuliah (Admin)
+  - name: Classes
+    description: Pembukaan dan pengelolaan kelas perkuliahan
+  - name: Enrollments
+    description: Modul direct enrollment kepesertaan mahasiswa (Admin)
+  - name: Dashboard
+    description: Dasbor kontekstual mahasiswa, dosen, dan admin
+  - name: Audit Logs
+    description: Peninjau jejak audit mutasi sistem (Admin)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    EntityId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PageQuery:
+      in: query
+      name: page
+      required: false
+      schema:
+        type: integer
+        default: 1
+    LimitQuery:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        default: 20
+    SearchQuery:
+      in: query
+      name: search
+      required: false
+      schema:
+        type: string
+
+  schemas:
+    ApiResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operasi berhasil
+        code:
+          type: string
+          example: CONCURRENCY_CONFLICT
+        data:
+          type: object
+          nullable: true
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 45
+        totalPages:
+          type: integer
+          example: 3
+
+    LoginRequest:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+          description: Username, NIM, NIDN, NIP, atau Email terdaftar
+          example: admin
+        password:
+          type: string
+          format: password
+          example: password123
+
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: mahasiswa@kampus.ac.id
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          example: Budi Santoso
+        phone:
+          type: string
+          example: '08123456789'
+        bio:
+          type: string
+          example: Dosen Teknik Informatika
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+
+    CreateUserRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - role
+        - full_name
+      properties:
+        username:
+          type: string
+          example: 2024001099
+        email:
+          type: string
+          format: email
+          example: mhs.baru@kampus.ac.id
+        password:
+          type: string
+          format: password
+          example: password123
+        role:
+          type: string
+          enum: [admin, dosen, mahasiswa]
+        full_name:
+          type: string
+          example: Fajar Nugraha
+        nim:
+          type: string
+          example: '2024001099'
+        nidn:
+          type: string
+          example: '0612345609'
+        nip:
+          type: string
+          example: '198501152010121099'
+        prodi:
+          type: string
+          example: Teknik Informatika
+        angkatan:
+          type: integer
+          example: 2024
+        gelar_depan:
+          type: string
+          example: Dr.
+        gelar_belakang:
+          type: string
+          example: M.Kom.
+
+    UpdateUserStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED]
+
+    ResetPasswordRequest:
+      type: object
+      required:
+        - newPassword
+      properties:
+        newPassword:
+          type: string
+          format: password
+          example: BaruPassword123!
+
+    CreateCourseRequest:
+      type: object
+      required:
+        - code
+        - name
+        - credits
+      properties:
+        code:
+          type: string
+          example: TIF106
+        name:
+          type: string
+          example: Arsitektur Perangkat Lunak
+        credits:
+          type: integer
+          minimum: 1
+          maximum: 6
+          example: 3
+        description:
+          type: string
+          example: Mata kuliah perancangan pola arsitektur software.
+
+    UpdateCourseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        credits:
+          type: integer
+          minimum: 1
+          maximum: 6
+        description:
+          type: string
+        is_active:
+          type: boolean
+
+    CreateClassRequest:
+      type: object
+      required:
+        - course_id
+        - lecturer_id
+        - academic_year
+        - semester
+        - name
+        - capacity
+      properties:
+        course_id:
+          type: string
+          format: uuid
+        lecturer_id:
+          type: string
+          format: uuid
+        academic_year:
+          type: string
+          pattern: '^\d{4}/\d{4}$'
+          example: 2026/2027
+        semester:
+          type: string
+          enum: [ganjil, genap]
+        name:
+          type: string
+          example: TI-C
+        capacity:
+          type: integer
+          minimum: 1
+          example: 40
+
+    UpdateClassRequest:
+      type: object
+      properties:
+        course_id:
+          type: string
+          format: uuid
+        lecturer_id:
+          type: string
+          format: uuid
+        academic_year:
+          type: string
+        semester:
+          type: string
+          enum: [ganjil, genap]
+        name:
+          type: string
+        capacity:
+          type: integer
+
+    CreateEnrollmentRequest:
+      type: object
+      required:
+        - class_id
+      properties:
+        class_id:
+          type: string
+          format: uuid
+        student_id:
+          type: string
+          format: uuid
+          description: Digunakan untuk pendaftaran tunggal
+        student_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Digunakan untuk pendaftaran batch
+
+    UpdateMeetingRequest:
+      type: object
+      description: |
+        Minimal satu properti wajib diisi; body kosong ditolak dengan 400.
+        Kolom di luar daftar ini ditolak (skema strict).
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: Judul/topik pertemuan
+        description:
+          type: string
+          nullable: true
+          maxLength: 2000
+          description: Deskripsi pertemuan
+        is_published:
+          type: boolean
+          description: Status publikasi pertemuan bagi mahasiswa
+
+    Meeting:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        class_id:
+          type: string
+          format: uuid
+        meeting_number:
+          type: integer
+          minimum: 1
+          maximum: 16
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        is_exam:
+          type: boolean
+        exam_type:
+          type: string
+          enum: [NONE, UTS, UAS]
+        is_published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login multi-kredensial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login berhasil dan access token diterbitkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Kredensial tidak valid
+        '403':
+          description: Akun berstatus INACTIVE atau SUSPENDED
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Memperbarui token akses via refresh token
+      responses:
+        '200':
+          description: Access token diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Mengakhiri sesi login dan mencabut refresh token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sesi berhasil dicabut
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Mengajukan permohonan reset password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Instruksi reset password dikirimkan jika email terdaftar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Mengambil data profil mandiri
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Informasi profil pengguna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags: [Profile]
+      summary: Memperbarui data profil mandiri
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profil berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /profile/avatar:
+    post:
+      tags: [Profile]
+      summary: Mengunggah berkas foto avatar
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Avatar berhasil diunggah
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /profile/password:
+    put:
+      tags: [Profile]
+      summary: Mengganti kata sandi mandiri
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Kata sandi berhasil diubah
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/users:
+    get:
+      tags: [Users]
+      summary: Mengambil daftar pengguna dengan filter dan paginasi
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+        - in: query
+          name: role
+          schema: { type: string, enum: [admin, dosen, mahasiswa] }
+        - in: query
+          name: status
+          schema: { type: string, enum: [ACTIVE, INACTIVE, SUSPENDED] }
+      responses:
+        '200':
+          description: Daftar pengguna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Users]
+      summary: Membuat pengguna baru
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Pengguna berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/users/{id}/status:
+    patch:
+      tags: [Users]
+      summary: Memperbarui status akun pengguna
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserStatusRequest'
+      responses:
+        '200':
+          description: Status pengguna berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/users/{id}/reset-password:
+    put:
+      tags: [Users]
+      summary: Reset kata sandi pengguna oleh administrator
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Kata sandi berhasil direset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/courses:
+    get:
+      tags: [Courses]
+      summary: Mengambil daftar master mata kuliah
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+      responses:
+        '200':
+          description: Daftar mata kuliah
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Courses]
+      summary: Menambahkan mata kuliah baru
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCourseRequest'
+      responses:
+        '201':
+          description: Mata kuliah berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/courses/{id}:
+    get:
+      tags: [Courses]
+      summary: Detail mata kuliah
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Data mata kuliah
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags: [Courses]
+      summary: Memperbarui mata kuliah
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCourseRequest'
+      responses:
+        '200':
+          description: Mata kuliah diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags: [Courses]
+      summary: Menonaktifkan mata kuliah
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Mata kuliah dinonaktifkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/classes:
+    get:
+      tags: [Classes]
+      summary: Mengambil daftar kelas perkuliahan (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+        - in: query
+          name: academic_year
+          schema: { type: string }
+        - in: query
+          name: semester
+          schema: { type: string, enum: [ganjil, genap] }
+        - in: query
+          name: course_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: lecturer_id
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Daftar kelas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Classes]
+      summary: Membuka kelas perkuliahan baru
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClassRequest'
+      responses:
+        '201':
+          description: Kelas berhasil dibuka
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/classes/{id}:
+    get:
+      tags: [Classes]
+      summary: Detail kelas perkuliahan (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Detail data kelas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags: [Classes]
+      summary: Memperbarui kelas perkuliahan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClassRequest'
+      responses:
+        '200':
+          description: Kelas diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags: [Classes]
+      summary: Menghapus kelas jika belum memiliki kepesertaan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Kelas dihapus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/enrollments:
+    post:
+      tags: [Enrollments]
+      summary: Direct enrollment pendaftaran mahasiswa tunggal atau batch
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEnrollmentRequest'
+      responses:
+        '201':
+          description: Mahasiswa berhasil didaftarkan ke kelas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
+          description: Kapasitas kelas tidak mencukupi atau mahasiswa sudah terdaftar
+
+  /admin/enrollments/{id}:
+    delete:
+      tags: [Enrollments]
+      summary: Mencabut kepesertaan mahasiswa dari kelas
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Kepesertaan mahasiswa dicabut
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/classes/{classId}/enrollments:
+    get:
+      tags: [Enrollments]
+      summary: Daftar mahasiswa yang telah terdaftar di kelas
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: classId
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+      responses:
+        '200':
+          description: Daftar mahasiswa terdaftar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/classes/{classId}/available-students:
+    get:
+      tags: [Enrollments]
+      summary: Daftar mahasiswa aktif yang belum terdaftar di kelas
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: classId
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+      responses:
+        '200':
+          description: Daftar mahasiswa yang tersedia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Mengambil data dasbor kontekstual sesuai role pengguna
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ringkasan dasbor pengguna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /classes:
+    get:
+      tags: [Classes]
+      summary: Mengambil daftar kelas pengguna (Mahasiswa terdaftar / Dosen pengampu)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Daftar kelas pengguna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /classes/{id}:
+    get:
+      tags: [Classes]
+      summary: Mengambil detail ruang kelas dan modul pembelajaran
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Informasi ruang kelas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/audit-logs:
+    get:
+      tags: [Audit Logs]
+      summary: Mengambil daftar rekaman jejak audit sistem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/LimitQuery'
+        - in: query
+          name: action
+          schema: { type: string }
+        - in: query
+          name: entity
+          schema: { type: string }
+        - in: query
+          name: user_id
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Rekaman audit log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /classes/{classId}/meetings:
+    get:
+      tags: [Meetings]
+      summary: Daftar 16 pertemuan terstruktur kelas (BR-004)
+      description: |
+        Mahasiswa hanya menerima pertemuan yang sudah dipublikasikan; Dosen
+        pengampu dan Admin menerima seluruh 16 pertemuan.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: classId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Daftar pertemuan kelas terurut berdasarkan nomor pertemuan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: Pengguna tidak berhak membaca kelas (BR-003)
+        '404':
+          description: Kelas perkuliahan tidak ditemukan
+
+  /meetings/{id}:
+    get:
+      tags: [Meetings]
+      summary: Detail pertemuan beserta materi dan info sesi presensi
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Detail pertemuan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: Pengguna tidak berhak membaca kelas (BR-003)
+        '404':
+          description: Pertemuan tidak ditemukan (atau belum dipublikasikan bagi mahasiswa)
+    put:
+      tags: [Meetings]
+      summary: Dosen pengampu/Admin memperbarui topik, deskripsi, atau publikasi pertemuan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeetingRequest'
+      responses:
+        '200':
+          description: Pertemuan berhasil diperbarui dan tercatat pada audit_logs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Payload tidak valid atau tidak ada data yang diperbarui
+        '403':
+          description: Hanya dosen pengampu atau Admin yang berwenang
+        '404':
+          description: Pertemuan tidak ditemukan

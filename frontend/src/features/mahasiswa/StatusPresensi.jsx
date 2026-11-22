@@ -164,7 +164,7 @@ export default function StatusPresensi({ onNavigate }) {
             className="hover:text-primary transition-colors cursor-pointer"
             type="button"
           >
-            Dasbor
+            Dashboard
           </button>
           <span className="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
           <button
@@ -525,14 +525,14 @@ export default function StatusPresensi({ onNavigate }) {
                   </span>
                 </div>
                 <div className="text-[11px] text-outline leading-tight pt-1">
-                  IP: Kampus UPGRIS (Lab Komputasi 3) • Device: Desktop Browser Chrome 128.0
+                  IP: Kampus (Lab Komputasi 3) • Device: Desktop Browser Chrome 128.0
                 </div>
               </div>
 
               {/* Verification Proof Badge */}
               <div className="rounded-lg bg-surface-container p-space-sm mb-space-md flex items-start gap-space-xs text-on-surface-variant font-caption text-caption leading-snug border border-outline-variant">
                 <span className="material-symbols-outlined text-[16px] text-success-ink mt-0.5">shield</span>
-                <span>Token Sesi Valid — Kehadiran disimpan permanen di database SPADA LMS UPGRIS.</span>
+                <span>Token Sesi Valid — Kehadiran disimpan permanen di database E-Learning Kampus.</span>
               </div>
             </div>
 
@@ -632,7 +632,7 @@ export default function StatusPresensi({ onNavigate }) {
             </div>
             <div>
               <h3 className="font-title-lg text-title-lg text-on-surface">Spesifikasi Aturan Bisnis &amp; Regulasi Presensi (BR-010 s/d BR-012)</h3>
-              <span className="font-body-sm text-body-sm text-on-surface-variant">Pedoman implementasi modul kehadiran mandiri berbasis waktu nyata pada SPADA UPGRIS</span>
+              <span className="font-body-sm text-body-sm text-on-surface-variant">Pedoman implementasi modul kehadiran mandiri berbasis waktu nyata pada E-Learning Kampus</span>
             </div>
           </div>
           <span className="inline-flex items-center gap-1 px-space-sm py-1 rounded bg-surface-container-high text-tertiary font-label-sm text-label-sm font-semibold border border-tertiary/20 self-start sm:self-auto">

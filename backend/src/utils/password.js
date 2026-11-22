@@ -23,7 +23,7 @@ export async function comparePassword(password, hashedPassword) {
 }
 
 /**
- * Validasi kompleksitas password sesuai standar keamanan SPADA (SRS Bab 35)
+ * Validasi kompleksitas password sesuai standar keamanan E-Learning Kampus (SRS Bab 35)
  * @param {string} password
  * @returns {object} {isValid: boolean, message: string}
  */

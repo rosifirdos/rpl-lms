@@ -6,7 +6,7 @@ import { useAuthStore } from '../../stores/authStore';
 /**
  * AppShellGlobal â€” Feature Component
  *
- * Implementasi React untuk App Shell Global SPADA LMS UPGRIS.
+ * Implementasi React untuk App Shell Global E-Learning Kampus.
  * Memanfaatkan AppShell tunggal modular dengan penegakan RBAC,
  * role visual switcher, banner sambutan dinamis, stat cards,
  * central timeline perkuliahan, dan modul akses cepat kelas.
@@ -84,7 +84,7 @@ export default function AppShellGlobal({ currentRole = 'mahasiswa', onRoleChange
               className="hover:text-primary transition-colors flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[16px]">home</span>
-              <span>SPADA UPGRIS</span>
+              <span>E-Learning Kampus</span>
             </a>
             <span className="material-symbols-outlined text-[14px]">chevron_right</span>
             <span className="text-secondary font-semibold capitalize">App Shell Global ({activeRole})</span>
@@ -136,7 +136,7 @@ export default function AppShellGlobal({ currentRole = 'mahasiswa', onRoleChange
           <div className="flex items-center gap-space-xs">
             <span className="material-symbols-outlined text-primary text-[20px]">account_tree</span>
             <h2 className="font-title-md text-title-md text-on-surface font-semibold">
-              Arsitektur Navigasi Multi-Peran SPADA LMS
+              Arsitektur Navigasi Multi-Peran E-Learning Kampus
             </h2>
           </div>
           <span className="font-caption text-caption text-outline">Role-Based Access Control Mode</span>
@@ -172,8 +172,7 @@ export default function AppShellGlobal({ currentRole = 'mahasiswa', onRoleChange
               )}
             </div>
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Dasbor, Kelas Saya, Panduan Belajar, Central Timeline, Rekap Nilai &amp; Presensi
-            </p>
+              Dashboard, Kelas Saya, Panduan Belajar, Central Timeline, Rekap Nilai & Presensi         </p>
           </button>
 
           {/* Tab 2: Dosen */}
@@ -202,7 +201,7 @@ export default function AppShellGlobal({ currentRole = 'mahasiswa', onRoleChange
               )}
             </div>
             <p className="font-body-sm text-body-sm text-outline">
-              Dasbor Dosen, Kelas Diampu, Panduan Dosen, Central Timeline, Pemeriksaan Tugas
+              Dashboard Dosen, Kelas Diampu, Panduan Dosen, Central Timeline, Pemeriksaan Tugas
             </p>
           </button>
 
@@ -221,7 +220,7 @@ export default function AppShellGlobal({ currentRole = 'mahasiswa', onRoleChange
             <div className="flex items-center justify-between mb-space-xs">
               <span className="font-label-md text-label-md font-bold text-on-surface flex items-center gap-space-xs">
                 <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
-                Administrator SPADA
+                Administrator E-Learning Kampus
               </span>
               {activeRole === 'admin' ? (
                 <span className="px-2 py-0.5 rounded bg-primary-container text-on-primary-container font-caption text-caption uppercase font-semibold">

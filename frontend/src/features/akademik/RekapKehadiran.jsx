@@ -158,7 +158,7 @@ export default function RekapKehadiran({ onNavigate, onRoleChange, activeRole = 
               className="hover:text-primary transition-colors flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[16px]">home</span>
-              Dasbor
+              Dashboard
             </button>
             <span>/</span>
             <button

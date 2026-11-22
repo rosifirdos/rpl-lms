@@ -1,4 +1,4 @@
-# SPADA LMS — Universitas PGRI Semarang
+# E-Learning Kampus — Universitas
 > **Sistem Pembelajaran Daring (Learning Management System)**
 > **Team Membangun Negeri — RPL 2026**
 
@@ -6,7 +6,7 @@
 
 ## Tentang
 
-SPADA LMS adalah sistem manajemen pembelajaran daring (*Learning Management System*) standalone untuk Universitas PGRI Semarang (UPGRIS). Sistem ini mendukung perkuliahan daring dan blended learning dengan fitur:
+E-Learning Kampus adalah sistem manajemen pembelajaran daring (*Learning Management System*) standalone untuk Universitas. Sistem ini mendukung perkuliahan daring dan blended learning dengan fitur:
 
 - **Profil pengguna** dengan avatar dan data identitas
 - **Pengelolaan mata kuliah & kelas** oleh Admin
@@ -36,7 +36,7 @@ SPADA LMS adalah sistem manajemen pembelajaran daring (*Learning Management Syst
 |-------------|-----------|
 | **Admin**    | Pengelola teknis & operasional (peleburan Super Admin/Admin Akademik/Admin LMS) |
 | **Dosen**    | Tenaga pendidik pengampu kelas |
-| **Mahasiswa**| Peserta didik yang terdaftar pada kelas SPADA |
+| **Mahasiswa**| Peserta didik yang terdaftar pada kelas E-Learning Kampus |
 
 ## Quick Start
 
@@ -143,4 +143,4 @@ Semua endpoint menggunakan path flat `/api/...` (bukan `/api/v1/...`). Lihat `SR
 
 ## Tim
 
-**Team Membangun Negeri** — Rekayasa Perangkat Lunak, Universitas PGRI Semarang (UPGRIS)
+**Team Membangun Negeri** — Rekayasa Perangkat Lunak, Universitas

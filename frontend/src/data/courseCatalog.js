@@ -170,7 +170,7 @@ const rawCourses = [
           'Teknik elisitasi kebutuhan pengguna (wawancara, kuesioner), pemisahan kebutuhan fungsional & non-fungsional, serta format baku dokumen SRS IEEE 830.',
         materials: [
           { name: 'Modul 03 — Elisitasi & Spesifikasi SRS IEEE 830.pdf', size: '3.1 MB', type: 'pdf' },
-          { name: 'Template Dokumen SRS Standar UPGRIS.docx', size: '540 KB', type: 'doc' },
+          { name: 'Template Dokumen SRS Standar Universitas.docx', size: '540 KB', type: 'doc' },
         ],
       },
       4: {

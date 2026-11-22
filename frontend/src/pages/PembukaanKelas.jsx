@@ -1,7 +1,7 @@
 /**
  * pages/PembukaanKelas.jsx
  *
- * Halaman-level wrapper untuk Pembukaan Kelas SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Pembukaan Kelas E-Learning Kampus.
  * Menggunakan AppShell terpusat dengan RBAC enforcement.
  */
 import PembukaanKelas from '../features/admin/PembukaanKelas';

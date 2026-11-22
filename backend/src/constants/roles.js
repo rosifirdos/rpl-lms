@@ -1,8 +1,8 @@
 /**
- * Peran pengguna SPADA LMS (SRS Bab 3 — Role Tunggal)
+ * Peran pengguna E-Learning Kampus (SRS Bab 3 — Role Tunggal)
  *
  * Tiga peran resmi (IMPLEMENTATION_PLAN_MVP1_BACKEND.md Bab 3 & SRS Bab 13):
- *   - mahasiswa  : peserta didik yang terdaftar pada kelas SPADA
+ *   - mahasiswa  : peserta didik yang terdaftar pada kelas E-Learning Kampus
  *   - dosen      : tenaga pendidik pengampu kelas
  *   - admin      : pengelola teknis & operasional (role tunggal)
  */

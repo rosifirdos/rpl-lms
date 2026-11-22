@@ -1,7 +1,7 @@
 ﻿/**
  * pages/PemeriksaanTugas.jsx
  *
- * Halaman-level wrapper untuk Pemeriksaan Tugas & Rubrik Penilaian Dosen SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Pemeriksaan Tugas & Rubrik Penilaian Dosen E-Learning Kampus.
  */
 import PemeriksaanTugas from '../features/dosen/PemeriksaanTugas';
 

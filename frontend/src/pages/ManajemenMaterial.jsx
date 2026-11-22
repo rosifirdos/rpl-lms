@@ -1,7 +1,7 @@
 /**
  * pages/ManajemenMaterial.jsx
  *
- * Halaman-level wrapper untuk Manajemen Materi Pembelajaran (Dosen) SPADA LMS UPGRIS.
+ * Halaman-level wrapper untuk Manajemen Materi Pembelajaran (Dosen) E-Learning Kampus.
  * Mengikuti konvensi page-wrapper `main`: passthrough tipis — layout shell
  * (Header, Sidebar ber-RBAC, ChangePasswordModal, toast) disediakan oleh AppShell
  * di dalam feature component.

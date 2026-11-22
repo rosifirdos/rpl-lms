@@ -13,7 +13,7 @@ export default function Profile({ onRoleChange, onNavigate, activeRole = 'mahasi
   // Biodata form state
   const [fullName, setFullName] = useState(storeUser?.name || fixture.name);
   const [phone, setPhone] = useState('0812-3456-7890');
-  const [bio, setBio] = useState('Mahasiswa aktif Fakultas Pendidikan Teknologi Informasi dan Komunikasi (FPTIK) Universitas PGRI Semarang.');
+  const [bio, setBio] = useState('Mahasiswa aktif Fakultas Teknologi Informasi.');
   const [avatarUrl, setAvatarUrl] = useState(null);
 
   // Security form state
@@ -182,7 +182,7 @@ export default function Profile({ onRoleChange, onNavigate, activeRole = 'mahasi
               <span>&bull;</span>
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[16px]">school</span>
-                FPTIK UPGRIS
+                Fakultas Teknologi Informasi
               </span>
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function Profile({ onRoleChange, onNavigate, activeRole = 'mahasi
                 value={fixture.identifier}
                 className="w-full px-3 py-2.5 rounded-lg bg-surface-container-high border border-outline-variant/20 text-on-surface-variant font-mono text-body-md cursor-not-allowed"
               />
-              <span className="text-[11px] text-outline mt-1 block">Dikelola langsung oleh Pusat PTIK UPGRIS (Read-only).</span>
+              <span className="text-[11px] text-outline mt-1 block">Dikelola langsung oleh Pusat Kampus (Read-only).</span>
             </div>
 
             <div>

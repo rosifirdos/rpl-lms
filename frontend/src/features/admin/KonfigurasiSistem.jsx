@@ -22,7 +22,7 @@ export default function KonfigurasiSistem({ onRoleChange, onNavigate }) {
 
   const handleSaveConfig = (e) => {
     e.preventDefault();
-    showToast('Konfigurasi sistem SPADA LMS berhasil diperbarui dan diterapkan ke seluruh klaster server.');
+    showToast('Konfigurasi sistem E-Learning Kampus berhasil diperbarui dan diterapkan ke seluruh klaster server.');
   };
 
   const handleResetDefaults = () => {
@@ -34,7 +34,7 @@ export default function KonfigurasiSistem({ onRoleChange, onNavigate }) {
     setAllowedExtensions('pdf, docx, pptx, zip, jpg, png');
     setAntiMalwareScan(true);
     setMaintenanceMode(false);
-    showToast('Parameter sistem telah dikembalikan ke standar rekomendasi UPGRIS PTIK.');
+    showToast('Parameter sistem telah dikembalikan ke standar rekomendasi Kampus.');
   };
 
   return (
@@ -67,10 +67,10 @@ export default function KonfigurasiSistem({ onRoleChange, onNavigate }) {
           className="hover:text-primary transition-colors flex items-center gap-1"
         >
           <span className="material-symbols-outlined text-[16px]">home</span>
-          <span>Dasbor Admin</span>
+          <span>Dashboard Admin</span>
         </a>
         <span className="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
-        <span className="text-secondary font-semibold">Konfigurasi Sistem &amp; Kebijakan SPADA</span>
+        <span className="text-secondary font-semibold">Konfigurasi Sistem &amp; Kebijakan E-Learning Kampus</span>
       </nav>
 
       {/* Header Banner */}
@@ -79,10 +79,10 @@ export default function KonfigurasiSistem({ onRoleChange, onNavigate }) {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-primary-container text-on-primary-container font-label-sm text-[12px] font-bold">
-                PTIK Core System v2.4
+                E-Learning Core System v2.4
               </span>
               <span className="font-caption text-caption text-on-surface-variant">
-                Pengaturan Global LMS UPGRIS
+                Pengaturan Global LMS Kampus
               </span>
             </div>
             <h1 className="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">
@@ -379,7 +379,7 @@ export default function KonfigurasiSistem({ onRoleChange, onNavigate }) {
                 Mode Pemeliharaan (Maintenance Mode)
               </span>
               <span className="font-caption text-caption text-on-surface-variant block">
-                Hanya akun Admin PTIK yang dapat mengakses antarmuka ketika mode ini diaktifkan.
+                Hanya akun Admin Kampus yang dapat mengakses antarmuka ketika mode ini diaktifkan.
               </span>
             </div>
           </label>

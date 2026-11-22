@@ -5,12 +5,12 @@
     <!--
       Anti-flash: tentukan tema SEBELUM paint pertama.
       Default adalah CERAH; class `dark` hanya dipasang bila pengguna pernah
-      memilih mode gelap (localStorage key: spada-theme).
+      memilih mode gelap (localStorage key: elearning-theme).
     -->
     <script>
       (function () {
         try {
-          var saved = localStorage.getItem('spada-theme');
+          var saved = localStorage.getItem('elearning-theme');
           if (saved === 'dark') {
             document.documentElement.classList.add('dark');
             document.documentElement.style.colorScheme = 'dark';
@@ -24,12 +24,12 @@
     </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SPADA UPGRIS - Dasbor Pembelajaran Mahasiswa</title>
+    <title>E-Learning Kampus - Dasbor Pembelajaran Mahasiswa</title>
     <!-- Google Fonts & Material Symbols -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link

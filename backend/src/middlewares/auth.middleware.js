@@ -5,7 +5,7 @@ import { apiResponse } from '../utils/apiResponse.js';
 /**
  * Middleware untuk memverifikasi JWT Access Token.
  *
- * Revised SPADA LMS: role disimpan langsung di field `user.role` (enum),
+ * Revised E-Learning Kampus: role disimpan langsung di field `user.role` (enum),
  * bukan di tabel relasi `user_roles → role → role_permissions`.
  */
 export async function authenticateToken(req, res, next) {
@@ -24,6 +24,14 @@ export async function authenticateToken(req, res, next) {
         statusCode: 401,
         message: 'Akses ditolak: Token autentikasi tidak valid',
       });
+    }
+
+    // Idempoten: beberapa mount router berbagi prefiks `/api/classes` dan
+    // `/api/meetings` (mis. rute Fase 2 + Fase 4), sehingga middlewares ini
+    // dapat berjalan lebih dari sekali untuk satu request. Setelah `req.user`
+    // terisi oleh pemanggilan pertama, kueri database tidak diulang.
+    if (req.user?.id) {
+      return next();
     }
 
     let decoded;

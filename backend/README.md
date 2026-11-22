@@ -1,8 +1,8 @@
-﻿# Backend API: SPADA (Learning Management System)
+﻿# Backend API: E-Learning Kampus (Learning Management System)
 
-Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan PostgreSQL untuk **SPADA LMS — Universitas PGRI Semarang**.
+Implementasi backend REST API berbasis Node.js, Express, dan Prisma ORM dengan PostgreSQL untuk **E-Learning Kampus — Universitas**.
 
-Mengacu pada dokumen [SRS.md](../SRS.md) hasil revisi (fokus eksklusif modul SPADA/LMS).
+Mengacu pada dokumen [SRS.md](../SRS.md) hasil revisi (fokus eksklusif modul E-Learning Kampus/LMS).
 
 > **Catatan revisi (BR-001 & BR-002):** Seluruh modul di luar kegiatan pembelajaran digital (SIA, PMB, KRS manual, KHS, transkrip, sidang) **telah dihapus dari ruang lingkup**. Peran disederhanakan menjadi **3 role tunggal**; Dosen Wali/PA dan varian Admin multirangkap ditiadakan. Enrollment mahasiswa ke kelas dilakukan langsung oleh Admin.
 
@@ -24,7 +24,7 @@ Mengacu pada dokumen [SRS.md](../SRS.md) hasil revisi (fokus eksklusif modul SPA
 | --- | --- |
 | `admin` | Pengelola teknis & operasional sistem (peran tunggal — menyatukan Super Admin, Admin Akademik, Admin LMS). |
 | `dosen` | Tenaga pendidik pengampu kelas perkuliahan. |
-| `mahasiswa` | Peserta didik yang terdaftar pada kelas SPADA (via enrollment Admin). |
+| `mahasiswa` | Peserta didik yang terdaftar pada kelas E-Learning Kampus (via enrollment Admin). |
 
 ## Struktur Modul
 
@@ -131,7 +131,32 @@ npm run db:seed         # Isi akun pengguna & master awal
 ```bash
 npm run dev             # Mode development (nodemon)
 npm start               # Mode produksi
-npm test                # Menjalankan seluruh pengujian otomatis (70 test, Fase 2–4)
+npm test                # Menjalankan seluruh pengujian otomatis (Fase 2–6)
+```
+
+## Dokumentasi API Fase 6
+
+Dokumentasi OpenAPI 3.0 untuk seluruh endpoint MVP 1 tersedia di [docs/openapi.yaml](docs/openapi.yaml). Dokumen tersebut mencakup autentikasi, manajemen pengguna, mata kuliah, kelas, enrollment, dashboard, ruang kelas, dan audit log.
+
+Komitmen pengujian Fase 6 memvalidasi regresi alur utama, RBAC, penolakan akun suspended, kapasitas enrollment, jejak audit, serta kelengkapan artefak OpenAPI.
+
+Dokumen tersebut **diparse sebagai YAML** oleh `tests/openapi.js` dan divalidasi secara struktural pada `tests/phase6.test.js`: keberadaan setiap operasi HTTP, `requestBody` bertipe objek pada seluruh operasi mutasi, respons 2xx ber-skema, parameter path yang terdeklarasi, serta integritas seluruh `$ref`. Pencocokan substring pada teks mentah sudah tidak dipakai lagi.
+
+### Isolasi Database Pengujian (DoD B4)
+
+`tests/setup.js` berjalan sebelum seluruh suite (via `--import ./tests/setup.js`) dan **memaksa pengujian terhubung ke database non-operasional `rpl_review`**:
+
+- Bila `DATABASE_URL` menunjuk `rpl_lms` (database operasional), setup otomatis mengganti nama database menjadi `rpl_review` dan mencatat peralihan itu di log.
+- Developer dapat menetapkan `DATABASE_URL_TEST` secara eksplisit untuk memakai database uji lain.
+- Guard terakhir menolak proses bila hasil resolusi tetap menunjuk ke `rpl_lms`.
+- `cleanupTestArtifacts()` menyapu sisa kelas uji (prefix `TEST-` dan `KAP-`) sebagai jaring pengaman bila sebuah suite terhenti sebelum blok `finally`/`after()`-nya berjalan. Data seed tidak pernah tersentuh.
+
+Siapkan database uji sekali di awal:
+
+```bash
+createdb rpl_review
+DATABASE_URL="postgresql://postgres:password@localhost:5432/rpl_review?schema=public" npx prisma migrate deploy
+DATABASE_URL="postgresql://postgres:password@localhost:5432/rpl_review?schema=public" npm run db:seed
 ```
 
 ### 4. Database Alternatif (Embedded Postgres)
@@ -146,11 +171,11 @@ Password default seluruh akun: `password123`
 
 | Role | Username | Email | Keterangan |
 | --- | --- | --- | --- |
-| Admin | `admin` | `admin@upgris.ac.id` | Administrator SPADA |
-| Dosen | `198501152010121002` | `budi.santoso@upgris.ac.id` | NIDN sebagai username |
-| Dosen | `199003202015042001` | `siti.aminah@upgris.ac.id` | NIDN sebagai username |
-| Dosen | `197805102003122001` | `hadi.wijaya@upgris.ac.id` | NIDN sebagai username |
-| Mahasiswa | `2024001001`–`2024001010` | `<nim>@mhs.upgris.ac.id` | NIM sebagai username |
+| Admin | `admin` | `admin@kampus.ac.id` | Administrator E-Learning Kampus |
+| Dosen | `198501152010121002` | `budi.santoso@kampus.ac.id` | NIDN sebagai username |
+| Dosen | `199003202015042001` | `siti.aminah@kampus.ac.id` | NIDN sebagai username |
+| Dosen | `197805102003122001` | `hadi.wijaya@kampus.ac.id` | NIDN sebagai username |
+| Mahasiswa | `2024001001`–`2024001010` | `<nim>@mhs.kampus.ac.id` | NIM sebagai username |
 
 Seeder juga membuat 5 master mata kuliah (`TIF101`–`TIF105`) dan 2 kelas perkuliahan (`TI-A`, `SI-B`) untuk tahun ajaran `2026/2027` semester `ganjil`.
 
@@ -166,11 +191,12 @@ Seeder juga membuat 5 master mata kuliah (`TIF101`–`TIF105`) dan 2 kelas perku
   - Endpoint peninjau jejak audit untuk Admin: `GET /api/admin/audit-logs` (filter tanggal, aksi, entitas, user, search, sorting, pagination) dan `GET /api/admin/audit-logs/:id` (detail JSON diff).
   - Endpoint reset password Admin: `PUT /api/admin/users/:id/reset-password`.
   - HTTP Security Hardening: Helmet security headers, CORS terproteksi dengan validasi origin ketat, general & auth rate limiting (`express-rate-limit`).
-- ✅ **Fase 4: Master Data Akademik SPADA (Selesai — 5 test integrasi)**
+- ✅ **Fase 4: Master Data Akademik E-Learning Kampus (Selesai — 5 test integrasi)**
   - Manajemen pengguna Admin: pencarian username/email/nama/NIM/NIDN/NIP, filter role/status, dan pembuatan akun dengan identitas mahasiswa/dosen.
   - CRUD mata kuliah dengan pencarian, paginasi, validasi SKS 1–6, dan penonaktifan yang mempertahankan relasi kelas.
   - CRUD kelas dengan filter akademik, validasi mata kuliah/dosen aktif, jejak audit, dan perlindungan kapasitas serta enrollment.
-  - Seluruh pengujian otomatis Fase 2–4: **70 test**.
+  - Suite backend saat ini mencakup Fase 2–6; jumlah aktual ditampilkan oleh `npm test`.
+  - Pengujian Fase 6 menambahkan validasi kepatuhan, kapasitas enrollment konkuren, dan dokumentasi handoff OpenAPI.
 
 ### Modul SRS yang **belum diimplementasikan**
 
