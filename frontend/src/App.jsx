@@ -12,6 +12,7 @@ import ForgotPasswordPage from './pages/ForgotPassword';
 import MasterMataKuliah from './pages/MasterMataKuliah';
 import PembukaanKelas from './pages/PembukaanKelas';
 import JejakAudit from './pages/JejakAudit';
+import RekapKehadiran from './pages/RekapKehadiran';
 
 // Tabel rute modul aplikasi LMS
 const ROUTES = {
@@ -19,6 +20,8 @@ const ROUTES = {
   'master-mata-kuliah': MasterMataKuliah,
   'pembukaan-kelas': PembukaanKelas,
   'jejak-audit': JejakAudit,
+  'rekap-kehadiran': RekapKehadiran,
+  'rekap-nilai-dan-presensi': RekapKehadiran,
 };
 
 // Ekstrak route key bersih dari URL (query param ?page= atau pathname)
