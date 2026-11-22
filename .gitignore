@@ -23,5 +23,3 @@ backend/storage/private/**/*
 frontend/stitch-handoff/**/*.html
 *.html
 !frontend/index.html
-!Dasbor_Admin React.html
-!unggah_materi React.html
