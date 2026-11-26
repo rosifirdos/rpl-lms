@@ -1,0 +1,30 @@
+export const DEFAULT_CONFIG = {
+  allowedExtensions: ['.pdf', '.docx', '.xlsx', '.zip'],
+  payloadLimit: 10,
+  mimeTypeCheck: true,
+  privateStorage: true,
+  attendanceThreshold: 70,
+  attendanceTolerance: '15',
+  autoCloseAttendance: true,
+  academicYear: '2026/2027',
+  semester: 'ganjil',
+  standardMeetings: 16,
+  directEnrollment: true,
+  auditLoggingLevel: 'verbose',
+  auditRetention: '10 Tahun',
+};
+
+export const BLACKLISTED_EXTENSIONS = [
+  '.exe',
+  '.sh',
+  '.php',
+  '.js',
+  '.bat',
+  '.cmd',
+  '.py',
+  '.jar',
+  '.msi',
+  '.vbs',
+  '.scr',
+  '.com',
+];
