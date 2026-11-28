@@ -483,16 +483,18 @@ Komponen berikut dipakai berulang oleh Fase 2–4 dan harus selesai lebih dulu:
 
 ---
 
-### Fase 4: Lembar Penilaian Skor 0–100 & Feedback (Hari 6) — ⬜ **BELUM**
+### Fase 4: Lembar Penilaian Skor 0–100 & Feedback (Hari 6) — ✅ **SELESAI**
+**Mulai:** 2026-11-28
+**Selesai:** 2026-11-28
 
-- [ ] Implementasi `PUT /api/submissions/:id/grade`:
+- [x] Implementasi `PUT /api/submissions/:id/grade`:
   - Otorisasi `ensureCanManageClass` melalui `submission → assignment → meeting → class`.
   - Validasi Zod: `score` wajib, `min(0)`, `max(100)`, maksimal 2 desimal (refine `Number.isInteger(score * 100)`); `feedback` opsional maks. 2000 karakter, boleh `null` untuk mengosongkan.
   - Simpan `score`, `feedback`, `graded_at = new Date()`.
   - Audit `GRADE_SUBMISSION` dengan `old_values { score, feedback }` dan `new_values { score, feedback }` — wajib menangkap **perubahan skor** (FR-058, TC-024).
   - Kembalikan submission terserialisasi (score sebagai `number`).
-- [ ] Pastikan mahasiswa melihat hasil melalui `GET /api/assignments/:assignmentId/submission` dan detail tugas (`my_submission`) tanpa bisa mengubahnya.
-- [ ] **Pengujian `tests/mvp3-phase4.test.js`:**
+- [x] Pastikan mahasiswa melihat hasil melalui `GET /api/assignments/:assignmentId/submission` dan detail tugas (`my_submission`) tanpa bisa mengubahnya.
+- [x] **Pengujian `tests/mvp3-phase4.test.js`:**
   - Skor batas `0` dan `100` diterima; `0.5`/`87.25` diterima; `-0.01`, `100.01`, `85.555`, non-angka ditolak `400`.
   - `feedback` tersimpan dan terbaca mahasiswa; `feedback: null` mengosongkan.
   - Mahasiswa tidak dapat menilai (`403`); dosen non-pengampu (`403`); Admin boleh.
@@ -570,7 +572,7 @@ Komponen berikut dipakai berulang oleh Fase 2–4 dan harus selesai lebih dulu:
 | 1 — Migrasi Skema | ✅ | 2026-11-27 | 2026-11-27 | `npx prisma validate` OK; `npm test` 220/220 lulus | Migrasi `20261127163147_add_elearning_mvp3_assignments_submissions` diterapkan ke `rpl_lms` & `rpl_review`; delegate `assignment`/`submission` terverifikasi |
 | 2 — Penerbitan Tugas | ✅ | 2026-11-28 | 2026-11-28 | `mvp3-phase2.test.js` 3/3; `npm test` 225/225 lulus | Modul assignments + tes CRUD/publikasi/RBAC/unduh/filter draft; revisi temuan review |
 | 3 — Submission & Validasi Berkas | ✅ | 2026-11-28 | 2026-11-28 | `mvp3-phase3.test.js` 2/2; `npm test` 225/225 lulus | Modul submissions + validasi magic-byte/deadline/private storage/resubmission; revisi temuan review |
-| 4 — Penilaian 0–100 | ⬜ | — | — | — | — |
+| 4 — Penilaian 0–100 | ✅ | 2026-11-28 | 2026-11-28 | `mvp3-phase4.test.js` 2/2; `npm test` 227/227 lulus | Modul grading skor 0–100 + feedback + audit GRADE_SUBMISSION; DTO Zod + RBAC dosen/admin |
 | 5 — Integrasi & Handoff | ⬜ | — | — | — | — |
 
 ### 9.2 Log Progress
@@ -584,6 +586,7 @@ Komponen berikut dipakai berulang oleh Fase 2–4 dan harus selesai lebih dulu:
 | 2026-11-28 | 2–3 | Perbaikan review: checklist tes permanen diperluas, late roster dihitung dari `is_late`, PUT file-only diizinkan, cleanup berkas dibungkus try/finally, kontras `_count.submissions` ditambah, dan validasi soal memakai `STORAGE.DOC_MAX_SIZE`. | `assignment.dto.js`, `assignment.service.js`, `submission.service.js`, `mvp3-phase2.test.js`, `mvp3-phase3.test.js`, `IMPLEMENTATION_PLAN_MVP3_BACKEND.md` | Fase 2–3 3/3 lulus; `npm test` 223/223 lulus; `prisma validate` OK | b9b071c |
 | 2026-11-28 | 2–3 | Pelengkapan bukti review Fase 1: tambah tes Admin/tanpa soal, filter draft untuk mahasiswa, RBAC mutasi dosen lain/mahasiswa, unduh soal 403/401, dan assertion lokasi private storage submissions. | `backend/tests/mvp3-phase2.test.js`, `backend/tests/mvp3-phase3.test.js`, `IMPLEMENTATION_PLAN_MVP3_BACKEND.md` | Fase 2 3/3 dan Fase 3 2/2 lulus; `npm test` 225/225 lulus | e46a153 |
 | 2026-11-28 | 2–3 | Perapian kontrak: hapus field duplikat `submission_count` dan pertahankan `_count.submissions`; pesan batas ukuran soal diturunkan dari `maxSize`. Tes daftar tugas dosen ikut mengunci bentuk kontrak. | `backend/src/modules/assignments/assignment.service.js`, `backend/tests/mvp3-phase2.test.js`, `IMPLEMENTATION_PLAN_MVP3_BACKEND.md` | `npm test` 225/225 lulus | 8ffa08a |
+| 2026-11-28 | 4 | Implementasi PUT /api/submissions/:id/grade: Zod DTO score 0–100 (maks 2 desimal), feedback opsional 2000 karakter, service gradeSubmission dengan audit GRADE_SUBMISSION (old/new values), controller, route. Tes mencakup batas skor, feedback null, RBAC mahasiswa 403/dosen-lain 403/admin 200, perubahan skor multi-audit, isolasi submission antar mahasiswa. | `submission.dto.js`, `submission.service.js`, `submission.controller.js`, `submission.routes.js`, `mvp3-phase4.test.js`, `IMPLEMENTATION_PLAN_MVP3_BACKEND.md` | Fase 4 2/2 lulus; `npm test` 227/227 lulus | bbb2741 |
 
 **Format acuan baris baru (jangan dihapus; tambahkan baris di bawah tabel):**
 

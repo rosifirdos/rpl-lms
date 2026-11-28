@@ -5,7 +5,7 @@ import { uploadSubmission } from '../../middlewares/upload.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { ROLES } from '../../constants/roles.js';
 import { SubmissionController } from './submission.controller.js';
-import { assignmentIdParamSchema, submissionIdParamSchema } from './submission.dto.js';
+import { assignmentIdParamSchema, gradeSubmissionSchema, submissionIdParamSchema } from './submission.dto.js';
 
 export const assignmentSubmissionRoutes = Router();
 assignmentSubmissionRoutes.use(authenticateToken);
@@ -39,4 +39,12 @@ submissionRoutes.get(
   requireRole(ROLES.MAHASISWA, ROLES.DOSEN, ROLES.ADMIN),
   validate(submissionIdParamSchema),
   SubmissionController.download
+);
+
+// Penilaian tugas (skor 0–100 & feedback) — hanya dosen pengampu/Admin (FR-035).
+submissionRoutes.put(
+  '/:id/grade',
+  requireRole(ROLES.DOSEN, ROLES.ADMIN),
+  validate(gradeSubmissionSchema),
+  SubmissionController.grade
 );

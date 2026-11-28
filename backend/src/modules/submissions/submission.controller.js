@@ -50,4 +50,20 @@ export class SubmissionController {
       return stream.pipe(res);
     } catch (error) { return next(error); }
   }
+
+  static async grade(req, res, next) {
+    try {
+      const info = extractClientInfo(req);
+      const submission = await SubmissionService.gradeSubmission({
+        submissionId: req.params.id,
+        payload: req.body,
+        user: req.user,
+        ...info,
+      });
+      return apiResponse.success(res, {
+        message: 'Penilaian submission berhasil disimpan',
+        data: submission,
+      });
+    } catch (error) { return next(error); }
+  }
 }

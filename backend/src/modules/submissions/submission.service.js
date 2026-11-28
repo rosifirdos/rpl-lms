@@ -268,4 +268,68 @@ export class SubmissionService {
     try { await fs.access(filePath); } catch { throw new AppError('Berkas jawaban tidak ditemukan', 404); }
     return { filePath, fileName: submission.file.original_name, mimeType: submission.file.mime_type };
   }
+
+  static async gradeSubmission({ submissionId, payload, user, ipAddress, userAgent }) {
+    const submission = await prisma.submission.findUnique({
+      where: { id: submissionId },
+      include: {
+        assignment: {
+          include: {
+            meeting: {
+              include: {
+                class: {
+                  include: {
+                    lecturer: { select: { user_id: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    if (!submission) {
+      throw new AppError('Submission tidak ditemukan', 404);
+    }
+
+    ensureCanManageClass(submission.assignment.meeting.class, user);
+
+    const oldValues = {
+      score: number(submission.score),
+      feedback: submission.feedback,
+    };
+
+    const newFeedback = payload.feedback !== undefined ? payload.feedback : submission.feedback;
+    const gradedAt = new Date();
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const res = await tx.submission.update({
+        where: { id: submissionId },
+        data: {
+          score: payload.score,
+          feedback: newFeedback,
+          graded_at: gradedAt,
+        },
+      });
+
+      await AuditLogService.record({
+        userId: user.id,
+        action: 'GRADE_SUBMISSION',
+        entity: AUDIT_ENTITIES.SUBMISSIONS,
+        entityId: submissionId,
+        oldValues,
+        newValues: {
+          score: number(payload.score),
+          feedback: newFeedback,
+        },
+        ipAddress,
+        userAgent,
+        dbClient: tx,
+      });
+
+      return res;
+    });
+
+    return serializeSubmission(updated);
+  }
 }
