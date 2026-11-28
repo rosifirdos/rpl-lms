@@ -316,7 +316,7 @@ describe('Fase 2: Autentikasi, Manajemen Sesi & RBAC Guard', () => {
       assert.equal(res.status, 200);
       const json = await res.json();
       assert.equal(json.success, true);
-      assert.match(json.message, /tautan verifikasi pemulihan kata sandi/i);
+      assert.match(json.message, /tautan pemulihan kata sandi telah dikirim/i);
     });
   });
 

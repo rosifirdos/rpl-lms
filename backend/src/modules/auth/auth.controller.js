@@ -114,4 +114,42 @@ export class AuthController {
       return next(error);
     }
   }
+
+  static async validateResetToken(req, res, next) {
+    try {
+      const { token } = req.query;
+
+      const result = await AuthService.validateResetToken({ token });
+
+      return apiResponse.success(res, {
+        statusCode: 200,
+        message: 'Tautan reset kata sandi valid.',
+        data: result,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  static async resetPassword(req, res, next) {
+    try {
+      const { token, newPassword } = req.body;
+      const ipAddress = req.ip || req.headers['x-forwarded-for'];
+      const userAgent = req.headers['user-agent'];
+
+      const result = await AuthService.resetPassword({
+        token,
+        newPassword,
+        ipAddress,
+        userAgent,
+      });
+
+      return apiResponse.success(res, {
+        statusCode: 200,
+        message: result.message,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }

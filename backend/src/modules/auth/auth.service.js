@@ -1,5 +1,13 @@
+import crypto from 'node:crypto';
 import prisma from '../../config/prisma.js';
-import { hashPassword, comparePassword } from '../../utils/password.js';
+import { ENV, PASSWORD_RESET_TTL_MINUTES } from '../../config/env.js';
+import {
+  hashPassword,
+  comparePassword,
+  validatePasswordComplexity,
+} from '../../utils/password.js';
+import { sendMail } from '../../utils/mailer.js';
+import { buildPasswordResetEmail } from '../../utils/emailTemplates.js';
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -9,6 +17,14 @@ import {
 } from '../../utils/token.js';
 import { AppError } from '../../utils/errors.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
+
+/** Pesan aman anti-enumerasi untuk alur lupa kata sandi (FR-003). */
+const FORGOT_PASSWORD_GENERIC_MESSAGE =
+  'Jika akun terdaftar pada sistem kami, tautan pemulihan kata sandi telah dikirimkan ke alamat email terkait.';
+
+/** Pesan baku ketika token reset tidak valid, kedaluwarsa, atau telah dipakai. */
+const RESET_TOKEN_INVALID_MESSAGE =
+  'Tautan reset kata sandi tidak valid atau telah kedaluwarsa.';
 
 export class AuthService {
   /**
@@ -239,7 +255,11 @@ export class AuthService {
   }
 
   /**
-   * Lupa Kata Sandi (FR-003)
+   * Lupa Kata Sandi (FR-003) — terbitkan token reset & kirim email.
+   *
+   * Anti-enumerasi: respons selalu generik, baik akun ada maupun tidak.
+   * Kegagalan pengiriman email tidak mengubah respons (tetap 200) agar
+   * keberadaan akun tidak dapat ditebak dari perbedaan perilaku.
    */
   static async forgotPassword({ identifier, ipAddress, userAgent }) {
     const user = await prisma.user.findFirst({
@@ -251,9 +271,45 @@ export class AuthService {
           { dosen: { OR: [{ nidn: identifier }, { nip: identifier }] } },
         ],
       },
+      include: {
+        profile: { select: { full_name: true } },
+      },
     });
 
     if (user) {
+      // Cabut seluruh token reset lama yang masih berlaku (sekali aktif per user).
+      await prisma.passwordResetToken.updateMany({
+        where: { user_id: user.id, used_at: null },
+        data: { used_at: new Date() },
+      });
+
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = hashToken(rawToken);
+      const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_MINUTES * 60 * 1000);
+
+      await prisma.passwordResetToken.create({
+        data: {
+          user_id: user.id,
+          token_hash: tokenHash,
+          expires_at: expiresAt,
+        },
+      });
+
+      const resetUrl = `${ENV.FRONTEND_URL}/reset-password?token=${rawToken}`;
+      const email = buildPasswordResetEmail({
+        recipientName: user.profile?.full_name,
+        resetUrl,
+        expiresAt,
+      });
+
+      try {
+        await sendMail({ to: user.email, ...email });
+      } catch (error) {
+        // Jangan gagalkan request dan jangan bocorkan status akun.
+        console.error('[AuthService] Gagal mengirim email reset kata sandi:', error.message);
+      }
+
+      // Catat jejak audit TANPA token mentah (hanya metadata permintaan).
       await AuditLogService.record({
         userId: user.id,
         action: 'FORGOT_PASSWORD_REQUEST',
@@ -267,8 +323,102 @@ export class AuthService {
 
     // Mengembalikan pesan aman tanpa mengungkap eksistensi akun
     return {
-      message:
-        'Jika akun terdaftar pada sistem kami, tautan verifikasi pemulihan kata sandi telah dikirimkan ke alamat email terkait.',
+      message: FORGOT_PASSWORD_GENERIC_MESSAGE,
     };
+  }
+
+  /**
+   * Verifikasi token reset kata sandi (precheck frontend, FR-003).
+   *
+   * @returns {Promise<{valid: boolean, expires_at: string}>}
+   */
+  static async validateResetToken({ token }) {
+    const resetToken = await this.#findActiveResetToken(token);
+    return {
+      valid: true,
+      expires_at: resetToken.expires_at.toISOString(),
+    };
+  }
+
+  /**
+   * Reset kata sandi menggunakan token dari email (FR-003).
+   *
+   * Sekali pakai: token ditandai `used_at` dalam transaksi yang sama dengan
+   * pembaruan kata sandi, lalu seluruh refresh token aktif dicabut agar
+   * sesi lama tidak bertahan.
+   */
+  static async resetPassword({ token, newPassword, ipAddress, userAgent }) {
+    const resetToken = await this.#findActiveResetToken(token);
+    const user = resetToken.user;
+
+    const validation = validatePasswordComplexity(newPassword);
+    if (!validation.isValid) {
+      throw new AppError(validation.message, 400);
+    }
+
+    const isSameAsOld = await comparePassword(newPassword, user.password_hash);
+    if (isSameAsOld) {
+      throw new AppError('Kata sandi baru tidak boleh sama dengan kata sandi lama', 400);
+    }
+
+    const newPasswordHash = await hashPassword(newPassword);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: user.id },
+        data: { password_hash: newPasswordHash },
+      });
+
+      await tx.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { used_at: new Date() },
+      });
+
+      // Cabut seluruh refresh token aktif untuk memaksa re-login.
+      await tx.refreshToken.updateMany({
+        where: { user_id: user.id, revoked_at: null },
+        data: { revoked_at: new Date() },
+      });
+    });
+
+    // Catat jejak audit tanpa nilai sensitif (token/password tidak disimpan).
+    await AuditLogService.record({
+      userId: user.id,
+      action: 'RESET_PASSWORD_SELF',
+      entity: 'users',
+      entityId: user.id,
+      ipAddress,
+      userAgent,
+      newValues: { password_reset: true, via: 'email_token' },
+    });
+
+    return {
+      message: 'Kata sandi berhasil diperbarui. Silakan login kembali dengan kata sandi baru.',
+    };
+  }
+
+  /**
+   * Cari token reset yang masih aktif (belum dipakai & belum kedaluwarsa).
+   *
+   * @param {string} token token mentah dari tautan email
+   * @returns {Promise<object>} baris `PasswordResetToken` beserta `user`
+   * @throws {AppError} 400 bila token tidak valid/kedaluwarsa/terpakai
+   */
+  static async #findActiveResetToken(token) {
+    if (!token || typeof token !== 'string') {
+      throw new AppError(RESET_TOKEN_INVALID_MESSAGE, 400);
+    }
+
+    const tokenHash = hashToken(token.trim());
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token_hash: tokenHash },
+      include: { user: true },
+    });
+
+    if (!resetToken || resetToken.used_at !== null || resetToken.expires_at < new Date()) {
+      throw new AppError(RESET_TOKEN_INVALID_MESSAGE, 400);
+    }
+
+    return resetToken;
   }
 }

@@ -7,6 +7,8 @@ import {
   refreshTokenSchema,
   changePasswordSchema,
   forgotPasswordSchema,
+  resetPasswordSchema,
+  resetTokenQuerySchema,
 } from './auth.validation.js';
 
 const router = Router();
@@ -29,6 +31,16 @@ router.post('/logout', optionalAuth, AuthController.logout);
 
 // POST /api/auth/forgot-password
 router.post('/forgot-password', validate(forgotPasswordSchema), AuthController.forgotPassword);
+
+// GET /api/auth/reset-password/validate (precheck tautan reset — FR-003)
+router.get(
+  '/reset-password/validate',
+  validate({ query: resetTokenQuerySchema }),
+  AuthController.validateResetToken
+);
+
+// POST /api/auth/reset-password (selesaikan pemulihan kata sandi — FR-003)
+router.post('/reset-password', validate(resetPasswordSchema), AuthController.resetPassword);
 
 // PUT /api/auth/change-password (Wajib Login)
 router.put(
