@@ -19,11 +19,19 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
+    /* Tipe ambient: vite/client untuk import.meta.env */
+    "types": ["vite/client"],
+
     /* Path aliases */
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+
+    /* Migrasi bertahap: file .jsx lama ikut dalam program (resolusi impor)
+       tetapi tidak ditipe-check (checkJs false). */
+    "allowJs": true,
+    "checkJs": false
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
