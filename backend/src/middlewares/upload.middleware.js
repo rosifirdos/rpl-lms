@@ -2,6 +2,7 @@ import multer from 'multer';
 import { STORAGE } from '../config/env.js';
 import { DOCUMENT_MIME_TYPES, getFileExtension } from '../utils/storage.js';
 import { AppError } from '../utils/errors.js';
+import { ConfigService } from '../modules/config/config.service.js';
 
 // Konfigurasi Memory Storage agar buffer dapat divalidasi sebelum disimpan ke disk
 const storage = multer.memoryStorage();
@@ -228,7 +229,70 @@ export const uploadAssignmentFile = createDocumentUploader({
  */
 export const uploadSubmission = createDocumentUploader({
   field: 'file',
-  maxSize: STORAGE.SUBMISSION_MAX_SIZE,
+  maxSize: STORAGE.DOC_MAX_SIZE,
   label: 'jawaban tugas',
   required: true,
 });
+
+/**
+ * Susun pesan penolakan ekstensi sesuai kebijakan efektif.
+ *
+ * Ketika kebijakan masih berupa default BR-007, pesan dipertahankan persis
+ * seperti sebelumnya agar kontrak tes MVP 1–3 tidak berubah.
+ */
+function formatAllowedExtensionsMessage(allowedExtensions) {
+  const defaults = STORAGE.DOC_ALLOWED_EXTENSIONS;
+  const isDefault =
+    allowedExtensions.length === defaults.length &&
+    defaults.every((ext, index) => allowedExtensions[index] === ext);
+
+  if (isDefault) {
+    return 'Format berkas tidak didukung. Harap unggah file berformat .pdf, .docx, .xlsx, atau .zip';
+  }
+  return `Format berkas tidak didukung. Harap unggah file berformat ${allowedExtensions.join(', ')}`;
+}
+
+/**
+ * Middleware penegakan kebijakan unggahan dari konfigurasi Admin (FR-049).
+ *
+ * Dipasang SETELAH middleware multer (memory storage) sehingga berkas yang
+ * ditolak tidak pernah tertulis ke disk. Multer menegakkan hard ceiling
+ * statis (10MB + whitelist superset); middleware ini menegakkan kebijakan
+ * efektif dari `system_configs`:
+ *   - ekstensi harus termasuk `file.allowed_extensions`;
+ *   - ukuran tidak boleh melebihi `file.max_size_mb`.
+ *
+ * @param {object} [options]
+ * @param {string} [options.kind='document'] label kebijakan (untuk log)
+ * @returns {import('express').RequestHandler}
+ */
+export function enforceConfiguredUploadPolicy({ kind = 'document' } = {}) {
+  return async function configuredUploadPolicy(req, res, next) {
+    try {
+      if (!req.file) {
+        return next();
+      }
+
+      const policy = await ConfigService.getFilePolicy();
+      const ext = getFileExtension(req.file.originalname);
+
+      if (!policy.allowedExtensions.includes(ext)) {
+        return next(new AppError(formatAllowedExtensionsMessage(policy.allowedExtensions), 400));
+      }
+
+      if (req.file.size > policy.maxSizeBytes) {
+        return next(
+          new AppError(
+            `Ukuran berkas melebihi batas maksimal (maks ${policy.maxSizeMb}MB)`,
+            400
+          )
+        );
+      }
+
+      return next();
+    } catch (error) {
+      console.error(`[upload.middleware] Gagal menerapkan kebijakan unggahan (${kind}):`, error.message);
+      return next(error);
+    }
+  };
+}

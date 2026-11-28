@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticateToken } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/rbac.middleware.js';
-import { uploadMaterial } from '../../middlewares/upload.middleware.js';
+import { uploadMaterial, enforceConfiguredUploadPolicy } from '../../middlewares/upload.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { ROLES } from '../../constants/roles.js';
 import { MaterialController } from './material.controller.js';
@@ -20,6 +20,7 @@ meetingMaterialRoutes.post(
   requireRole(ROLES.DOSEN, ROLES.ADMIN),
   validate(meetingIdParamSchema),
   uploadMaterial,
+  enforceConfiguredUploadPolicy({ kind: 'material' }),
   validate(createMaterialSchema),
   MaterialController.createMaterial
 );

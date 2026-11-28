@@ -284,6 +284,20 @@ async function main() {
   console.log('   Login Admin     : admin / admin@kampus.ac.id');
   console.log('   Login Dosen     : <NIDN> (mis. 198501152010121002)');
   console.log('   Login Mahasiswa : <NIM>  (mis. 2024001001)');
+
+  // ========= 6. KONFIGURASI SISTEM DEFAULT (FR-049, FR-050) =========
+  // Idempoten: hanya mengisi baris yang belum ada; nilai yang sudah diubah
+  // Admin tidak pernah ditimpa ulang oleh seeder.
+  const { CONFIG_DEFAULTS } = await import('../src/constants/config.js');
+  let configCount = 0;
+  for (const [key, value] of Object.entries(CONFIG_DEFAULTS)) {
+    const existing = await prisma.systemConfig.findUnique({ where: { key } });
+    if (!existing) {
+      await prisma.systemConfig.create({ data: { key, value } });
+      configCount += 1;
+    }
+  }
+  console.log(`  ✔ Konfigurasi sistem: ${configCount} default baru (FR-049/FR-050)`);
 }
 
 main()
