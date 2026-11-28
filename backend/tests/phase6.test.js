@@ -128,6 +128,19 @@ describe('Fase 6: Kepatuhan MVP 1 & Handoff API', () => {
         ['/attendance/{sessionId}/check-in', 'post'],
         ['/attendance/{sessionId}/records', 'get'],
         ['/attendance/records/{id}', 'put'],
+        // Modul MVP 3 (Fase 2 — penerbitan tugas)
+        ['/meetings/{meetingId}/assignments', 'post'],
+        ['/classes/{classId}/assignments', 'get'],
+        ['/assignments/{id}', 'get'],
+        ['/assignments/{id}', 'put'],
+        ['/assignments/{id}', 'delete'],
+        ['/assignments/{id}/download', 'get'],
+        // Modul MVP 3 (Fase 3–4 — submission & penilaian)
+        ['/assignments/{assignmentId}/submissions', 'post'],
+        ['/assignments/{assignmentId}/submission', 'get'],
+        ['/assignments/{assignmentId}/submissions', 'get'],
+        ['/submissions/{id}/download', 'get'],
+        ['/submissions/{id}/grade', 'put'],
       ];
 
       for (const [path, method] of required) {
@@ -283,6 +296,18 @@ describe('Fase 6: Kepatuhan MVP 1 & Handoff API', () => {
         'AttendanceSessionData',
         'AttendanceSessionRecordsData',
         'AttendanceRecapData',
+        'Assignment',
+        'AssignmentDetail',
+        'AssignmentListEntry',
+        'AssignmentMySubmission',
+        'AssignmentRosterSummary',
+        'Submission',
+        'SubmissionRoster',
+        'SubmissionRosterEntry',
+        'CreateAssignmentRequest',
+        'UpdateAssignmentRequest',
+        'UploadSubmissionRequest',
+        'GradeSubmissionRequest',
       ]) {
         assert.ok(
           specification.components?.schemas?.[schemaName],
@@ -340,6 +365,80 @@ describe('Fase 6: Kepatuhan MVP 1 & Handoff API', () => {
       const recapStudent = specification.components.schemas.AttendanceRecapStudent;
       assert.ok(recapStudent.required.includes('percentage'));
       assert.ok(recapStudent.required.includes('matrix'));
+    });
+
+    test('Endpoint tugas dan submission memakai skema respons MVP 3 yang spesifik', () => {
+      const responseSchemas = [
+        ['/meetings/{meetingId}/assignments', 'post', '201', 'AssignmentResponse'],
+        ['/classes/{classId}/assignments', 'get', '200', 'AssignmentListResponse'],
+        ['/assignments/{id}', 'get', '200', 'AssignmentDetailResponse'],
+        ['/assignments/{id}', 'put', '200', 'AssignmentResponse'],
+        ['/assignments/{assignmentId}/submissions', 'post', '201', 'SubmissionResponse'],
+        ['/assignments/{assignmentId}/submission', 'get', '200', 'MySubmissionResponse'],
+        ['/assignments/{assignmentId}/submissions', 'get', '200', 'SubmissionRosterResponse'],
+        ['/submissions/{id}/grade', 'put', '200', 'SubmissionResponse'],
+      ];
+
+      for (const [path, method, status, schemaName] of responseSchemas) {
+        const operation = specification.paths[path]?.[method];
+        assert.ok(operation, `Operasi ${method.toUpperCase()} ${path} wajib didefinisikan`);
+
+        const response = operation.responses?.[status];
+        assert.ok(response, `${method.toUpperCase()} ${path} wajib mendefinisikan respons ${status}`);
+
+        const schema = response.content?.['application/json']?.schema;
+        assert.equal(
+          schema?.$ref,
+          `#/components/schemas/${schemaName}`,
+          `${method.toUpperCase()} ${path} harus memakai ${schemaName}`
+        );
+      }
+
+      // Endpoint unduh wajib dideklarasikan sebagai respons biner.
+      for (const path of ['/assignments/{id}/download', '/submissions/{id}/download']) {
+        const schema = specification.paths[path]?.get?.responses?.['200']?.content?.[
+          'application/octet-stream'
+        ]?.schema;
+        assert.equal(schema?.type, 'string');
+        assert.equal(schema?.format, 'binary');
+      }
+
+      // Request body unggah wajib multipart dengan field `file` biner.
+      for (const [path, method] of [
+        ['/meetings/{meetingId}/assignments', 'post'],
+        ['/assignments/{id}', 'put'],
+        ['/assignments/{assignmentId}/submissions', 'post'],
+      ]) {
+        const content = specification.paths[path]?.[method]?.requestBody?.content;
+        const schema = content?.['multipart/form-data']?.schema;
+        assert.ok(schema, `${method.toUpperCase()} ${path} wajib mendukung multipart/form-data`);
+        const resolved = schema.$ref
+          ? resolveJsonPointer(specification, schema.$ref)
+          : schema;
+        assert.equal(resolved.properties?.file?.format, 'binary');
+      }
+
+      // Kontrak penilaian: skor wajib 0–100, feedback opsional dan boleh null.
+      const grade = specification.components.schemas.GradeSubmissionRequest;
+      assert.deepEqual(grade.required, ['score']);
+      assert.equal(grade.properties.score.minimum, 0);
+      assert.equal(grade.properties.score.maximum, 100);
+      assert.equal(grade.properties.feedback.nullable, true);
+
+      // Roster wajib memuat ringkasan dan daftar baris mahasiswa.
+      const roster = specification.components.schemas.SubmissionRoster;
+      for (const field of ['total_students', 'submitted', 'late', 'graded', 'not_submitted', 'roster']) {
+        assert.ok(roster.required.includes(field), `SubmissionRoster wajib memuat ${field}`);
+      }
+      assert.equal(
+        roster.properties.roster.items.$ref,
+        '#/components/schemas/SubmissionRosterEntry'
+      );
+
+      // Daftar tugas memuat konteks per peran (submission pribadi / jumlah submission).
+      const listEntry = specification.components.schemas.AssignmentListEntry;
+      assert.ok(listEntry.allOf?.[1]?.properties?.my_submission);
+      assert.ok(listEntry.allOf?.[1]?.properties?._count);
     });
 
     test('resolveContentSchema menggabungkan allOf sehingga envelope ApiResponse tetap terdeteksi', () => {

@@ -424,7 +424,7 @@ Suatu rilis/siklus dinyatakan **selesai dan layak** hanya jika seluruh syarat be
 | FR-049–FR-052, FR-058 (Audit) | AUD-01…15, SEC-01…13 | ⬜ | |
 | FR-013–FR-015, FR-030–FR-031 (Ruang Kelas & Materi — MVP 2) | MTG-*, MAT-* (menyusul implementasi) | ⬜ | |
 | FR-023–FR-039 (Presensi — MVP 2) | ATT-* (menyusul implementasi) | ⬜ | |
-| FR-016–FR-034 (Tugas & Validasi File — MVP 3) | ⛔ Blocked by roadmap | — | |
+| FR-016–FR-035 (Tugas, Submission & Validasi File — MVP 3) | TC-009…014, TC-023, mvp3-phase2…5 | ✅ Terverifikasi | `backend/tests/mvp3-phase2..5.test.js` |
 | FR-026–FR-042, FR-056 (UTS/UAS — MVP 5) | ⛔ Blocked by roadmap | — | |
 | NFR-001 (Hashing) | SEC-11 | ⬜ | |
 | NFR-002 (RBAC) | RBAC-01…08 | ⬜ | |

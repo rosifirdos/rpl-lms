@@ -38,8 +38,8 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **Ruang Kelas 16 Pertemuan** | FR-013, FR-014, FR-030, BR-004 | Epic 6: Ruang Kelas 16 Pertemuan | TC-CLSS-01, MTG-01 s.d. 05 | 🟡 Ready to Test |
 | **Materi Perkuliahan** | FR-015, FR-031, BR-007, BR-009, NFR-003, NFR-005 | Epic 7: Materi Pembelajaran | TC-MATR-01 s.d. 03, MAT-01 s.d. 08 | 🟡 Ready to Test |
 | **Presensi Digital** | FR-023, FR-024, FR-036 s.d. FR-039, FR-055, BR-010, BR-011 | Epic 10: Presensi Digital | TC-ATTN-01 s.d. 05, ATT-01 s.d. 10 | 🟡 Ready to Test |
-| **Tugas & Validasi Berkas** | FR-016 s.d. FR-021, FR-032 s.d. FR-034, FR-053, FR-054, BR-006, BR-007, BR-008 | Epic 8: Tugas & Validasi File | TC-009 s.d. TC-012 | ⛔ Blocked by Roadmap (MVP 3) |
-| **Penilaian Skor 0–100** | FR-022, FR-035, BR-006, FR-058 | Epic 9: Penilaian Skor E-Learning | TC-013, TC-014 | ⛔ Blocked by Roadmap (MVP 3) |
+| **Tugas & Validasi Berkas** | FR-016 s.d. FR-021, FR-032 s.d. FR-034, FR-053, FR-054, BR-006, BR-007, BR-008 | Epic 8: Tugas & Validasi File | TC-009 s.d. TC-012, mvp3-phase2..5 | ✅ Implemented (MVP 3) |
+| **Penilaian Skor 0–100** | FR-022, FR-035, BR-006, FR-058 | Epic 9: Penilaian Skor E-Learning | TC-013, TC-014, mvp3-phase4..5 | ✅ Implemented (MVP 3) |
 | **Timeline Pembelajaran** | FR-009 s.d. FR-012, BR-013 | Epic 3: Central Timeline | TC-006 | ⛔ Blocked by Roadmap (MVP 4) |
 | **Kuis Interaktif** | FR-025, FR-040, FR-041 | Epic 11: Kuis Pembelajaran | - | ⛔ Blocked by Roadmap (MVP 4) |
 | **Evaluasi UTS / UAS** | FR-026, FR-027, FR-042, FR-050, FR-056, BR-012 | Epic 11: Gatekeeping UTS/UAS | TC-018 s.d. TC-020 | ⛔ Blocked by Roadmap (MVP 5) |
@@ -66,13 +66,13 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **FR-013** | Mahasiswa melihat daftar kelas yang dienroll oleh Admin di dasbor | Mahasiswa | MVP 1/2 | TC-CLSS-01, ENR-08, TC-007 | 🟡 Ready to Test |
 | **FR-014** | Membuka ruang kelas dan melihat silabus daftar 16 pertemuan | Mahasiswa | MVP 2 | TC-CLSS-01, MTG-01, MTG-02 | 🟡 Ready to Test |
 | **FR-015** | Mahasiswa melihat dan mengunduh berkas materi perkuliahan terbitan dosen | Mahasiswa | MVP 2 | TC-MATR-01, TC-MATR-02, MAT-05, MAT-06, TC-008 | 🟡 Ready to Test |
-| **FR-016** | Mahasiswa melihat instruksi tugas, bobot nilai, dan berkas soal | Mahasiswa | MVP 3 | TC-009 | ⛔ Blocked (MVP 3) |
-| **FR-017** | Mahasiswa mengunggah jawaban tugas (*submission*) sebelum deadline | Mahasiswa | MVP 3 | TC-009, TC-012 | ⛔ Blocked (MVP 3) |
-| **FR-018** | Validasi tipe file tugas hanya menerima `.pdf`, `.docx`, `.xlsx`, `.zip` | Sistem | MVP 3 | TC-010 | ⛔ Blocked (MVP 3) |
-| **FR-019** | Validasi ukuran berkas tugas maksimal 5MB–10MB dengan penolakan otomatis | Sistem | MVP 3 | TC-011 | ⛔ Blocked (MVP 3) |
-| **FR-020** | Pencatatan timestamp submission dan status keterlambatan (*Late*) | Sistem | MVP 3 | TC-012 | ⛔ Blocked (MVP 3) |
-| **FR-021** | Mahasiswa dapat memperbarui/mengganti file jawaban sebelum batas waktu | Mahasiswa | MVP 3 | TC-009 | ⛔ Blocked (MVP 3) |
-| **FR-022** | Mahasiswa melihat perolehan skor tugas numerik (0–100) dan feedback | Mahasiswa | MVP 3 | TC-013 | ⛔ Blocked (MVP 3) |
+| **FR-016** | Mahasiswa melihat instruksi tugas, bobot nilai, dan berkas soal | Mahasiswa | MVP 3 | TC-009, mvp3-phase2..5 | ✅ Implemented |
+| **FR-017** | Mahasiswa mengunggah jawaban tugas (*submission*) sebelum deadline | Mahasiswa | MVP 3 | TC-009, TC-012, mvp3-phase3..5 | ✅ Implemented |
+| **FR-018** | Validasi tipe file tugas hanya menerima `.pdf`, `.docx`, `.xlsx`, `.zip` | Sistem | MVP 3 | TC-010, mvp3-phase3 | ✅ Implemented |
+| **FR-019** | Validasi ukuran berkas tugas maksimal 5MB–10MB dengan penolakan otomatis | Sistem | MVP 3 | TC-011, mvp3-phase3 | ✅ Implemented |
+| **FR-020** | Pencatatan timestamp submission dan status keterlambatan (*Late*) | Sistem | MVP 3 | TC-012, mvp3-phase3..5 | ✅ Implemented |
+| **FR-021** | Mahasiswa dapat memperbarui/mengganti file jawaban sebelum batas waktu | Mahasiswa | MVP 3 | TC-009, mvp3-phase3 | ✅ Implemented |
+| **FR-022** | Mahasiswa melihat perolehan skor tugas numerik (0–100) dan feedback | Mahasiswa | MVP 3 | TC-013, mvp3-phase4..5 | ✅ Implemented |
 | **FR-023** | Mahasiswa mengisi presensi hanya apabila sesi presensi telah dibuka dosen | Mahasiswa | MVP 2 | TC-ATTN-01, ATT-03, ATT-04, TC-015, TC-016 | 🟡 Ready to Test |
 | **FR-024** | Mahasiswa memantau status kehadiran dan rekapitulasi presensi kelas | Mahasiswa | MVP 2 | TC-ATTN-02, ATT-08 | 🟡 Ready to Test |
 | **FR-025** | Mahasiswa mengerjakan kuis interaktif sesuai durasi dan jadwal | Mahasiswa | MVP 4 | - | ⛔ Blocked (MVP 4) |
@@ -82,10 +82,10 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **FR-029** | Dosen melihat daftar seluruh kelas yang diampunya pada dasbor | Dosen | MVP 1/2 | ENR-09, DASH-02 | 🟡 Ready to Test |
 | **FR-030** | Dosen mengelola isi dan struktur silabus Pertemuan 1 s.d. 16 | Dosen | MVP 2 | TC-CLSS-01, MTG-03, MTG-04 | 🟡 Ready to Test |
 | **FR-031** | Dosen mengunggah materi pembelajaran pada pertemuan yang ditentukan | Dosen | MVP 2 | TC-MATR-01, MAT-01..04, TC-008 | 🟡 Ready to Test |
-| **FR-032** | Dosen menerbitkan tugas perkuliahan (bobot, deadline, file soal) | Dosen | MVP 3 | - | ⛔ Blocked (MVP 3) |
-| **FR-033** | Dosen melihat daftar penyerahan tugas mahasiswa beserta statusnya | Dosen | MVP 3 | - | ⛔ Blocked (MVP 3) |
-| **FR-034** | Dosen mengunduh berkas submission mahasiswa secara aman | Dosen | MVP 3 | TC-023 | ⛔ Blocked (MVP 3) |
-| **FR-035** | Dosen memberikan nilai evaluasi berbasis skor numerik (0–100) & feedback | Dosen | MVP 3 | TC-013, TC-014 | ⛔ Blocked (MVP 3) |
+| **FR-032** | Dosen menerbitkan tugas perkuliahan (bobot, deadline, file soal) | Dosen | MVP 3 | mvp3-phase2..5 | ✅ Implemented |
+| **FR-033** | Dosen melihat daftar penyerahan tugas mahasiswa beserta statusnya | Dosen | MVP 3 | mvp3-phase3..5 | ✅ Implemented |
+| **FR-034** | Dosen mengunduh berkas submission mahasiswa secara aman | Dosen | MVP 3 | TC-023, mvp3-phase3..5 | ✅ Implemented |
+| **FR-035** | Dosen memberikan nilai evaluasi berbasis skor numerik (0–100) & feedback | Dosen | MVP 3 | TC-013, TC-014, mvp3-phase4..5 | ✅ Implemented |
 | **FR-036** | Dosen membuka sesi presensi perkuliahan pada pertemuan berjalan | Dosen | MVP 2 | TC-ATTN-01, ATT-01, TC-016 | 🟡 Ready to Test |
 | **FR-037** | Dosen memantau daftar kehadiran mahasiswa real-time saat sesi buka | Dosen | MVP 2 | TC-ATTN-01, ATT-05 | 🟡 Ready to Test |
 | **FR-038** | Dosen menutup sesi presensi perkuliahan sewaktu-waktu | Dosen | MVP 2 | TC-ATTN-01, ATT-02, TC-017 | 🟡 Ready to Test |
@@ -103,8 +103,8 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **FR-050** | Admin mengonfigurasi ambang kehadiran kelayakan UTS/UAS | Admin | MVP 5 | - | ⛔ Blocked (MVP 5) |
 | **FR-051** | Admin memantau aktivitas pembelajaran seluruh kelas di sistem | Admin | MVP 1/2 | DASH-01, AUD-01..15 | 🟡 Ready to Test |
 | **FR-052** | Admin meninjau riwayat mutasi kritis melalui Jejak Audit (*Audit Log*) | Admin | MVP 1 | TC-AUDT-01, AUD-01..15 | 🟡 Ready to Test |
-| **FR-053** | Sistem menolak otomatis file dengan format di luar ekstensi yang diizinkan | Sistem | MVP 2/3 | TC-MATR-01, MAT-02, TC-010 | 🟡 Ready to Test |
-| **FR-054** | Sistem menolak otomatis file dengan ukuran melebihi limit konfigurasi | Sistem | MVP 2/3 | TC-MATR-01, MAT-03, TC-011 | 🟡 Ready to Test |
+| **FR-053** | Sistem menolak otomatis file dengan format di luar ekstensi yang diizinkan | Sistem | MVP 2/3 | TC-MATR-01, MAT-02, TC-010, mvp3-phase3 | ✅ Implemented |
+| **FR-054** | Sistem menolak otomatis file dengan ukuran melebihi limit konfigurasi | Sistem | MVP 2/3 | TC-MATR-01, MAT-03, TC-011, mvp3-phase3 | ✅ Implemented |
 | **FR-055** | Sistem mengalkulasi persentase kehadiran mahasiswa secara otomatis | Sistem | MVP 2 | TC-ATTN-02, ATT-08..10 | 🟡 Ready to Test |
 | **FR-056** | Penguncian otomatis tombol UTS/UAS bila kehadiran di bawah ambang batas | Sistem | MVP 5 | TC-019, TC-020 | ⛔ Blocked (MVP 5) |
 | **FR-057** | Notifikasi internal perkuliahan (tugas baru, presensi buka, nilai rilis) | Sistem | MVP 4 | - | ⛔ Blocked (MVP 4) |

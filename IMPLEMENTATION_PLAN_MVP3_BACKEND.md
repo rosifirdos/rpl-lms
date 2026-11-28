@@ -503,20 +503,22 @@ Komponen berikut dipakai berulang oleh Fase 2–4 dan harus selesai lebih dulu:
 
 ---
 
-### Fase 5: Integrasi Lintas Modul, Validasi Keamanan & Handoff (Hari 7) — ⬜ **BELUM**
+### Fase 5: Integrasi Lintas Modul, Validasi Keamanan & Handoff (Hari 7) — ✅ **SELESAI**
+**Mulai:** 2026-11-28
+**Selesai:** 2026-11-28
 
-- [ ] **Pengujian integrasi `tests/mvp3-phase5.test.js`:**
+- [x] **Pengujian integrasi `tests/mvp3-phase5.test.js`:**
   - Alur end-to-end: kelas baru → 16 pertemuan → dosen menerbitkan tugas pada Pertemuan 3 → mahasiswa enrolled mengunduh soal → mengunggah jawaban → dosen menilai 90 + feedback → mahasiswa melihat skor 90 dan feedback.
   - Isolasi antar kelas: mahasiswa kelas lain tidak dapat melihat tugas, mengunduh soal/jawaban, atau menilai; dosen non-pengampu ditolak.
   - RBAC gabungan: tanpa token `401`; mahasiswa `403` pada endpoint tulis; Admin dapat seluruh operasi.
   - Verifikasi `is_late` terhadap `due_date` aktual dan `submitted_at` server (bukan waktu klien).
   - Verifikasi penghapusan tugas membersihkan baris submission, metadata `files`, dan berkas fisik.
-- [ ] **Pemutakhiran OpenAPI** di `backend/docs/openapi.yaml`:
+- [x] **Pemutakhiran OpenAPI** di `backend/docs/openapi.yaml`:
   - Tambah 11 operasi Bab 4 beserta schema: `Assignment`, `AssignmentDetail`, `Submission`, `SubmissionRoster`, `GradeSubmissionRequest`, dan respons envelop yang sesuai.
   - Deklarasikan `multipart/form-data` untuk create assignment/upload submission serta respons biner untuk kedua endpoint unduh.
-- [ ] **Perbarui `tests/phase6.test.js`:** daftar operasi wajib dan skema respons baru (termasuk skema grade/roster) harus ikut divalidasi parser.
-- [ ] **Perbarui `TEST_PLAN.md`/`RTM.md`** (bila disyaratkan proses QA): status FR-016–FR-022, FR-032–FR-035, FR-053–FR-054 berubah dari *Blocked (MVP 3)* menjadi *Implemented*.
-- [ ] **Handoff frontend:** catat kontrak `multipart/form-data`, nama field `file`, format `due_date` ISO 8601 UTC, dan bentuk respons `score` sebagai number.
+- [x] **Perbarui `tests/phase6.test.js`:** daftar operasi wajib dan skema respons baru (termasuk skema grade/roster) harus ikut divalidasi parser.
+- [x] **Perbarui `TEST_PLAN.md`/`RTM.md`** (bila disyaratkan proses QA): status FR-016–FR-022, FR-032–FR-035, FR-053–FR-054 berubah dari *Blocked (MVP 3)* menjadi *Implemented*.
+- [x] **Handoff frontend:** catat kontrak `multipart/form-data`, nama field `file`, format `due_date` ISO 8601 UTC, dan bentuk respons `score` sebagai number (lihat Bab 10).
 
 ---
 
@@ -573,7 +575,7 @@ Komponen berikut dipakai berulang oleh Fase 2–4 dan harus selesai lebih dulu:
 | 2 — Penerbitan Tugas | ✅ | 2026-11-28 | 2026-11-28 | `mvp3-phase2.test.js` 3/3; `npm test` 225/225 lulus | Modul assignments + tes CRUD/publikasi/RBAC/unduh/filter draft; revisi temuan review |
 | 3 — Submission & Validasi Berkas | ✅ | 2026-11-28 | 2026-11-28 | `mvp3-phase3.test.js` 2/2; `npm test` 225/225 lulus | Modul submissions + validasi magic-byte/deadline/private storage/resubmission; revisi temuan review |
 | 4 — Penilaian 0–100 | ✅ | 2026-11-28 | 2026-11-28 | `mvp3-phase4.test.js` 3/3; `npm test` 228/228 lulus | Modul grading skor 0–100 + feedback + audit GRADE_SUBMISSION; DTO Zod + RBAC dosen/admin; revisi temuan review (row lock audit & bukti tes 404/UUID/pesan kontrak) |
-| 5 — Integrasi & Handoff | ⬜ | — | — | — | — |
+| 5 — Integrasi & Handoff | ✅ | 2026-11-28 | 2026-11-28 | `mvp3-phase5.test.js` 4/4; `phase6.test.js` 17/17; `npm test` 233/233 lulus | Uji integrasi lintas modul & matriks RBAC; OpenAPI 1.2.0 (11 operasi MVP 3); RTM/TEST_PLAN diperbarui; handoff frontend di Bab 10 |
 
 ### 9.2 Log Progress
 
@@ -588,6 +590,7 @@ Komponen berikut dipakai berulang oleh Fase 2–4 dan harus selesai lebih dulu:
 | 2026-11-28 | 2–3 | Perapian kontrak: hapus field duplikat `submission_count` dan pertahankan `_count.submissions`; pesan batas ukuran soal diturunkan dari `maxSize`. Tes daftar tugas dosen ikut mengunci bentuk kontrak. | `backend/src/modules/assignments/assignment.service.js`, `backend/tests/mvp3-phase2.test.js`, `IMPLEMENTATION_PLAN_MVP3_BACKEND.md` | `npm test` 225/225 lulus | 8ffa08a |
 | 2026-11-28 | 4 | Implementasi PUT /api/submissions/:id/grade: Zod DTO score 0–100 (maks 2 desimal), feedback opsional 2000 karakter, service gradeSubmission dengan audit GRADE_SUBMISSION (old/new values), controller, route. Tes mencakup batas skor, feedback null, RBAC mahasiswa 403/dosen-lain 403/admin 200, perubahan skor multi-audit, isolasi submission antar mahasiswa. | `submission.dto.js`, `submission.service.js`, `submission.controller.js`, `submission.routes.js`, `mvp3-phase4.test.js`, `IMPLEMENTATION_PLAN_MVP3_BACKEND.md` | Fase 4 2/2 lulus; `npm test` 227/227 lulus | bbb2741 |
 | 2026-11-28 | 4 | Perbaikan review pasca-merge: hapus refine `Number.isFinite` yang redundan, dokumentasikan semantik feedback parsial (omit = pertahankan, `null` = kosongkan), kunci baris submission (`SELECT … FOR UPDATE`) agar `old_values` audit tidak basi saat penilaian bersamaan, dan perluas tes (404 submission tidak ada, 400 UUID invalid, pesan kontrak Bab 4.4, retensi feedback, assertion isolasi lebih ketat). | `backend/src/modules/submissions/submission.dto.js`, `backend/src/modules/submissions/submission.service.js`, `backend/tests/mvp3-phase4.test.js`, `IMPLEMENTATION_PLAN_MVP3_BACKEND.md` | Fase 4 3/3 lulus; `npm test` 228/228 lulus | c12e839 |
+| 2026-11-28 | 5 | Integrasi lintas modul & handoff: tes E2E tugas→soal→submission→nilai, isolasi antar kelas, matriks RBAC gabungan, verifikasi `is_late`/`submitted_at` jam server, dan pembersihan berkas saat hapus tugas; OpenAPI 1.2.0 memuat 11 operasi MVP 3; phase6 memvalidasi operasi/skema baru; RTM/TEST_PLAN diperbarui; Bab 10 handoff frontend. | `backend/tests/mvp3-phase5.test.js`, `backend/tests/phase6.test.js`, `backend/tests/openapi.js`, `backend/docs/openapi.yaml`, `RTM.md`, `TEST_PLAN.md`, `IMPLEMENTATION_PLAN_MVP3_BACKEND.md` | `mvp3-phase5.test.js` 4/4; `phase6.test.js` 17/17; `npm test` 233/233 lulus | belum commit |
 
 **Format acuan baris baru (jangan dihapus; tambahkan baris di bawah tabel):**
 
@@ -612,3 +615,46 @@ Sebuah fase baru boleh ditandai `✅` bila **semua** syarat berikut terpenuhi:
 5. Status di Bab 9.1 sudah diperbarui (tanggal mulai/selesai + catatan).
 
 Jika salah satu syarat belum terpenuhi, status tetap `🔄` (sedang dikerjakan) atau `⏸️` (tertunda) — **bukan** `✅`.
+
+---
+
+## 10. Handoff Frontend MVP 3
+
+Bagian ini adalah kontrak ringkas untuk tim frontend. Sumber kebenaran lengkap ada pada `backend/docs/openapi.yaml` (OpenAPI 3.0.3) yang divalidasi otomatis oleh `tests/phase6.test.js`.
+
+### 10.1 Unggah Berkas (`multipart/form-data`)
+
+| Operasi | Endpoint | Nama field berkas | Catatan |
+|---|---|---|---|
+| Terbitkan tugas | `POST /api/meetings/:meetingId/assignments` | `file` (opsional) | Field teks lain dikirim sebagai string multipart. |
+| Perbarui tugas | `PUT /api/assignments/:id` | `file` (opsional) | Mendukung JSON bila tidak mengganti berkas soal. |
+| Kumpulkan jawaban | `POST /api/assignments/:assignmentId/submissions` | `file` (wajib) | `201` saat pertama kali, `200` saat resubmission. |
+
+Jangan menetapkan header `Content-Type` secara manual saat memakai `FormData`; biarkan browser/klien menuliskan boundary. Whitelist: `.pdf`, `.docx`, `.xlsx`, `.zip`; batas soal 10MB, batas jawaban mengikuti `MAX_SUBMISSION_SIZE_MB` (5–10MB).
+
+### 10.2 Format Waktu
+
+- `due_date` dikirim dan diterima sebagai **ISO 8601 dengan zona waktu** (contoh `2026-12-01T23:59:00+07:00`; respons dinormalisasi ke UTC `2026-12-01T16:59:00.000Z`).
+- `submitted_at` dan `graded_at` selalu berasal dari jam server. Frontend tidak boleh mengirim timestamp submission.
+- `due_date` pada pembuatan/`PUT` wajib berada di masa depan (`400` bila tidak).
+
+### 10.3 Bentuk Nilai Numerik
+
+- `weight_percentage`, `score` dikirim sebagai **number JSON** (bukan string). Contoh respons: `"score": 87.5`, `"weight_percentage": 20`.
+- `score` menerima 0–100 dengan maksimal 2 desimal; `85.555` ditolak.
+- `feedback` pada `PUT /api/submissions/:id/grade`: dihilangkan = pertahankan nilai lama, `null` = kosongkan.
+
+### 10.4 Status Submission
+
+Status diturunkan oleh backend dan tidak boleh dihitung ulang berbeda oleh frontend:
+
+| Kondisi | `status` |
+|---|---|
+| Belum ada baris submission | `NOT_SUBMITTED` |
+| `score != null` | `GRADED` |
+| `is_late = true` | `LATE` |
+| Selain itu | `SUBMITTED` |
+
+### 10.5 Unduhan
+
+`GET /api/assignments/:id/download` dan `GET /api/submissions/:id/download` mengembalikan stream biner dengan `Content-Disposition: attachment`. Klien wajib mengirim header `Authorization: Bearer <token>`; tautan biasa tanpa header akan ditolak `401`. Gunakan `fetch` + `blob()` (bukan `<a href>` langsung) lalu buat object URL untuk menyimpan berkas.

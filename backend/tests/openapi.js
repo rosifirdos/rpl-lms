@@ -29,11 +29,16 @@ export const BODYLESS_MUTATIONS = new Set([
 export const MULTIPART_MUTATIONS = new Map([
   ['post /profile/avatar', 'multipart/form-data'],
   ['post /meetings/{meetingId}/materials', 'multipart/form-data'],
+  ['post /meetings/{meetingId}/assignments', 'multipart/form-data'],
+  ['put /assignments/{id}', 'multipart/form-data'],
+  ['post /assignments/{assignmentId}/submissions', 'multipart/form-data'],
 ]);
 
 /** Successful operations that return a streamed file instead of ApiResponse JSON. */
 export const BINARY_SUCCESS_RESPONSES = new Map([
   ['get /materials/{id}/download', 'application/octet-stream'],
+  ['get /assignments/{id}/download', 'application/octet-stream'],
+  ['get /submissions/{id}/download', 'application/octet-stream'],
 ]);
 
 /**

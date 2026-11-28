@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: E-Learning Kampus Backend API
-  version: 1.1.0
-  description: Dokumentasi resmi API MVP 1 dan MVP 2 untuk sistem pembelajaran daring E-Learning Kampus.
+  version: 1.2.0
+  description: Dokumentasi resmi API MVP 1, MVP 2, dan MVP 3 untuk sistem pembelajaran daring E-Learning Kampus.
 servers:
   - url: http://localhost:5000/api
     description: Server Lokal Pengembangan
@@ -29,6 +29,10 @@ tags:
     description: Distribusi materi pembelajaran terproteksi
   - name: Attendance
     description: Sesi presensi, check-in, dan rekapitulasi MVP 2
+  - name: Assignments
+    description: Penerbitan dan pengelolaan tugas perkuliahan MVP 3
+  - name: Submissions
+    description: Pengumpulan jawaban mahasiswa dan penilaian skor 0–100 MVP 3
 
 components:
   securitySchemes:
@@ -632,6 +636,402 @@ components:
         updated_at:
           type: string
           format: date-time
+
+    AssignmentSoal:
+      type: object
+      required: [id, original_name, size_bytes, mime_type]
+      properties:
+        id:
+          type: string
+          format: uuid
+        original_name:
+          type: string
+        size_bytes:
+          type: integer
+          minimum: 0
+        mime_type:
+          type: string
+
+    AssignmentMySubmission:
+      type: object
+      description: |
+        Ringkasan submission milik mahasiswa yang sedang login. Status diturunkan
+        dari data tersimpan: `score != null` → `GRADED`, `is_late` → `LATE`,
+        selain itu `SUBMITTED`.
+      required: [id, status, submitted_at, is_late, score, feedback]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [SUBMITTED, LATE, GRADED]
+        submitted_at:
+          type: string
+          format: date-time
+        is_late:
+          type: boolean
+        score:
+          type: number
+          nullable: true
+          minimum: 0
+          maximum: 100
+          description: Skor numerik 0–100 dengan maksimal 2 desimal (null bila belum dinilai).
+        feedback:
+          type: string
+          nullable: true
+
+    Assignment:
+      type: object
+      required:
+        - id
+        - meeting_id
+        - meeting_number
+        - title
+        - weight_percentage
+        - due_date
+        - allow_late
+        - is_published
+        - soal
+      properties:
+        id:
+          type: string
+          format: uuid
+        meeting_id:
+          type: string
+          format: uuid
+        meeting_number:
+          type: integer
+          minimum: 1
+          maximum: 16
+        title:
+          type: string
+          maxLength: 150
+        instructions:
+          type: string
+          nullable: true
+        weight_percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Bobot penilaian tugas (0–100).
+        due_date:
+          type: string
+          format: date-time
+          description: Deadline berbasis waktu server (ISO 8601 UTC).
+        allow_late:
+          type: boolean
+        is_published:
+          type: boolean
+          description: Tugas non-publikasi tidak terlihat oleh mahasiswa (BR-005).
+        soal:
+          allOf:
+            - $ref: '#/components/schemas/AssignmentSoal'
+          nullable: true
+
+    AssignmentListEntry:
+      allOf:
+        - $ref: '#/components/schemas/Assignment'
+        - type: object
+          properties:
+            my_submission:
+              allOf:
+                - $ref: '#/components/schemas/AssignmentMySubmission'
+              nullable: true
+              description: Hanya diisi untuk mahasiswa.
+            _count:
+              type: object
+              description: Hanya diisi untuk dosen pengampu/Admin.
+              properties:
+                submissions:
+                  type: integer
+                  minimum: 0
+
+    AssignmentRosterSummary:
+      type: object
+      required: [total_students, submitted, late, graded, not_submitted]
+      properties:
+        total_students:
+          type: integer
+          minimum: 0
+        submitted:
+          type: integer
+          minimum: 0
+        late:
+          type: integer
+          minimum: 0
+        graded:
+          type: integer
+          minimum: 0
+        not_submitted:
+          type: integer
+          minimum: 0
+
+    AssignmentDetail:
+      allOf:
+        - $ref: '#/components/schemas/Assignment'
+        - type: object
+          properties:
+            my_submission:
+              allOf:
+                - $ref: '#/components/schemas/AssignmentMySubmission'
+              nullable: true
+              description: Hanya diisi untuk mahasiswa.
+            roster_summary:
+              $ref: '#/components/schemas/AssignmentRosterSummary'
+
+    Submission:
+      type: object
+      required:
+        - id
+        - assignment_id
+        - student_id
+        - status
+        - submitted_at
+        - is_late
+        - score
+        - feedback
+        - graded_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        assignment_id:
+          type: string
+          format: uuid
+        student_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [SUBMITTED, LATE, GRADED]
+        submitted_at:
+          type: string
+          format: date-time
+          description: Stempel waktu server saat berkas jawaban diterima.
+        is_late:
+          type: boolean
+        score:
+          type: number
+          nullable: true
+          minimum: 0
+          maximum: 100
+        feedback:
+          type: string
+          nullable: true
+        graded_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    SubmissionRosterEntry:
+      type: object
+      required:
+        - student_id
+        - nim
+        - full_name
+        - submission_id
+        - submitted_at
+        - is_late
+        - score
+        - feedback
+        - status
+        - download_url
+      properties:
+        student_id:
+          type: string
+          format: uuid
+        nim:
+          type: string
+        full_name:
+          type: string
+          nullable: true
+        submission_id:
+          type: string
+          format: uuid
+          nullable: true
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        is_late:
+          type: boolean
+        score:
+          type: number
+          nullable: true
+          minimum: 0
+          maximum: 100
+        feedback:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [NOT_SUBMITTED, SUBMITTED, LATE, GRADED]
+        download_url:
+          type: string
+          nullable: true
+
+    SubmissionRoster:
+      type: object
+      required: [total_students, submitted, late, graded, not_submitted, roster]
+      properties:
+        total_students:
+          type: integer
+          minimum: 0
+        submitted:
+          type: integer
+          minimum: 0
+        late:
+          type: integer
+          minimum: 0
+        graded:
+          type: integer
+          minimum: 0
+        not_submitted:
+          type: integer
+          minimum: 0
+        roster:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubmissionRosterEntry'
+
+    CreateAssignmentRequest:
+      type: object
+      required: [title, weight_percentage, due_date]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        instructions:
+          type: string
+          nullable: true
+          maxLength: 5000
+        weight_percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Bobot penilaian tugas (maksimal 2 desimal).
+        due_date:
+          type: string
+          format: date-time
+          description: Wajib berada di masa depan saat tugas dibuat.
+        allow_late:
+          type: boolean
+          default: false
+        is_published:
+          type: boolean
+          default: true
+        file:
+          type: string
+          format: binary
+          description: Berkas soal opsional (.pdf, .docx, .xlsx, .zip; maks 10MB).
+
+    UpdateAssignmentRequest:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 150
+        instructions:
+          type: string
+          nullable: true
+          maxLength: 5000
+        weight_percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+        due_date:
+          type: string
+          format: date-time
+        allow_late:
+          type: boolean
+        is_published:
+          type: boolean
+        file:
+          type: string
+          format: binary
+          description: Berkas soal pengganti (opsional).
+
+    UploadSubmissionRequest:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: Berkas jawaban (.pdf, .docx, .xlsx, .zip; maks 5–10MB).
+
+    GradeSubmissionRequest:
+      type: object
+      required: [score]
+      properties:
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Skor numerik 0–100 dengan maksimal 2 digit desimal.
+        feedback:
+          type: string
+          nullable: true
+          maxLength: 2000
+          description: |
+            Bila dihilangkan, feedback sebelumnya dipertahankan; kirim `null`
+            untuk mengosongkannya.
+
+    AssignmentResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Assignment'
+
+    AssignmentListResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/AssignmentListEntry'
+
+    AssignmentDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/AssignmentDetail'
+
+    SubmissionResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Submission'
+
+    SubmissionRosterResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SubmissionRoster'
+
+    MySubmissionResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              allOf:
+                - $ref: '#/components/schemas/Submission'
+              nullable: true
 
 paths:
   /auth/login:
@@ -1534,3 +1934,323 @@ paths:
           description: Pengguna tidak terdaftar atau bukan dosen pengampu
         '404':
           description: Materi, berkas, atau pertemuan tidak tersedia
+
+  /meetings/{meetingId}/assignments:
+    post:
+      tags: [Assignments]
+      summary: Terbitkan tugas pada pertemuan pembelajaran
+      description: |
+        Dosen pengampu atau Admin dapat menerbitkan tugas pada pertemuan
+        pembelajaran. Pertemuan UTS/UAS (`is_exam = true`) ditolak. Berkas soal
+        bersifat opsional dan tunduk pada whitelist `.pdf/.docx/.xlsx/.zip`
+        serta limit 10MB.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: meetingId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAssignmentRequest'
+      responses:
+        '201':
+          description: Tugas berhasil diterbitkan dan dicatat pada audit log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+        '400':
+          description: Payload tidak valid, perturbuan ujian, atau berkas ditolak
+        '403':
+          description: Hanya dosen pengampu atau Admin yang berwenang
+        '404':
+          description: Pertemuan tidak ditemukan
+
+  /classes/{classId}/assignments:
+    get:
+      tags: [Assignments]
+      summary: Daftar tugas kelas
+      description: |
+        Mahasiswa hanya menerima tugas yang sudah dipublikasikan beserta
+        `my_submission` miliknya. Dosen pengampu dan Admin menerima seluruh tugas
+        beserta jumlah submission.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: classId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Daftar tugas terurut berdasarkan deadline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentListResponse'
+        '403':
+          description: Mahasiswa tidak terdaftar atau dosen bukan pengampu
+        '404':
+          description: Kelas perkuliahan tidak ditemukan
+
+  /assignments/{id}:
+    get:
+      tags: [Assignments]
+      summary: Detail tugas
+      description: |
+        Mahasiswa menerima instruksi, metadata soal, dan `my_submission`.
+        Dosen pengampu/Admin menerima ringkasan roster. Tugas non-publikasi
+        disamarkan sebagai 404 bagi mahasiswa.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Detail tugas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentDetailResponse'
+        '403':
+          description: Pengguna tidak berhak membaca kelas
+        '404':
+          description: Tugas tidak ditemukan atau belum dipublikasikan
+    put:
+      tags: [Assignments]
+      summary: Perbarui tugas (dan ganti berkas soal bila perlu)
+      description: |
+        Hanya field yang dikirim yang diubah. Berkas soal dapat diganti melalui
+        `multipart/form-data` dengan field `file`; berkas lama dihapus setelah
+        pembaruan berhasil.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAssignmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateAssignmentRequest'
+      responses:
+        '200':
+          description: Tugas diperbarui dan dicatat pada audit log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+        '400':
+          description: Payload tidak valid atau tidak ada data yang diperbarui
+        '403':
+          description: Hanya dosen pengampu atau Admin yang berwenang
+        '404':
+          description: Tugas tidak ditemukan
+    delete:
+      tags: [Assignments]
+      summary: Hapus tugas beserta submission dan berkas privatnya
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Tugas, submission, metadata files, dan berkas fisik terhapus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: Hanya dosen pengampu atau Admin yang berwenang
+        '404':
+          description: Tugas tidak ditemukan
+
+  /assignments/{id}/download:
+    get:
+      tags: [Assignments]
+      summary: Unduh berkas soal tugas
+      description: |
+        Mahasiswa terdaftar hanya dapat mengunduh soal tugas yang sudah
+        dipublikasikan; dosen pengampu dan Admin dapat mengunduh seluruhnya.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Berkas soal dialirkan dengan Content-Disposition attachment
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Pengguna tidak terdaftar atau bukan dosen pengampu
+        '404':
+          description: Tugas tidak ditemukan, belum dipublikasikan, atau tanpa berkas soal
+
+  /assignments/{assignmentId}/submissions:
+    post:
+      tags: [Submissions]
+      summary: Unggah atau ganti berkas jawaban tugas
+      description: |
+        Mahasiswa terdaftar mengunggah jawaban sebelum deadline. `submitted_at`
+        memakai jam server dan `is_late` diturunkan dari `due_date`. Submission
+        yang sudah dinilai tidak dapat diganti (409).
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadSubmissionRequest'
+      responses:
+        '201':
+          description: Jawaban berhasil dikumpulkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponse'
+        '200':
+          description: Jawaban berhasil diperbarui (resubmission)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponse'
+        '400':
+          description: Berkas tidak valid (ekstensi, ukuran, MIME, atau signature)
+        '403':
+          description: Mahasiswa tidak terdaftar atau deadline telah berakhir
+        '404':
+          description: Tugas tidak ditemukan atau belum dipublikasikan
+        '409':
+          description: Submission sudah dinilai dan tidak dapat diubah
+    get:
+      tags: [Submissions]
+      summary: Roster penilaian tugas
+      description: |
+        Roster seluruh mahasiswa terdaftar beserta status penyerahan, waktu
+        submit, skor, feedback, dan tautan unduh. Hanya dosen pengampu/Admin.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Roster submission beserta ringkasan status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionRosterResponse'
+        '403':
+          description: Hanya dosen pengampu atau Admin yang boleh melihat roster
+        '404':
+          description: Tugas tidak ditemukan
+
+  /assignments/{assignmentId}/submission:
+    get:
+      tags: [Submissions]
+      summary: Ambil submission milik mahasiswa sendiri
+      description: |
+        Mengembalikan submission beserta skor dan feedback milik mahasiswa yang
+        login. `data` bernilai `null` bila belum mengumpulkan.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: assignmentId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Submission milik mahasiswa (atau null)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MySubmissionResponse'
+        '403':
+          description: Mahasiswa tidak terdaftar pada kelas
+        '404':
+          description: Tugas tidak ditemukan atau belum dipublikasikan
+
+  /submissions/{id}/download:
+    get:
+      tags: [Submissions]
+      summary: Unduh berkas jawaban submission
+      description: |
+        Mahasiswa hanya dapat mengunduh submission miliknya sendiri; mahasiswa
+        lain ditolak 403 (TC-023). Dosen pengampu dan Admin dapat mengunduh
+        seluruh submission pada kelasnya.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Berkas jawaban dialirkan dengan Content-Disposition attachment
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Bukan pemilik submission, bukan dosen pengampu, atau bukan Admin
+        '404':
+          description: Submission atau berkas jawaban tidak ditemukan
+
+  /submissions/{id}/grade:
+    put:
+      tags: [Submissions]
+      summary: Simpan skor 0–100 dan feedback submission
+      description: |
+        Dosen pengampu/Admin menyimpan skor numerik 0–100 (maksimal 2 desimal)
+        dan feedback opsional. Perubahan skor dicatat pada audit log dengan
+        nilai lama dan baru (FR-058, TC-024).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeSubmissionRequest'
+      responses:
+        '200':
+          description: Penilaian tersimpan dan dicatat pada audit log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponse'
+        '400':
+          description: Skor di luar 0–100, desimal berlebih, atau feedback terlalu panjang
+        '403':
+          description: Hanya dosen pengampu atau Admin yang berwenang
+        '404':
+          description: Submission tidak ditemukan
