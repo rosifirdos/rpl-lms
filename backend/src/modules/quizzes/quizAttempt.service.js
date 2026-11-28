@@ -244,15 +244,40 @@ export class QuizAttemptService {
       Math.min(now.getTime() + quiz.duration_minutes * 60 * 1000, quiz.close_at.getTime())
     );
 
-    const attempt = await prisma.quizAttempt.create({
-      data: {
-        quiz_id: quizId,
-        student_id: student.id,
-        deadline_at: deadline,
-      },
-      include: quizAttemptInclude,
-    });
+    let attempt;
+    try {
+      attempt = await prisma.quizAttempt.create({
+        data: {
+          quiz_id: quizId,
+          student_id: student.id,
+          deadline_at: deadline,
+        },
+        include: quizAttemptInclude,
+      });
+    } catch (error) {
+      // R-06: dua request start bersamaan dapat lolos cek `currentAttempt`
+      // lalu saling menabrak pada unique (quiz_id, student_id). Bila rival
+      // menang, kembalikan attempt miliknya alih-alih 500.
+      if (error?.code !== 'P2002') throw error;
 
+      const rival = await prisma.quizAttempt.findUnique({
+        where: { quiz_id_student_id: { quiz_id: quizId, student_id: student.id } },
+        include: quizAttemptInclude,
+      });
+      if (!rival) throw error;
+
+      if (rival.status !== QUIZ_ATTEMPT_STATUS.IN_PROGRESS) {
+        throw new AppError('Kuis telah diselesaikan dan tidak dapat dikerjakan ulang', 409);
+      }
+      const refreshed = await this.#autoSubmitIfExpired(rival);
+      if (refreshed.status !== QUIZ_ATTEMPT_STATUS.IN_PROGRESS) {
+        throw new AppError('Kuis telah diselesaikan dan tidak dapat dikerjakan ulang', 409);
+      }
+      return { attempt: refreshed, created: false };
+    }
+
+    // Audit hanya untuk pembuat attempt yang sesungguhnya (created: true)
+    // agar start paralel tidak menggandakan jejak audit.
     await AuditLogService.record({
       userId: user.id,
       action: 'START_QUIZ_ATTEMPT',

@@ -666,4 +666,58 @@ describe('Fase 4 MVP 4: pengerjaan kuis & penilaian', () => {
     assert.equal(gradePayload.data.score, 0);
     assert.equal(gradePayload.data.status, 'GRADED');
   });
+
+  test('R-06: dua start kuis paralel tidak menghasilkan 500 dan satu attempt', async () => {
+    // Kuis baru untuk mahasiswa C (sudah ter-enroll pada tes R-01 sebelumnya).
+    const created = await request(`/api/meetings/${meeting.id}/quizzes`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        title: 'Kuis Race',
+        duration_minutes: 30,
+        open_at: iso(now - 3600 * 1000),
+        close_at: iso(now + 24 * 3600 * 1000),
+      },
+    });
+    const raceQuiz = (await created.json()).data;
+    await request(`/api/quizzes/${raceQuiz.id}/questions`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        question_text: 'Satu ditambah satu?',
+        type: 'MULTIPLE_CHOICE',
+        points: 10,
+        options: [
+          { option_text: '2', is_correct: true },
+          { option_text: '3', is_correct: false },
+        ],
+      },
+    });
+    await request(`/api/quizzes/${raceQuiz.id}/publish`, {
+      token: lecturerToken,
+      method: 'PATCH',
+      body: { is_published: true },
+    });
+
+    // Dua request start bersamaan: satu membuat, satu menabrak unique
+    // constraint — keduanya harus sukses dengan attempt yang sama.
+    const [res1, res2] = await Promise.all([
+      request(`/api/quizzes/${raceQuiz.id}/attempts`, { token: studentCToken, method: 'POST' }),
+      request(`/api/quizzes/${raceQuiz.id}/attempts`, { token: studentCToken, method: 'POST' }),
+    ]);
+    const payload1 = await res1.json();
+    const payload2 = await res2.json();
+
+    assert.ok(
+      [res1.status, res2.status].every((status) => [200, 201].includes(status)),
+      `tidak boleh ada 500 — status: ${res1.status}, ${res2.status}`
+    );
+    assert.equal(payload1.data.attempt.id, payload2.data.attempt.id, 'kedua request memakai attempt yang sama');
+
+    // Audit START_QUIZ_ATTEMPT hanya tercatat sekali untuk attempt ini.
+    const auditCount = await prisma.auditLog.count({
+      where: { action: 'START_QUIZ_ATTEMPT', entity_id: payload1.data.attempt.id },
+    });
+    assert.equal(auditCount, 1, 'audit start hanya boleh sekali');
+  });
 });

@@ -278,6 +278,36 @@ async function main() {
       .join(', ')}) — ${ACADEMIC_YEAR} ${SEMESTER}`
   );
 
+  // ========= 6. JADWAL PERTEMUAN (R-04 — FR-011, BR-013) =========
+  // Isi `scheduled_at` HANYA untuk pertemuan yang masih kosong agar seed
+  // tetap idempoten dan tidak menimpa jadwal yang sudah disunting dosen.
+  // Jadwal mingguan dari tanggal mulai semester (dapat dikonfigurasi via
+  // env `SEMESTER_START_DATE`, format YYYY-MM-DD).
+  const SEMESTER_START_DATE = process.env.SEMESTER_START_DATE || '2026-09-07';
+  const semesterStart = new Date(`${SEMESTER_START_DATE}T08:00:00+07:00`);
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+  let scheduledCount = 0;
+  for (const cls of classes) {
+    const unscheduled = await prisma.meeting.findMany({
+      where: { class_id: cls.id, scheduled_at: null },
+      orderBy: { meeting_number: 'asc' },
+    });
+    for (const meeting of unscheduled) {
+      await prisma.meeting.update({
+        where: { id: meeting.id },
+        data: {
+          scheduled_at: new Date(semesterStart.getTime() + (meeting.meeting_number - 1) * WEEK_MS),
+        },
+      });
+      scheduledCount += 1;
+    }
+  }
+  console.log(
+    `  ✅ Jadwal pertemuan: ${scheduledCount} pertemuan diisi scheduled_at ` +
+      `(mingguan mulai ${SEMESTER_START_DATE}, hanya yang masih kosong)`
+  );
+
   console.log('');
   console.log('🎉 Seeding selesai!');
   console.log(`   Default password untuk seluruh akun: ${DEFAULT_PASSWORD}`);

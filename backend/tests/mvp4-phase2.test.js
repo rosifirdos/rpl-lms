@@ -27,10 +27,14 @@ describe('Fase 2 MVP 4: Central Timeline', () => {
   const now = Date.now();
   const iso = (ms) => new Date(ms).toISOString();
 
-  const request = (url, { method = 'GET', token = lecturerToken } = {}) =>
+  const request = (url, { method = 'GET', token = lecturerToken, body } = {}) =>
     fetch(`${baseUrl}${url}`, {
       method,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
     });
 
   async function login(identifier) {
@@ -257,5 +261,33 @@ describe('Fase 2 MVP 4: Central Timeline', () => {
     assert.ok(payload.meta?.server_time);
     assert.ok(payload.meta?.from);
     assert.ok(payload.meta?.to);
+  });
+
+  test('R-04: scheduled_at dapat diperbarui via API dan tampil di timeline MEETING/EXAM', async () => {
+    const newSchedule = iso(now + 7 * 24 * 3600 * 1000);
+
+    // Dosen mengubah jadwal pertemuan ujian lewat API resmi.
+    const update = await request(`/api/meetings/${examMeeting.id}`, {
+      method: 'PUT',
+      body: { scheduled_at: newSchedule },
+    });
+    const updatePayload = await update.json();
+    assert.equal(update.status, 200, updatePayload.message);
+    assert.equal(updatePayload.data.scheduled_at, newSchedule, 'respons pertemuan memuat scheduled_at');
+
+    // Timeline memuat item EXAM dengan starts_at sesuai jadwal baru.
+    const response = await request('/api/timeline?types=MEETING,EXAM', { token: studentToken });
+    const payload = await response.json();
+    assert.equal(response.status, 200);
+
+    const examItem = payload.data.find((item) => item.id === examMeeting.id);
+    assert.ok(examItem, 'item EXAM harus muncul di timeline');
+    assert.equal(examItem.type, 'EXAM');
+    assert.equal(examItem.starts_at, newSchedule);
+    assert.equal(examItem.status, 'UPCOMING');
+
+    const meetingItem = payload.data.find((item) => item.id === meeting.id);
+    assert.ok(meetingItem, 'item MEETING terjadwal harus muncul di timeline');
+    assert.equal(meetingItem.type, 'MEETING');
   });
 });

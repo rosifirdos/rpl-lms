@@ -7,6 +7,7 @@ export class NotificationController {
     try {
       const result = await NotificationService.listNotifications({
         userId: req.user.id,
+        user: req.user,
         query: req.query,
       });
 
@@ -24,7 +25,10 @@ export class NotificationController {
   /** GET /api/notifications/unread-count */
   static async getUnreadCount(req, res, next) {
     try {
-      const result = await NotificationService.getUnreadCount({ userId: req.user.id });
+      const result = await NotificationService.getUnreadCount({
+        userId: req.user.id,
+        user: req.user,
+      });
 
       return apiResponse.success(res, {
         statusCode: 200,

@@ -1,7 +1,7 @@
 ﻿openapi: 3.0.3
 info:
   title: E-Learning Kampus Backend API
-  version: 1.4.0
+  version: 1.4.1
   description: Dokumentasi resmi API MVP 1, MVP 2, dan MVP 3 untuk sistem pembelajaran daring E-Learning Kampus.
 servers:
   - url: http://localhost:5000/api
@@ -350,6 +350,14 @@ components:
         is_published:
           type: boolean
           description: Status publikasi pertemuan bagi mahasiswa
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Jadwal pelaksanaan pertemuan/ujian (ISO 8601 dengan offset zona
+            waktu). Menjadi sumber `starts_at` item `MEETING`/`EXAM` pada
+            timeline terpusat (FR-011, BR-013).
 
     CreateMaterialRequest:
       type: object
@@ -630,6 +638,13 @@ components:
           enum: [NONE, UTS, UAS]
         is_published:
           type: boolean
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Jadwal pelaksanaan pertemuan/ujian (ISO 8601 dengan offset zona
+            waktu); `starts_at` item `MEETING`/`EXAM` pada timeline (FR-011).
         created_at:
           type: string
           format: date-time

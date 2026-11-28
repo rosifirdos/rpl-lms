@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import prisma from '../src/config/prisma.js';
 import { cleanupTestArtifacts } from './setup.js';
+import { NotificationService } from '../src/modules/notifications/notification.service.js';
 
 /**
  * Suite Fase 5 MVP 4: notifikasi internal (FR-057).
@@ -256,6 +257,8 @@ describe('Fase 5 MVP 4: notifikasi internal', () => {
   });
 
   test('Pengingat deadline H-1 dimaterialisasi lazy saat daftar notifikasi diminta', async () => {
+    NotificationService.resetDeadlineReminderThrottle();
+
     // Tugas terbit berakhir dalam 12 jam; mahasiswa A belum mengumpulkan.
     const assignment = await prisma.assignment.create({
       data: {
@@ -318,7 +321,9 @@ describe('Fase 5 MVP 4: notifikasi internal', () => {
   });
 
   test('Pengingat tidak digandakan pada pemanggilan berulang', async () => {
+    NotificationService.resetDeadlineReminderThrottle();
     await request('/api/notifications');
+    NotificationService.resetDeadlineReminderThrottle();
     await request('/api/notifications');
 
     const count = await prisma.notification.count({
@@ -332,5 +337,217 @@ describe('Fase 5 MVP 4: notifikasi internal', () => {
       select: { id: true },
     });
     assert.ok(count <= assignments.length, 'dedupe key membatasi satu pengingat per tugas');
+  });
+
+  test('R-03: dosen membuka notifikasi tidak memicu materialisasi pengingat', async () => {
+    // Tugas mendesak baru pada kelas yang diampu dosen ini.
+    const assignment = await prisma.assignment.create({
+      data: {
+        meeting_id: meeting.id,
+        title: 'Tugas Mendesak R03',
+        weight_percentage: 10,
+        due_date: new Date(now + 10 * 3600 * 1000),
+        is_published: true,
+      },
+    });
+
+    await prisma.notification.deleteMany({
+      where: { user_id: studentUserId, type: 'DEADLINE_REMINDER' },
+    });
+
+    // Dosen membuka daftar notifikasi — tidak boleh memicu materialisasi.
+    const response = await request('/api/notifications', { token: lecturerToken });
+    assert.equal(response.status, 200);
+
+    const reminder = await prisma.notification.findFirst({
+      where: { user_id: studentUserId, type: 'DEADLINE_REMINDER' },
+    });
+    assert.equal(reminder, null, 'dosen tidak boleh memicu pengingat untuk mahasiswa');
+
+    // Admin pun sama.
+    await request('/api/notifications', { token: adminToken });
+    const reminderAfterAdmin = await prisma.notification.findFirst({
+      where: { user_id: studentUserId, type: 'DEADLINE_REMINDER' },
+    });
+    assert.equal(reminderAfterAdmin, null);
+  });
+
+  test('R-03: pengingat hanya untuk kelas yang dienroll mahasiswa (dedupe + throttle)', async () => {
+    // Kelas kedua milik dosen lain; mahasiswa A TIDAK ter-enroll di sini.
+    const otherLecturer = await prisma.dosen.findFirst({ where: { nidn: '199003202015042001' } });
+    const course2 = await prisma.course.create({
+      data: { code: `NTFB${suffix}`, name: `Notif Test B ${suffix}`, credits: 2 },
+    });
+    const class2 = await prisma.class.create({
+      data: {
+        course_id: course2.id,
+        lecturer_id: otherLecturer.id,
+        name: `TEST-NTFB-${suffix}`,
+        academic_year: '2026/2027',
+        semester: 'ganjil',
+      },
+    });
+    const meeting2 = await prisma.meeting.create({
+      data: { class_id: class2.id, meeting_number: 1, title: 'Pertemuan Kelas Lain' },
+    });
+    await prisma.assignment.create({
+      data: {
+        meeting_id: meeting2.id,
+        title: 'Tugas Kelas Lain',
+        weight_percentage: 10,
+        due_date: new Date(now + 8 * 3600 * 1000),
+        is_published: true,
+      },
+    });
+
+    // Tugas mendesak di kelas yang benar-benar dienroll mahasiswa A.
+    await prisma.assignment.create({
+      data: {
+        meeting_id: meeting.id,
+        title: 'Tugas Kelas Sendiri',
+        weight_percentage: 10,
+        due_date: new Date(now + 9 * 3600 * 1000),
+        is_published: true,
+      },
+    });
+
+    await prisma.notification.deleteMany({
+      where: { user_id: studentUserId, type: 'DEADLINE_REMINDER' },
+    });
+    NotificationService.resetDeadlineReminderThrottle();
+    const first = await request('/api/notifications');
+    assert.equal(first.status, 200);
+
+    const reminders = await prisma.notification.findMany({
+      where: { user_id: studentUserId, type: 'DEADLINE_REMINDER' },
+    });
+    assert.ok(reminders.length >= 1, 'pengingat untuk kelas sendiri harus dibuat');
+    assert.ok(
+      reminders.some((item) => item.message.includes('Tugas Kelas Sendiri')),
+      'pengingat tugas kelas sendiri ada'
+    );
+    assert.ok(
+      reminders.every((item) => !item.message.includes('Tugas Kelas Lain')),
+      'tugas kelas lain tidak boleh bocor ke mahasiswa luar kelas'
+    );
+
+    // Dua pemanggilan berurutan: throttle + dedupe tidak menggandakan.
+    NotificationService.resetDeadlineReminderThrottle();
+    await request('/api/notifications');
+    const after = await prisma.notification.count({
+      where: { user_id: studentUserId, type: 'DEADLINE_REMINDER' },
+    });
+    assert.equal(after, reminders.length, 'pemanggilan berulang tidak menambah pengingat');
+  });
+
+  test('R-05: regrade 80 → 90 menghasilkan dua notifikasi; skor sama tidak menambah', async () => {
+    // Tugas + submission mahasiswa A (dibuat langsung via Prisma).
+    const assignment = await prisma.assignment.create({
+      data: {
+        meeting_id: meeting.id,
+        title: 'Tugas Regrade',
+        weight_percentage: 20,
+        due_date: new Date(now + 48 * 3600 * 1000),
+        is_published: true,
+      },
+    });
+    const fileRecord = await prisma.file.create({
+      data: {
+        original_name: 'regrade.pdf',
+        storage_name: `test-${suffix}-regrade.pdf`,
+        file_path: `assignments/test-${suffix}-regrade.pdf`,
+        mime_type: 'application/pdf',
+        size_bytes: 1024,
+        uploaded_by: studentUserId,
+      },
+    });
+    const submission = await prisma.submission.create({
+      data: {
+        assignment_id: assignment.id,
+        student_id: (await prisma.mahasiswa.findFirst({ where: { nim: '2024001001' } })).id,
+        file_id: fileRecord.id,
+        submitted_at: new Date(),
+        is_late: false,
+      },
+    });
+
+    const grade = (score) =>
+      request(`/api/submissions/${submission.id}/grade`, {
+        token: lecturerToken,
+        method: 'PUT',
+        body: { score },
+      });
+
+    // Penilaian pertama: satu notifikasi dengan skor 80.
+    const first = await grade(80);
+    assert.equal(first.status, 200, (await first.json()).message);
+    const afterFirst = await prisma.notification.findMany({
+      where: { user_id: studentUserId, type: 'GRADE_PUBLISHED' },
+    });
+    assert.equal(afterFirst.length, 1);
+    assert.match(afterFirst[0].message, /80/);
+
+    // Regrade 80 → 90: notifikasi kedua dengan skor baru.
+    const second = await grade(90);
+    assert.equal(second.status, 200);
+    const afterSecond = await prisma.notification.findMany({
+      where: { user_id: studentUserId, type: 'GRADE_PUBLISHED' },
+    });
+    assert.equal(afterSecond.length, 2, 'regrade harus menghasilkan notifikasi kedua');
+    assert.ok(
+      afterSecond.some((item) => item.message.includes('90 / 100')),
+      'notifikasi kedua memuat skor 90'
+    );
+
+    // Simpan skor yang sama: tidak ada notifikasi baru.
+    const third = await grade(90);
+    assert.equal(third.status, 200);
+    const afterThird = await prisma.notification.count({
+      where: { user_id: studentUserId, type: 'GRADE_PUBLISHED' },
+    });
+    assert.equal(afterThird, 2, 'skor tidak berubah tidak boleh menambah notifikasi');
+  });
+
+  test('R-05: koreksi presensi HADIR → IZIN → ALPA menghasilkan dua notifikasi', async () => {
+    const session = await prisma.attendanceSession.findFirst({
+      where: { meeting_id: meeting.id },
+    });
+    assert.ok(session, 'sesi presensi harus sudah dibuka oleh tes sebelumnya');
+
+    const studentA = await prisma.mahasiswa.findFirst({ where: { nim: '2024001001' } });
+    const record = await prisma.attendanceRecord.create({
+      data: {
+        session_id: session.id,
+        student_id: studentA.id,
+        status: 'HADIR',
+        is_auto_generated: false,
+      },
+    });
+
+    const updateStatus = (status) =>
+      request(`/api/attendance/records/${record.id}`, {
+        token: lecturerToken,
+        method: 'PUT',
+        body: { status },
+      });
+
+    // Koreksi pertama HADIR → IZIN: satu notifikasi.
+    const first = await updateStatus('IZIN');
+    assert.equal(first.status, 200, (await first.json()).message);
+    const afterFirst = await prisma.notification.findMany({
+      where: { user_id: studentUserId, type: 'ATTENDANCE_UPDATED' },
+    });
+    assert.equal(afterFirst.length, 1);
+    assert.match(afterFirst[0].message, /IZIN/);
+
+    // Koreksi kedua IZIN → ALPA: notifikasi kedua (dedupe statis tidak boleh
+    // membungkam koreksi berikutnya).
+    const second = await updateStatus('ALPA');
+    assert.equal(second.status, 200);
+    const afterSecond = await prisma.notification.findMany({
+      where: { user_id: studentUserId, type: 'ATTENDANCE_UPDATED' },
+    });
+    assert.equal(afterSecond.length, 2, 'koreksi kedua harus menghasilkan notifikasi');
+    assert.ok(afterSecond.some((item) => /ALPA/.test(item.message)));
   });
 });

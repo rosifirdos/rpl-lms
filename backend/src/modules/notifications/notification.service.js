@@ -1,6 +1,7 @@
 import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
 import { NotificationType } from '../../constants/notifications.js';
+import { ROLES } from '../../constants/roles.js';
 import { buildDeadlineReminderNotification } from './notification.templates.js';
 
 /** Jendela pengingat deadline: tugas yang berakhir dalam 24 jam ke depan. */
@@ -8,6 +9,18 @@ const REMINDER_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /** Suffix dedupe key pengingat harian. */
 const DEADLINE_DEDUPE_SUFFIX = '24h';
+
+/**
+ * Jeda minimum antar eksekusi materialisasi pengingat per proses (R-03).
+ *
+ * Materialisasi bersifat lazy (tanpa scheduler — keputusan MVP 4), sehingga
+ * frontend yang melakukan polling dapat memicunya berkali-kali. Throttle
+ * in-memory membatasi eksekusi maksimal sekali per 60 detik per proses.
+ * Catatan: pada deployment multi-instance, batas ini berlaku per instance;
+ * alternatif jangka panjang adalah job terjadwal (automation/cron) di luar
+ * cakupan MVP 4.
+ */
+const REMINDER_THROTTLE_MS = 60 * 1000;
 
 /**
  * Layanan notifikasi internal (FR-057).
@@ -107,19 +120,53 @@ export class NotificationService {
   /**
    * Materialisasi lazy pengingat deadline H-1 (FR-057, tanpa scheduler).
    *
-   * Dipanggil saat daftar notifikasi / unread-count diminta: cari tugas
-   * terbit dengan `due_date` dalam 24 jam ke depan yang belum dikumpulkan
-   * mahasiswa terkait, lalu buat notifikasi ber-dedupe sekali per tugas.
+   * Dipanggil saat daftar notifikasi / unread-count diminta, **hanya untuk
+   * peran MAHASISWA** (R-03): tugas terbit dengan `due_date` dalam 24 jam ke
+   * depan pada kelas yang **dienroll mahasiswa pemanggil** dan belum
+   * dikumpulkan olehnya dibuatkan notifikasi ber-dedupe.
+   *
+   * Throttle in-memory membatasi eksekusi maksimal sekali per
+   * `REMINDER_THROTTLE_MS` per proses; `{ force: true }` melewatkannya untuk
+   * keperluan pengujian. Pemanggil oleh dosen/Admin tidak pernah memicu
+   * materialisasi.
+   *
+   * @param {object} [params]
+   * @param {object} [params.user] pengguna pemanggil (`req.user`)
+   * @param {boolean} [params.force] lewati throttle (untuk pengujian)
    */
-  static async materializeDeadlineReminders() {
+  static async materializeDeadlineReminders({ user, force = false } = {}) {
+    // Hanya mahasiswa yang memicu materialisasi; dosen/Admin tidak pernah
+    // memindai tugas hanya karena membuka notifikasi (R-03).
+    if (user?.role !== ROLES.MAHASISWA) return;
+
+    // Throttle per proses: polling beruntun tidak boleh memindai berulang.
+    const nowMs = Date.now();
+    if (!force && nowMs - this.#reminderState.lastRunAt < REMINDER_THROTTLE_MS) return;
+    this.#reminderState.lastRunAt = nowMs;
+
     try {
       const now = new Date();
-      const windowEnd = new Date(now.getTime() + REMINDER_WINDOW_MS);
+      const windowEnd = new Date(nowMs + REMINDER_WINDOW_MS);
+
+      // Scope ke kelas mahasiswa pemanggil — bukan seluruh database.
+      const student = await prisma.mahasiswa.findUnique({
+        where: { user_id: user.id },
+        select: { id: true },
+      });
+      if (!student) return;
+
+      const enrollments = await prisma.enrollment.findMany({
+        where: { student_id: student.id },
+        select: { class_id: true },
+      });
+      const classIds = enrollments.map((enrollment) => enrollment.class_id);
+      if (classIds.length === 0) return;
 
       const assignments = await prisma.assignment.findMany({
         where: {
           is_published: true,
           due_date: { gte: now, lte: windowEnd },
+          meeting: { class_id: { in: classIds } },
         },
         select: {
           id: true,
@@ -130,17 +177,11 @@ export class NotificationService {
       });
 
       for (const assignment of assignments) {
-        const [enrolledUserIds, submissions] = await Promise.all([
-          this.getEnrolledStudentUserIds(assignment.meeting.class_id),
-          prisma.submission.findMany({
-            where: { assignment_id: assignment.id },
-            select: { student: { select: { user_id: true } } },
-          }),
-        ]);
-
-        const submittedUserIds = new Set(submissions.map((entry) => entry.student.user_id));
-        const recipients = enrolledUserIds.filter((userId) => !submittedUserIds.has(userId));
-        if (recipients.length === 0) continue;
+        const submission = await prisma.submission.findFirst({
+          where: { assignment_id: assignment.id, student_id: student.id },
+          select: { id: true },
+        });
+        if (submission) continue;
 
         const template = buildDeadlineReminderNotification({
           assignmentTitle: assignment.title,
@@ -148,7 +189,7 @@ export class NotificationService {
         });
 
         await this.notifyMany({
-          userIds: recipients,
+          userIds: [user.id],
           type: template.type,
           title: template.title,
           message: template.message,
@@ -157,15 +198,29 @@ export class NotificationService {
         });
       }
     } catch (error) {
+      // Best-effort: kegagalan materialisasi tidak boleh menggagalkan
+      // pembacaan notifikasi.
       console.error('[NotificationService] Gagal mematerialisasi pengingat deadline:', error.message);
     }
   }
 
+  /** Keadaan throttle materialisasi (per proses). */
+  static #reminderState = { lastRunAt: 0 };
+
+  /**
+   * Reset throttle materialisasi pengingat (hanya untuk pengujian).
+   */
+  static resetDeadlineReminderThrottle() {
+    this.#reminderState.lastRunAt = 0;
+  }
+
   /**
    * Daftar notifikasi milik pengguna (paginasi + filter).
+   *
+   * Materialisasi pengingat deadline hanya dijalankan untuk mahasiswa (R-03).
    */
-  static async listNotifications({ userId, query = {} }) {
-    await this.materializeDeadlineReminders();
+  static async listNotifications({ userId, user, query = {} }) {
+    await this.materializeDeadlineReminders({ user });
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
@@ -207,10 +262,11 @@ export class NotificationService {
   }
 
   /**
-   * Jumlah notifikasi belum dibaca (juga mematerialisasi pengingat H-1).
+   * Jumlah notifikasi belum dibaca (materialisasi pengingat H-1 hanya untuk
+   * mahasiswa — R-03).
    */
-  static async getUnreadCount({ userId }) {
-    await this.materializeDeadlineReminders();
+  static async getUnreadCount({ userId, user }) {
+    await this.materializeDeadlineReminders({ user });
     return { unread_count: await prisma.notification.count({ where: { user_id: userId, is_read: false } }) };
   }
 

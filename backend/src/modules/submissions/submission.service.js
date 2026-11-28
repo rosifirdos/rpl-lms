@@ -298,7 +298,7 @@ export class SubmissionService {
 
     const gradedAt = new Date();
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Kunci baris submission agar pembacaan nilai lama dan penulisan nilai
       // baru bersifat atomik. Tanpa lock, dua penilaian bersamaan dapat
       // merekam old_values yang basi pada audit (FR-058, TC-024).
@@ -338,17 +338,22 @@ export class SubmissionService {
         dbClient: tx,
       });
 
-      return res;
+      return { record: res, previousScore: number(current.score) };
     });
 
+    const updated = result.record;
+
     // Notifikasi best-effort: nilai tugas dirilis (FR-057).
+    // R-05: hanya dikirim bila skor benar-benar berubah (perbaikan skor
+    // nyata), dengan dedupe key berbasis versi (`updated_at`) sehingga
+    // regrade berikutnya tetap diberitahukan.
     const studentUserId = (
       await prisma.mahasiswa.findUnique({
         where: { id: updated.student_id },
         select: { user: { select: { id: true } } },
       })
     )?.user?.id;
-    if (studentUserId) {
+    if (studentUserId && number(updated.score) !== result.previousScore) {
       const template = buildGradePublishedNotification({
         assignmentTitle: submission.assignment.title,
         score: number(payload.score),
@@ -359,7 +364,7 @@ export class SubmissionService {
         title: template.title,
         message: template.message,
         link: template.link,
-        dedupeKey: `grade:${submissionId}`,
+        dedupeKey: `grade:${submissionId}:${updated.updated_at.toISOString()}`,
       });
     }
 

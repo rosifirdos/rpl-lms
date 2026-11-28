@@ -508,7 +508,10 @@ export class AttendanceService {
           title: template.title,
           message: template.message,
           link: template.link,
-          dedupeKey: `attendance:${record.id}:updated`,
+          // R-05: tanpa dedupe key statis — pengiriman sudah digating oleh
+          // `existing.status !== record.status`, sehingga setiap koreksi
+          // status yang nyata selalu diberitahukan.
+          dedupeKey: null,
         });
       }
     }
