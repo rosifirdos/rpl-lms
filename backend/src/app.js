@@ -14,6 +14,7 @@ import usersRoutes from './modules/users/users.routes.js';
 import coursesRoutes from './modules/courses/courses.routes.js';
 import classesRoutes from './modules/classes/classes.routes.js';
 import enrollmentsRoutes from './modules/enrollments/enrollments.routes.js';
+import configRoutes from './modules/config/config.routes.js';
 import {
   meetingAttendanceRoutes,
   attendanceRoutes,
@@ -35,6 +36,14 @@ import {
   assignmentSubmissionRoutes,
   submissionRoutes,
 } from './modules/submissions/submission.routes.js';
+import timelineRoutes from './modules/timeline/timeline.routes.js';
+import notificationRoutes from './modules/notifications/notification.routes.js';
+import {
+  meetingQuizRoutes,
+  classQuizRoutes,
+  quizRoutes,
+  quizAttemptRoutes,
+} from './modules/quizzes/quiz.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 import { attachAuditHelper } from './middlewares/audit.middleware.js';
 import { generalLimiter, authLimiter } from './middlewares/rateLimit.middleware.js';
@@ -107,8 +116,13 @@ app.get('/api', (req, res) => {
         admin_courses: '/api/admin/courses',
         admin_classes: '/api/admin/classes',
         admin_enrollments: '/api/admin/enrollments',
+        admin_config: '/api/admin/config',
         admin_audit_logs: '/api/admin/audit-logs',
         materials: '/api/materials',
+        timeline: '/api/timeline',
+        notifications: '/api/notifications',
+        quizzes: '/api/quizzes',
+        quiz_attempts: '/api/quiz-attempts',
       },
     },
   });
@@ -117,6 +131,7 @@ app.get('/api', (req, res) => {
 // Proteksi Frekuensi Percobaan Autentikasi (Brute-force protection)
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
+app.use('/api/auth/reset-password', authLimiter);
 
 // === Modul Inti E-Learning Kampus (flat /api paths per SRS Bab 21) ===
 app.use('/api/auth', authRoutes);
@@ -128,6 +143,7 @@ app.use('/api/admin/users', usersRoutes);
 app.use('/api/admin/courses', coursesRoutes);
 app.use('/api/admin/classes', classesRoutes);
 app.use('/api/admin/enrollments', enrollmentsRoutes);
+app.use('/api/admin/config', configRoutes);
 app.use('/api/admin/audit-logs', auditLogRoutes);
 app.use('/api/audit-logs', auditLogRoutes); // Alias kemudahan akses
 
@@ -142,6 +158,12 @@ app.use('/api/classes', classAssignmentRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/assignments', assignmentSubmissionRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api/timeline', timelineRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/meetings', meetingQuizRoutes);
+app.use('/api/classes', classQuizRoutes);
+app.use('/api/quizzes', quizRoutes);
+app.use('/api/quiz-attempts', quizAttemptRoutes);
 
 // 404 Handler untuk rute tak terdefinisi
 app.use((req, res) => {

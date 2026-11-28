@@ -33,6 +33,13 @@ export const updateMeetingSchema = {
       is_published: z
         .boolean({ message: "Status publikasi harus boolean" })
         .optional(),
+      scheduled_at: z
+        .string({
+          message: "Jadwal pelaksanaan harus berupa tanggal-waktu ISO 8601",
+        })
+        .datetime({ offset: true, message: "Jadwal pelaksanaan harus tanggal-waktu ISO 8601 dengan offset zona waktu" })
+        .nullable()
+        .optional(),
     })
     .strict()
     .refine((data) => Object.keys(data).length > 0, {

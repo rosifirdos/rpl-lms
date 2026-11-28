@@ -6,6 +6,8 @@ import { ROLES } from '../../constants/roles.js';
 import { AUDIT_ENTITIES } from '../../constants/auditEntities.js';
 import { STORAGE } from '../../config/env.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
+import { buildGradePublishedNotification } from '../notifications/notification.templates.js';
 import { AppError } from '../../utils/errors.js';
 import { ensureCanReadClass, ensureCanManageClass, ensureEnrolledInClass, getStudentRecordOrThrow } from '../../utils/ownership.js';
 import { DOCUMENT_MIME_TYPES, generateStorageName, resolveStorageSubdir, sanitizeFilename } from '../../utils/storage.js';
@@ -338,6 +340,28 @@ export class SubmissionService {
 
       return res;
     });
+
+    // Notifikasi best-effort: nilai tugas dirilis (FR-057).
+    const studentUserId = (
+      await prisma.mahasiswa.findUnique({
+        where: { id: updated.student_id },
+        select: { user: { select: { id: true } } },
+      })
+    )?.user?.id;
+    if (studentUserId) {
+      const template = buildGradePublishedNotification({
+        assignmentTitle: submission.assignment.title,
+        score: number(payload.score),
+      });
+      await NotificationService.notify({
+        userId: studentUserId,
+        type: template.type,
+        title: template.title,
+        message: template.message,
+        link: template.link,
+        dedupeKey: `grade:${submissionId}`,
+      });
+    }
 
     return serializeSubmission(updated);
   }

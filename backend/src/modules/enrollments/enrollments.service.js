@@ -1,6 +1,8 @@
 ﻿import prisma from '../../config/prisma.js';
 import { AppError } from '../../utils/errors.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
+import { buildEnrollmentCreatedNotification } from '../notifications/notification.templates.js';
 import { ACADEMIC } from '../../constants/academic.js';
 
 async function executeWithRetry(operation, maxRetries = 3) {
@@ -345,6 +347,22 @@ export class EnrollmentsService {
         timeout: 10000,
       }
     ));
+
+    // Notifikasi best-effort: mahasiswa didaftarkan ke kelas (FR-057).
+    for (const enrollment of createdEnrollments) {
+      const template = buildEnrollmentCreatedNotification({
+        className: enrollment.class.name,
+        courseName: enrollment.class.course.code,
+      });
+      await NotificationService.notify({
+        userId: enrollment.student.user.id,
+        type: template.type,
+        title: template.title,
+        message: template.message,
+        link: template.link,
+        dedupeKey: `enrollment:${enrollment.id}`,
+      });
+    }
 
     return createdEnrollments;
   }

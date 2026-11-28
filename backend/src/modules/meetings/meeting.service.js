@@ -43,11 +43,12 @@ const classIncludeForOwnership = {
   },
 };
 
-const meetingAuditValues = ({ id, title, description, is_published }) => ({
+const meetingAuditValues = ({ id, title, description, is_published, scheduled_at }) => ({
   id,
   title,
   description,
   is_published,
+  scheduled_at,
 });
 
 export class MeetingService {
