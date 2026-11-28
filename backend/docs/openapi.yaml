@@ -1,7 +1,7 @@
-openapi: 3.0.3
+﻿openapi: 3.0.3
 info:
   title: E-Learning Kampus Backend API
-  version: 1.2.0
+  version: 1.4.0
   description: Dokumentasi resmi API MVP 1, MVP 2, dan MVP 3 untuk sistem pembelajaran daring E-Learning Kampus.
 servers:
   - url: http://localhost:5000/api
@@ -32,7 +32,7 @@ tags:
   - name: Assignments
     description: Penerbitan dan pengelolaan tugas perkuliahan MVP 3
   - name: Submissions
-    description: Pengumpulan jawaban mahasiswa dan penilaian skor 0–100 MVP 3
+    description: Pengumpulan jawaban mahasiswa dan penilaian skor 0â€“100 MVP 3
 
 components:
   securitySchemes:
@@ -656,7 +656,7 @@ components:
       type: object
       description: |
         Ringkasan submission milik mahasiswa yang sedang login. Status diturunkan
-        dari data tersimpan: `score != null` → `GRADED`, `is_late` → `LATE`,
+        dari data tersimpan: `score != null` â†’ `GRADED`, `is_late` â†’ `LATE`,
         selain itu `SUBMITTED`.
       required: [id, status, submitted_at, is_late, score, feedback]
       properties:
@@ -676,7 +676,7 @@ components:
           nullable: true
           minimum: 0
           maximum: 100
-          description: Skor numerik 0–100 dengan maksimal 2 desimal (null bila belum dinilai).
+          description: Skor numerik 0â€“100 dengan maksimal 2 desimal (null bila belum dinilai).
         feedback:
           type: string
           nullable: true
@@ -714,7 +714,7 @@ components:
           type: number
           minimum: 0
           maximum: 100
-          description: Bobot penilaian tugas (0–100).
+          description: Bobot penilaian tugas (0â€“100).
         due_date:
           type: string
           format: date-time
@@ -943,7 +943,7 @@ components:
           type: number
           minimum: 0
           maximum: 100
-          description: Bobot penilaian tugas (0–100, maksimal 2 desimal).
+          description: Bobot penilaian tugas (0â€“100, maksimal 2 desimal).
         due_date:
           type: string
           format: date-time
@@ -964,7 +964,7 @@ components:
         file:
           type: string
           format: binary
-          description: Berkas jawaban (.pdf, .docx, .xlsx, .zip; maks 5–10MB).
+          description: Berkas jawaban (.pdf, .docx, .xlsx, .zip; maks 5â€“10MB).
 
     GradeSubmissionRequest:
       type: object
@@ -974,7 +974,7 @@ components:
           type: number
           minimum: 0
           maximum: 100
-          description: Skor numerik 0–100 dengan maksimal 2 digit desimal.
+          description: Skor numerik 0â€“100 dengan maksimal 2 digit desimal.
         feedback:
           type: string
           nullable: true
@@ -1034,6 +1034,716 @@ components:
               allOf:
                 - $ref: '#/components/schemas/Submission'
               nullable: true
+
+    SelfResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - new_password
+      properties:
+        token:
+          type: string
+          description: Token mentah dari tautan email pemulihan kata sandi
+        new_password:
+          type: string
+          format: password
+          minLength: 8
+          description: Kata sandi baru (wajib memenuhi kebijakan kompleksitas)
+        confirm_password:
+          type: string
+          format: password
+          description: Konfirmasi kata sandi baru (opsional, wajib sama bila dikirim)
+
+    ValidateResetTokenResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [valid, expires_at]
+              properties:
+                valid:
+                  type: boolean
+                  example: true
+                expires_at:
+                  type: string
+                  format: date-time
+
+    UserDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                status:
+                  type: string
+                  enum: [ACTIVE, INACTIVE, SUSPENDED]
+                role:
+                  type: string
+                  enum: [admin, dosen, mahasiswa]
+                last_login_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                created_at:
+                  type: string
+                  format: date-time
+                profile:
+                  type: object
+                  nullable: true
+                mahasiswa:
+                  type: object
+                  nullable: true
+                dosen:
+                  type: object
+                  nullable: true
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED]
+        role:
+          type: string
+          enum: [admin, dosen, mahasiswa]
+        full_name:
+          type: string
+
+    AuditLogDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                user_id:
+                  type: string
+                  format: uuid
+                  nullable: true
+                action:
+                  type: string
+                entity:
+                  type: string
+                entity_id:
+                  type: string
+                  nullable: true
+                old_values:
+                  nullable: true
+                new_values:
+                  nullable: true
+                ip_address:
+                  type: string
+                  nullable: true
+                user_agent:
+                  type: string
+                  nullable: true
+                created_at:
+                  type: string
+                  format: date-time
+                user:
+                  type: object
+                  nullable: true
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    username:
+                      type: string
+                    email:
+                      type: string
+                    role:
+                      type: string
+                    profile:
+                      type: object
+
+    SystemConfigData:
+      type: object
+      required: [file, attendance]
+      properties:
+        file:
+          type: object
+          required: [allowed_extensions, max_size_mb, max_size_bytes]
+          properties:
+            allowed_extensions:
+              type: array
+              items:
+                type: string
+              example: ['.pdf', '.docx', '.xlsx', '.zip']
+            max_size_mb:
+              type: integer
+              minimum: 5
+              maximum: 10
+            max_size_bytes:
+              type: integer
+        attendance:
+          type: object
+          required: [threshold_percentage]
+          properties:
+            threshold_percentage:
+              type: integer
+              minimum: 0
+              maximum: 100
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_by:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            username:
+              type: string
+
+    SystemConfigResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/SystemConfigData'
+
+    UpdateSystemConfigRequest:
+      type: object
+      minProperties: 1
+      properties:
+        file:
+          type: object
+          properties:
+            allowed_extensions:
+              type: array
+              minItems: 1
+              uniqueItems: true
+              items:
+                type: string
+                enum: ['.pdf', '.docx', '.xlsx', '.zip']
+              description: Hanya subset hard ceiling keamanan yang diizinkan (BR-007)
+            max_size_mb:
+              type: integer
+              minimum: 5
+              maximum: 10
+        attendance:
+          type: object
+          properties:
+            threshold_percentage:
+              type: integer
+              minimum: 0
+              maximum: 100
+
+    # === MVP 4 - Timeline, Kuis, Notifikasi ===
+    TimelineItem:
+      type: object
+      required: [id, type, title, class_id, class_name, course_code, starts_at, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [ASSIGNMENT, QUIZ, MEETING, EXAM]
+        title:
+          type: string
+        class_id:
+          type: string
+          format: uuid
+        class_name:
+          type: string
+        course_code:
+          type: string
+        course_name:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [UPCOMING, ONGOING, OVERDUE, PAST]
+        link:
+          type: string
+          nullable: true
+        meta:
+          type: object
+          nullable: true
+          additionalProperties: true
+
+    TimelineResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimelineItem'
+
+    Quiz:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        meeting_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        instructions:
+          type: string
+          nullable: true
+        duration_minutes:
+          type: integer
+        open_at:
+          type: string
+          format: date-time
+        close_at:
+          type: string
+          format: date-time
+        is_published:
+          type: boolean
+
+    QuizQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        question_text:
+          type: string
+        type:
+          type: string
+          enum: [MULTIPLE_CHOICE, ESSAY]
+        points:
+          type: number
+        answer_key:
+          type: string
+          nullable: true
+        order_index:
+          type: integer
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              option_text:
+                type: string
+              is_correct:
+                type: boolean
+              order_index:
+                type: integer
+
+    QuizDetail:
+      allOf:
+        - $ref: '#/components/schemas/Quiz'
+        - type: object
+          properties:
+            meeting_number:
+              type: integer
+            class_id:
+              type: string
+              format: uuid
+            class_name:
+              type: string
+            course_code:
+              type: string
+            course_name:
+              type: string
+            total_points:
+              type: number
+            question_count:
+              type: integer
+            attempt_count:
+              type: integer
+            questions:
+              type: array
+              items:
+                $ref: '#/components/schemas/QuizQuestion'
+
+    QuizResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/QuizDetail'
+
+    QuizListResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  meeting_id:
+                    type: string
+                    format: uuid
+                  meeting_number:
+                    type: integer
+                  title:
+                    type: string
+                  duration_minutes:
+                    type: integer
+                  open_at:
+                    type: string
+                    format: date-time
+                  close_at:
+                    type: string
+                    format: date-time
+                  is_published:
+                    type: boolean
+                  question_count:
+                    type: integer
+                  attempt_count:
+                    type: integer
+
+    CreateQuizRequest:
+      type: object
+      required: [title, duration_minutes, open_at, close_at]
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        instructions:
+          type: string
+          maxLength: 2000
+        duration_minutes:
+          type: integer
+          minimum: 1
+          maximum: 180
+        open_at:
+          type: string
+          format: date-time
+        close_at:
+          type: string
+          format: date-time
+
+    UpdateQuizRequest:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        instructions:
+          type: string
+          maxLength: 2000
+        duration_minutes:
+          type: integer
+          minimum: 1
+          maximum: 180
+        open_at:
+          type: string
+          format: date-time
+        close_at:
+          type: string
+          format: date-time
+
+    PublishQuizRequest:
+      type: object
+      required: [is_published]
+      properties:
+        is_published:
+          type: boolean
+
+    CreateQuizQuestionRequest:
+      type: object
+      required: [question_text, type]
+      properties:
+        question_text:
+          type: string
+          maxLength: 2000
+        type:
+          type: string
+          enum: [MULTIPLE_CHOICE, ESSAY]
+        points:
+          type: number
+          minimum: 0.01
+          maximum: 100
+        answer_key:
+          type: string
+          maxLength: 4000
+        order_index:
+          type: integer
+          minimum: 1
+        options:
+          type: array
+          items:
+            type: object
+            required: [option_text]
+            properties:
+              option_text:
+                type: string
+                maxLength: 500
+              is_correct:
+                type: boolean
+              order_index:
+                type: integer
+
+    QuizAttempt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        quiz_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [IN_PROGRESS, SUBMITTED, GRADED]
+        started_at:
+          type: string
+          format: date-time
+        deadline_at:
+          type: string
+          format: date-time
+        submitted_at:
+          type: string
+          format: date-time
+          nullable: true
+        score:
+          type: number
+          nullable: true
+        remaining_seconds:
+          type: integer
+        server_time:
+          type: string
+          format: date-time
+
+    QuizAttemptResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                attempt:
+                  $ref: '#/components/schemas/QuizAttempt'
+                questions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/QuizQuestion'
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      question_id:
+                        type: string
+                        format: uuid
+                      selected_option_id:
+                        type: string
+                        format: uuid
+                        nullable: true
+                      answer_text:
+                        type: string
+                        nullable: true
+                      is_correct:
+                        type: boolean
+                      points_awarded:
+                        type: number
+                        nullable: true
+                      feedback:
+                        type: string
+                        nullable: true
+
+    SaveQuizAnswersRequest:
+      type: object
+      required: [answers]
+      properties:
+        answers:
+          type: array
+          maxItems: 200
+          items:
+            type: object
+            required: [question_id]
+            properties:
+              question_id:
+                type: string
+                format: uuid
+              selected_option_id:
+                type: string
+                format: uuid
+              answer_text:
+                type: string
+                maxLength: 10000
+
+    GradeQuizAttemptRequest:
+      type: object
+      required: [answers]
+      properties:
+        answers:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [answer_id, points_awarded]
+            properties:
+              answer_id:
+                type: string
+                format: uuid
+              points_awarded:
+                type: number
+                minimum: 0
+              feedback:
+                type: string
+                maxLength: 2000
+
+    QuizGradeResultResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                attempt_id:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [SUBMITTED, GRADED]
+                score:
+                  type: number
+                fully_graded:
+                  type: boolean
+
+    QuizResultRosterResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                quiz:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    title:
+                      type: string
+                    total_points:
+                      type: number
+                    question_count:
+                      type: integer
+                    is_published:
+                      type: boolean
+                total_students:
+                  type: integer
+                roster:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      attempt_id:
+                        type: string
+                        format: uuid
+                      student_id:
+                        type: string
+                        format: uuid
+                      nim:
+                        type: string
+                      full_name:
+                        type: string
+                      status:
+                        type: string
+                        enum: [IN_PROGRESS, SUBMITTED, GRADED]
+                      score:
+                        type: number
+                        nullable: true
+                      started_at:
+                        type: string
+                        format: date-time
+                      submitted_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      graded_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [ASSIGNMENT_CREATED, DEADLINE_REMINDER, ATTENDANCE_OPENED, ATTENDANCE_UPDATED, GRADE_PUBLISHED, ENROLLMENT_CREATED, QUIZ_PUBLISHED]
+        title:
+          type: string
+        message:
+          type: string
+        link:
+          type: string
+          nullable: true
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationListResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/Notification'
+
+    UnreadCountResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                unread_count:
+                  type: integer
+                  minimum: 0
 
 paths:
   /auth/login:
@@ -1102,6 +1812,83 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
 
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Menyelesaikan pemulihan kata sandi menggunakan token email (FR-003)
+      description: >-
+        Token mentah diterima melalui tautan email. Token bersifat sekali pakai,
+        kedaluwarsa sesuai konfigurasi (default 30 menit), dan setelah sukses
+        seluruh refresh token aktif pengguna dicabut.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfResetPasswordRequest'
+      responses:
+        '200':
+          description: Kata sandi berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Token tidak valid/kedaluwarsa/terpakai atau password tidak memenuhi kebijakan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/reset-password/validate:
+    get:
+      tags: [Auth]
+      summary: Precheck validitas token reset kata sandi (FR-003)
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Token mentah dari tautan email
+      responses:
+        '200':
+          description: Token masih berlaku
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateResetTokenResponse'
+        '400':
+          description: Token tidak valid atau telah kedaluwarsa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/change-password:
+    put:
+      tags: [Auth]
+      summary: Alias penggantian kata sandi mandiri
+      deprecated: true
+      description: >-
+        Alias kompatibilitas untuk `PUT /profile/password`. Gunakan endpoint
+        tersebut untuk integrasi baru.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Kata sandi berhasil diubah
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
   /profile:
     get:
       tags: [Profile]
@@ -1135,6 +1922,29 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
 
   /profile/avatar:
+    get:
+      tags: [Profile]
+      summary: Mengunduh berkas foto avatar pengguna saat ini
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Berkas avatar (PNG atau JPEG) dikirim sebagai biner
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Pengguna belum mengunggah avatar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
     post:
       tags: [Profile]
       summary: Mengunggah berkas foto avatar
@@ -1215,6 +2025,54 @@ paths:
       responses:
         '201':
           description: Pengguna berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/users/{id}:
+    get:
+      tags: [Users]
+      summary: Detail akun pengguna berdasarkan ID (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Detail pengguna berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+        '404':
+          description: Pengguna tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    put:
+      tags: [Users]
+      summary: Memperbarui data akun pengguna (Admin, FR-044)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Data pengguna berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailResponse'
+        '404':
+          description: Pengguna tidak ditemukan
           content:
             application/json:
               schema:
@@ -1530,6 +2388,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
 
+  /admin/config:
+    get:
+      tags: [Users]
+      summary: Konfigurasi efektif sistem (FR-049, FR-050)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Konfigurasi sistem berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemConfigResponse'
+    put:
+      tags: [Users]
+      summary: Memperbarui konfigurasi sistem (partial update, FR-049/FR-050)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSystemConfigRequest'
+      responses:
+        '200':
+          description: Konfigurasi sistem berhasil diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemConfigResponse'
+        '400':
+          description: Nilai konfigurasi tidak sah (hard ceiling keamanan dilanggar)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
   /dashboard:
     get:
       tags: [Dashboard]
@@ -1595,6 +2491,28 @@ paths:
       responses:
         '200':
           description: Rekaman audit log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /admin/audit-logs/{id}:
+    get:
+      tags: [Audit Logs]
+      summary: Detail satu rekaman jejak audit berdasarkan ID (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Detail rekaman jejak audit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogDetailResponse'
+        '404':
+          description: Rekaman audit tidak ditemukan
           content:
             application/json:
               schema:
@@ -1753,7 +2671,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AttendanceSessionResponse'
         '400':
-          description: Toleransi menit di luar rentang 1–180
+          description: Toleransi menit di luar rentang 1â€“180
         '403':
           description: Hanya dosen pengampu atau Admin yang boleh membuka sesi
         '404':
@@ -1868,7 +2786,7 @@ paths:
     put:
       tags: [Materials]
       summary: Perbarui informasi materi perkuliahan
-      description: Dosen pengampu atau Admin dapat memperbarui judul dan/atau deskripsi materi. Berkas lampiran tidak dapat diganti melalui endpoint ini — unggah ulang materi baru bila berkas perlu diganti.
+      description: Dosen pengampu atau Admin dapat memperbarui judul dan/atau deskripsi materi. Berkas lampiran tidak dapat diganti melalui endpoint ini â€” unggah ulang materi baru bila berkas perlu diganti.
       security:
         - bearerAuth: []
       parameters:
@@ -2228,9 +3146,9 @@ paths:
   /submissions/{id}/grade:
     put:
       tags: [Submissions]
-      summary: Simpan skor 0–100 dan feedback submission
+      summary: Simpan skor 0â€“100 dan feedback submission
       description: |
-        Dosen pengampu/Admin menyimpan skor numerik 0–100 (maksimal 2 desimal)
+        Dosen pengampu/Admin menyimpan skor numerik 0â€“100 (maksimal 2 desimal)
         dan feedback opsional. Perubahan skor dicatat pada audit log dengan
         nilai lama dan baru (FR-058, TC-024).
       security:
@@ -2251,8 +3169,579 @@ paths:
               schema:
                 $ref: '#/components/schemas/SubmissionResponse'
         '400':
-          description: Skor di luar 0–100, desimal berlebih, atau feedback terlalu panjang
+          description: Skor di luar 0â€“100, desimal berlebih, atau feedback terlalu panjang
         '403':
           description: Hanya dosen pengampu atau Admin yang berwenang
         '404':
           description: Submission tidak ditemukan
+
+  # === MVP 4 - Timeline, Kuis, Notifikasi ===
+  /timeline:
+    get:
+      tags: [Timeline]
+      summary: Kronologi akademik gabungan (FR-009 sampai FR-012)
+      description: |
+        Agregasi tugas terbit, kuis terbit, pertemuan terjadwal, dan ujian pada
+        kelas yang diikuti (Mahasiswa) atau diampu (Dosen). Jendela default 30
+        hari, item terurut `starts_at` menaik, draft tersembunyi dari Mahasiswa.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: from
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          schema: { type: string, format: date-time }
+        - in: query
+          name: class_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: types
+          schema:
+            type: string
+            description: Daftar tipe dipisah koma (ASSIGNMENT,QUIZ,MEETING,EXAM)
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        '200':
+          description: Item kronologi terurut menaik
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineResponse'
+        '400':
+          description: Parameter filter tidak valid
+        '403':
+          description: Admin, atau filter class_id di luar cakupan pengguna
+
+  /meetings/{meetingId}/quizzes:
+    post:
+      tags: [Quizzes]
+      summary: Buat kuis pada pertemuan (FR-025)
+      description: |
+        Dosen pengampu/Admin membuat kuis draft. Ditolak pada pertemuan ujian
+        (UTS/UAS). Kuis baru selalu `is_published: false`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: meetingId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuizRequest'
+      responses:
+        '201':
+          description: Kuis draft berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+        '400':
+          description: Pertemuan ujian, durasi di luar 1-180, atau jendela waktu tidak valid
+        '403':
+          description: Bukan dosen pengampu/Admin
+
+  /classes/{classId}/quizzes:
+    get:
+      tags: [Quizzes]
+      summary: Daftar kuis pada kelas
+      description: |
+        Mahasiswa hanya melihat kuis terbit; dosen pengampu/Admin melihat
+        seluruhnya termasuk jumlah percobaan.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: classId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Daftar kuis terurut `open_at` menaik
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizListResponse'
+        '403':
+          description: Tidak terdaftar/tidak mengampu kelas
+        '404':
+          description: Kelas tidak ditemukan
+
+  /quizzes/{id}:
+    get:
+      tags: [Quizzes]
+      summary: Detail kuis beserta butir soal
+      description: |
+        Mahasiswa hanya melihat kuis terbit dan TANPA kunci jawaban
+        (`answer_key`/`is_correct` disaring). Draft tersembunyi (404).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Detail kuis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+        '403':
+          description: Tidak berhak membaca kelas
+        '404':
+          description: Kuis tidak ditemukan (termasuk draft bagi Mahasiswa)
+    put:
+      tags: [Quizzes]
+      summary: Perbarui kuis (FR-025)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQuizRequest'
+      responses:
+        '200':
+          description: Kuis diperbarui dan dicatat audit log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+        '400':
+          description: Jendela waktu tidak valid
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Kuis tidak ditemukan
+    delete:
+      tags: [Quizzes]
+      summary: Hapus kuis beserta soal dan percobaan
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Kuis dihapus (cascade)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Kuis tidak ditemukan
+
+  /quizzes/{id}/publish:
+    patch:
+      tags: [Quizzes]
+      summary: Terbitkan atau tarik publikasi kuis (FR-025)
+      description: |
+        Penerbitkan memvalidasi kelengkapan: minimal satu soal, total poin > 0,
+        pilihan ganda tepat satu kunci, dan `close_at` di masa depan.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishQuizRequest'
+      responses:
+        '200':
+          description: Status publikasi diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+        '400':
+          description: Kuis belum layak terbit
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Kuis tidak ditemukan
+
+  /quizzes/{id}/questions:
+    post:
+      tags: [Quizzes]
+      summary: Tambah butir soal (FR-040)
+      description: |
+        Pilihan ganda wajib tepat satu opsi kunci; esai tidak boleh memiliki
+        opsi. Ditolak bila sudah ada percobaan mahasiswa (409).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuizQuestionRequest'
+      responses:
+        '201':
+          description: Butir soal ditambahkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+        '400':
+          description: Struktur soal tidak valid
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Kuis tidak ditemukan
+        '409':
+          description: Sudah ada percobaan mahasiswa
+
+  /quizzes/{id}/questions/{questionId}:
+    put:
+      tags: [Quizzes]
+      summary: Perbarui butir soal (FR-040)
+      description: Bila `options` dikirim, seluruh opsi diganti ulang.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - in: path
+          name: questionId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuizQuestionRequest'
+      responses:
+        '200':
+          description: Butir soal diperbarui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Kuis atau soal tidak ditemukan
+        '409':
+          description: Sudah ada percobaan mahasiswa
+    delete:
+      tags: [Quizzes]
+      summary: Hapus butir soal
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+        - in: path
+          name: questionId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Butir soal dihapus
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Kuis atau soal tidak ditemukan
+        '409':
+          description: Sudah ada percobaan mahasiswa
+
+  /quizzes/{id}/attempts:
+    get:
+      tags: [Quizzes]
+      summary: Roster hasil kuis (FR-041)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Roster seluruh percobaan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResultRosterResponse'
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Kuis tidak ditemukan
+    post:
+      tags: [Quizzes]
+      summary: Mulai atau lanjutkan percobaan kuis (FR-040)
+      description: |
+        Satu percobaan per mahasiswa per kuis. Timer ditegakkan server:
+        `deadline_at = min(sekarang + durasi, close_at)`. Mengembalikan 201
+        untuk percobaan baru dan 200 untuk kelanjutan.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '201':
+          description: Percobaan baru dimulai
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizAttemptResponse'
+        '200':
+          description: Melanjutkan percobaan berjalan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizAttemptResponse'
+        '400':
+          description: Kuis belum dibuka atau telah ditutup
+        '403':
+          description: Tidak terdaftar pada kelas
+        '404':
+          description: Kuis tidak ditemukan (termasuk draft)
+        '409':
+          description: Percobaan telah selesai
+
+  /quizzes/{id}/attempts/export:
+    get:
+      tags: [Quizzes]
+      summary: Ekspor roster hasil kuis sebagai CSV (FR-041)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Berkas CSV hasil kuis
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Kuis tidak ditemukan
+
+  /quiz-attempts/{attemptId}:
+    get:
+      tags: [Quizzes]
+      summary: Detail percobaan kuis
+      description: |
+        Mahasiswa pemilik mendapat versi tersanitasi; kunci jawaban terlihat
+        hanya setelah submission. Dosen pengampu/Admin mendapat akses penuh.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Detail percobaan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizAttemptResponse'
+        '403':
+          description: Bukan pemilik percobaan / bukan pengampu
+        '404':
+          description: Percobaan tidak ditemukan
+
+  /quiz-attempts/{attemptId}/answers:
+    put:
+      tags: [Quizzes]
+      summary: Simpan jawaban parsial (FR-040)
+      description: |
+        Auto-submit lazy: bila deadline terlewat, percobaan dikumpulkan
+        otomatis dengan `submitted_at = deadline_at` dan permintaan ditolak.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveQuizAnswersRequest'
+      responses:
+        '200':
+          description: Jawaban tersimpan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizAttemptResponse'
+        '400':
+          description: Soal/opsi tidak valid atau waktu telah berakhir
+        '403':
+          description: Bukan pemilik percobaan
+        '404':
+          description: Percobaan tidak ditemukan
+        '409':
+          description: Percobaan telah selesai
+
+  /quiz-attempts/{attemptId}/submit:
+    post:
+      tags: [Quizzes]
+      summary: Kumpulkan percobaan kuis (FR-040)
+      description: |
+        Pilihan ganda dinilai otomatis (0-100, 2 desimal). Status SUBMITTED
+        bila masih ada esai, GRADED bila seluruhnya objektif.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Percobaan dikumpulkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizAttemptResponse'
+        '403':
+          description: Bukan pemilik percobaan
+        '404':
+          description: Percobaan tidak ditemukan
+        '409':
+          description: Percobaan telah selesai
+
+  /quiz-attempts/{attemptId}/grade:
+    put:
+      tags: [Quizzes]
+      summary: Nilai jawaban esai (FR-041)
+      description: |
+        Hanya jawaban esai yang dapat dinilai manual. Skor akhir dihitung ulang
+        penuh dari poin seluruh jawaban; status GRADED bila seluruh esai telah
+        dinilai.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: attemptId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeQuizAttemptRequest'
+      responses:
+        '200':
+          description: Penilaian tersimpan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizGradeResultResponse'
+        '400':
+          description: Bukan esai, poin di luar rentang, atau percobaan masih berjalan
+        '403':
+          description: Bukan dosen pengampu/Admin
+        '404':
+          description: Percobaan tidak ditemukan
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Daftar notifikasi pengguna (FR-057)
+      description: |
+        Mematerialisasi pengingat deadline H-1 secara lazy. Mendukung filter
+        `is_read` dan `type` serta paginasi.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - in: query
+          name: is_read
+          schema: { type: string, enum: ['true', 'false'] }
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [ASSIGNMENT_CREATED, DEADLINE_REMINDER, ATTENDANCE_OPENED, ATTENDANCE_UPDATED, GRADE_PUBLISHED, ENROLLMENT_CREATED, QUIZ_PUBLISHED]
+      responses:
+        '200':
+          description: Daftar notifikasi terurut terbaru
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationListResponse'
+        '400':
+          description: Parameter filter tidak valid
+        '401':
+          description: Tidak terautentikasi
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Jumlah notifikasi belum dibaca (FR-057)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Jumlah belum dibaca
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnreadCountResponse'
+        '401':
+          description: Tidak terautentikasi
+
+  /notifications/read-all:
+    patch:
+      tags: [Notifications]
+      summary: Tandai seluruh notifikasi dibaca (FR-057)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Jumlah notifikasi ditandai
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          description: Tidak terautentikasi
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Tandai satu notifikasi dibaca (FR-057)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EntityId'
+      responses:
+        '200':
+          description: Notifikasi ditandai dibaca
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Notifikasi tidak ditemukan atau bukan milik pengguna

@@ -20,6 +20,10 @@ export const BODYLESS_MUTATIONS = new Set([
   'post /auth/logout',
   'post /meetings/{meetingId}/attendance/close',
   'post /attendance/{sessionId}/check-in',
+  'post /quizzes/{id}/attempts',
+  'post /quiz-attempts/{attemptId}/submit',
+  'patch /notifications/read-all',
+  'patch /notifications/{id}/read',
 ]);
 
 /**
@@ -39,7 +43,128 @@ export const BINARY_SUCCESS_RESPONSES = new Map([
   ['get /materials/{id}/download', 'application/octet-stream'],
   ['get /assignments/{id}/download', 'application/octet-stream'],
   ['get /submissions/{id}/download', 'application/octet-stream'],
+  ['get /profile/avatar', 'image/png'],
+  ['get /quizzes/{id}/attempts/export', 'text/csv'],
 ]);
+
+/**
+ * Daftar kanonik seluruh operasi API yang wajib terdokumentasi di
+ * `docs/openapi.yaml` (penjaga coverage — Workstream C).
+ *
+ * Setiap endpoint backend harus terdaftar di sini; `tests/phase6.test.js`
+ * memvalidasi dua arah:
+ *   1. setiap operasi pada daftar ini ada di dokumen;
+ *   2. setiap operasi di dokumen terdaftar di sini (tidak ada yang terlewat).
+ *
+ * Saat menambah endpoint baru (mis. MVP 4), tambahkan barisnya di sini
+ * sekaligus dengan definisi path di YAML.
+ */
+export const REQUIRED_OPERATIONS = Object.freeze([
+  // === MVP 1 — Auth & Profil ===
+  ['/auth/login', 'post'],
+  ['/auth/refresh', 'post'],
+  ['/auth/logout', 'post'],
+  ['/auth/forgot-password', 'post'],
+  ['/auth/reset-password', 'post'],
+  ['/auth/reset-password/validate', 'get'],
+  ['/auth/change-password', 'put'],
+  ['/profile', 'get'],
+  ['/profile', 'put'],
+  ['/profile/avatar', 'post'],
+  ['/profile/avatar', 'get'],
+  ['/profile/password', 'put'],
+  // === MVP 1 — Admin: pengguna, mata kuliah, kelas, enrollment, audit ===
+  ['/admin/users', 'get'],
+  ['/admin/users', 'post'],
+  ['/admin/users/{id}', 'get'],
+  ['/admin/users/{id}', 'put'],
+  ['/admin/users/{id}/status', 'patch'],
+  ['/admin/users/{id}/reset-password', 'put'],
+  ['/admin/courses', 'get'],
+  ['/admin/courses', 'post'],
+  ['/admin/courses/{id}', 'get'],
+  ['/admin/courses/{id}', 'put'],
+  ['/admin/courses/{id}', 'delete'],
+  ['/admin/classes', 'get'],
+  ['/admin/classes', 'post'],
+  ['/admin/classes/{id}', 'get'],
+  ['/admin/classes/{id}', 'put'],
+  ['/admin/classes/{id}', 'delete'],
+  ['/admin/enrollments', 'post'],
+  ['/admin/enrollments/{id}', 'delete'],
+  ['/admin/classes/{classId}/enrollments', 'get'],
+  ['/admin/classes/{classId}/available-students', 'get'],
+  ['/admin/config', 'get'],
+  ['/admin/config', 'put'],
+  ['/admin/audit-logs', 'get'],
+  ['/admin/audit-logs/{id}', 'get'],
+  ['/dashboard', 'get'],
+  ['/classes', 'get'],
+  ['/classes/{id}', 'get'],
+  // === MVP 2 — Pertemuan, materi, presensi ===
+  ['/classes/{classId}/meetings', 'get'],
+  ['/classes/{classId}/attendance-recap', 'get'],
+  ['/meetings/{id}', 'get'],
+  ['/meetings/{id}', 'put'],
+  ['/meetings/{meetingId}/materials', 'post'],
+  ['/meetings/{meetingId}/attendance/open', 'post'],
+  ['/meetings/{meetingId}/attendance/close', 'post'],
+  ['/attendance/{sessionId}/check-in', 'post'],
+  ['/attendance/{sessionId}/records', 'get'],
+  ['/attendance/records/{id}', 'put'],
+  ['/materials/{id}', 'put'],
+  ['/materials/{id}', 'delete'],
+  ['/materials/{id}/download', 'get'],
+  // === MVP 3 — Tugas & submission ===
+  ['/meetings/{meetingId}/assignments', 'post'],
+  ['/classes/{classId}/assignments', 'get'],
+  ['/assignments/{id}', 'get'],
+  ['/assignments/{id}', 'put'],
+  ['/assignments/{id}', 'delete'],
+  ['/assignments/{id}/download', 'get'],
+  ['/assignments/{assignmentId}/submissions', 'get'],
+  ['/assignments/{assignmentId}/submissions', 'post'],
+  ['/assignments/{assignmentId}/submission', 'get'],
+  ['/submissions/{id}/download', 'get'],
+  ['/submissions/{id}/grade', 'put'],
+  // === MVP 4 - Timeline, kuis, notifikasi ===
+  ['/timeline', 'get'],
+  ['/meetings/{meetingId}/quizzes', 'post'],
+  ['/classes/{classId}/quizzes', 'get'],
+  ['/quizzes/{id}', 'get'],
+  ['/quizzes/{id}', 'put'],
+  ['/quizzes/{id}', 'delete'],
+  ['/quizzes/{id}/publish', 'patch'],
+  ['/quizzes/{id}/questions', 'post'],
+  ['/quizzes/{id}/questions/{questionId}', 'put'],
+  ['/quizzes/{id}/questions/{questionId}', 'delete'],
+  ['/quizzes/{id}/attempts', 'get'],
+  ['/quizzes/{id}/attempts', 'post'],
+  ['/quizzes/{id}/attempts/export', 'get'],
+  ['/quiz-attempts/{attemptId}', 'get'],
+  ['/quiz-attempts/{attemptId}/answers', 'put'],
+  ['/quiz-attempts/{attemptId}/submit', 'post'],
+  ['/quiz-attempts/{attemptId}/grade', 'put'],
+  ['/notifications', 'get'],
+  ['/notifications/unread-count', 'get'],
+  ['/notifications/read-all', 'patch'],
+  ['/notifications/{id}/read', 'patch'],
+]);
+
+/**
+ * Operasi yang dapat diakses tanpa token (publik atau auth opsional).
+ * Operasi di luar daftar ini wajib mendeklarasikan `security: bearerAuth`.
+ */
+export const PUBLIC_OPERATIONS = Object.freeze(
+  new Set([
+    'post /auth/login',
+    'post /auth/refresh',
+    'post /auth/logout',
+    'post /auth/forgot-password',
+    'post /auth/reset-password',
+    'get /auth/reset-password/validate',
+  ])
+);
 
 /**
  * Membaca dan mem-parse `docs/openapi.yaml` menjadi objek JavaScript.
