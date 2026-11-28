@@ -396,19 +396,19 @@ Review PR #80 menemukan **2 temuan P1 (wajib sebelum merge)**, **4 temuan P2**, 
 
 ---
 
-### Fase 1: Pengerasan P2 (⬜)
+### Fase 1: Pengerasan P2 (✅)
 
-**Mulai:** — **Selesai:** —
+**Mulai:** 2026-11-28 **Selesai:** 2026-11-28
 
-- [ ] **R-03** Scope + throttle `materializeDeadlineReminders`, pass `req.user` dari controller.
-- [ ] **R-03** Tes: dosen tidak memicu, kelas lain tidak bocor, dedupe tetap bekerja.
-- [ ] **R-04** Dokumentasikan `scheduled_at` di OpenAPI dan respons pertemuan.
-- [ ] **R-04** Isi `scheduled_at` di seed secara idempoten.
-- [ ] **R-04** Tes timeline memuat item `MEETING`/`EXAM`.
-- [ ] **R-05** Dedupe berbasis versi untuk regrade dan koreksi presensi.
-- [ ] **R-05** Tes regrade beruntun dan koreksi status beruntun.
-- [ ] **R-06** Tangani `P2002` pada pembuatan attempt + tes paralel.
-- [ ] Jalankan `npm test` → seluruh suite hijau, termasuk `phase6.test.js` setelah OpenAPI berubah.
+- [x] **R-03** Scope + throttle `materializeDeadlineReminders`, pass `req.user` dari controller.
+- [x] **R-03** Tes: dosen tidak memicu, kelas lain tidak bocor, dedupe tetap bekerja.
+- [x] **R-04** Dokumentasikan `scheduled_at` di OpenAPI dan respons pertemuan.
+- [x] **R-04** Isi `scheduled_at` di seed secara idempoten.
+- [x] **R-04** Tes timeline memuat item `MEETING`/`EXAM`.
+- [x] **R-05** Dedupe berbasis versi untuk regrade dan koreksi presensi.
+- [x] **R-05** Tes regrade beruntun dan koreksi status beruntun.
+- [x] **R-06** Tangani `P2002` pada pembuatan attempt + tes paralel.
+- [x] Jalankan `npm test` → seluruh suite hijau, termasuk `phase6.test.js` setelah OpenAPI berubah. (Hasil: 321/321)
 
 **Definition of Done fase:** polling notifikasi tidak lagi memicu pemindaian lintas seluruh kelas; regrade/koreksi kedua menghasilkan notifikasi; timeline demo menampilkan pertemuan/ujian; start kuis paralel tidak pernah 500.
 
@@ -493,7 +493,7 @@ Review PR #80 menemukan **2 temuan P1 (wajib sebelum merge)**, **4 temuan P2**, 
 | Fase | Status | Tanggal mulai | Tanggal selesai | Tes terakhir | Catatan / commit |
 |---|---|---|---|---|---|
 | 0 — Blocker P1 | ✅ | 2026-11-28 | 2026-11-28 | `npm test` 315/315 | R-01, R-02 — commit `9d847ca` |
-| 1 — Pengerasan P2 | ⬜ | — | — | — | R-03–R-06 |
+| 1 — Pengerasan P2 | ✅ | 2026-11-28 | 2026-11-28 | `npm test` 321/321 | R-03–R-06 — commit `ef8964c` |
 | 2 — Kebersihan P3 | ⬜ | — | — | — | R-07–R-14 |
 | 3 — Regresi & Handoff | ⬜ | — | — | — | Penutup |
 
@@ -503,6 +503,7 @@ Review PR #80 menemukan **2 temuan P1 (wajib sebelum merge)**, **4 temuan P2**, 
 |---|---|---|---|---|---|
 | 2026-11-28 | — | Dokumen plan perbaikan pasca-review PR #80 dibuat (belum ada implementasi) | `IMPLEMENTATION_PLAN_MVP4_BACKEND.md` | — | — |
 | 2026-11-28 | 0 | R-01: skor kuis dihitung dari total poin seluruh soal, esai tak dijawab mendapat baris `QuizAnswer` kosong saat submit (dalam transaksi), syarat `GRADED` berbasis seluruh esai; R-02: `resolveMailTransport` murni — produksi default `smtp` + gagal cepat tanpa `SMTP_HOST`, `log`/`memory` di produksi selalu `console.warn`, `test` tetap `memory`. Catatan: T-01 dieksekusi sebagai "2 PG dijawab, 1 benar" agar konsisten dengan ekspektasi skor 33.33 pada R-01/T-02 | `quiz.service.js`, `quizAttempt.service.js`, `env.js`, `.env.example`, `mvp4-phase4.test.js`, `mvp4-review-config.test.js` | `npm test` 315/315 lulus, 0 gagal (baseline 302 + 13 baru) | `9d847ca` |
+| 2026-11-28 | 1 | R-03: materialisasi pengingat hanya untuk MAHASISWA, discope ke kelas ter-enroll pemanggil + throttle 60 detik/proses (opsi `force` untuk uji); R-04: `scheduled_at` di OpenAPI 1.4.1 + seed idempoten mingguan dari `SEMESTER_START_DATE`; R-05: notifikasi regrade berbasis versi `updated_at`, koreksi presensi tanpa dedupe statis; R-06: `P2002` start kuis ditangani (rival dibaca ulang / 409, audit sekali). Penyimpangan kecil: signature service memakai `{ user, force }` (bukan `{ userId, force }`) agar pemeriksaan role ada di service | `notification.service.js`, `notification.controller.js`, `submission.service.js`, `attendance.service.js`, `quizAttempt.service.js`, `openapi.yaml`, `seed.js`, `mvp4-phase2/4/5.test.js` | `npm test` 321/321 lulus, 0 gagal (315 + 6 baru) | `ef8964c` |
 
 **Format acuan baris baru (jangan dihapus; tambahkan baris di bawah tabel):**
 
