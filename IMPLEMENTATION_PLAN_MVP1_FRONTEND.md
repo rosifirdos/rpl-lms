@@ -337,21 +337,21 @@ frontend/
 - **Fase 4 modular per modul:** Manajemen Pengguna, Master Mata Kuliah, Pembukaan Kelas, dan Konfigurasi dapat dikerjakan dalam urutan bebas; jangan menunggu keempatnya selesai untuk memulai Fase 5 audit.
 - **Fase 6 bukan pekerjaan sekali jalan:** skeleton/empty/error state ditambahkan saat modul dibuat, lalu diaudit ulang di akhir.
 
-### Fase 0 — Fondasi: Dependency, Router, HTTP, Provider, UI Kit, Test Setup (⬜)
+### Fase 0 — Fondasi: Dependency, Router, HTTP, Provider, UI Kit, Test Setup (✅)
 
 **Tujuan:** menyiapkan pondasi yang dipakai seluruh MVP 1–5.
 
-- [ ] Pasang dependency: `react-router-dom`, `@tanstack/react-query`, `react-hook-form`, `zod`, `@hookform/resolvers`, `date-fns`, `clsx`, `tailwind-merge`.
-- [ ] Pasang dev dependency: `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom`, `msw`, `@playwright/test`, `typescript` (jika belum).
-- [ ] Tambahkan script `typecheck`, `test`, `test:watch`, `test:e2e`, `lint` (opsional).
-- [ ] Buat `services/http.ts` (refresh mutex + queue + error normalizer).
-- [ ] Buat `stores/authStore.ts` baru (memori + sessionStorage refresh + status booting).
-- [ ] Buat `AuthProvider`, `RequireAuth`, `RequireRole`.
-- [ ] Migrasi router ke React Router path-based; sediakan redirect legacy `?page=`.
-- [ ] Buat `components/ui/` minimal: Button, Input, Select, Modal, Table, Pagination, Badge, Skeleton, EmptyState, Alert, ConfirmDialog.
-- [ ] Aktifkan `QueryClientProvider` + Devtools (dev only).
-- [ ] Buat utilitas format tanggal/angka (`id-ID`) dan konversi waktu lokal → ISO 8601 ber-offset.
-- [ ] Setup MSW handlers dasar + 1 smoke test render App.
+- [x] Pasang dependency: `react-router-dom`, `@tanstack/react-query`, `react-hook-form`, `zod`, `@hookform/resolvers`, `date-fns`, `clsx`, `tailwind-merge`.
+- [x] Pasang dev dependency: `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom`, `msw`, `@playwright/test`, `typescript` (jika belum).
+- [x] Tambahkan script `typecheck`, `test`, `test:watch`, `test:e2e`, `lint` (opsional).
+- [x] Buat `services/http.ts` (refresh mutex + queue + error normalizer).
+- [x] Buat `stores/authStore.ts` baru (memori + sessionStorage refresh + status booting).
+- [x] Buat `AuthProvider`, `RequireAuth`, `RequireRole`.
+- [x] Migrasi router ke React Router path-based; sediakan redirect legacy `?page=`.
+- [x] Buat `components/ui/` minimal: Button, Input, Select, Modal, Table, Pagination, Badge, Skeleton, EmptyState, Alert, ConfirmDialog.
+- [x] Aktifkan `QueryClientProvider` + Devtools (dev only).
+- [x] Buat utilitas format tanggal/angka (`id-ID`) dan konversi waktu lokal → ISO 8601 ber-offset.
+- [x] Setup MSW handlers dasar + 1 smoke test render App.
 
 **DoD fase:** aplikasi berjalan di router baru, login page masih mock tetapi guard sudah aktif, `npm run build` sukses, smoke test lulus.
 
@@ -502,7 +502,7 @@ frontend/
 
 | Fase | Prioritas | Status | Tanggal mulai | Tanggal selesai | Tes terakhir | Catatan |
 |---|---|---|---|---|---|---|
-| 0 — Fondasi & Router | P0 | ⬜ | — | — | — | — |
+| 0 — Fondasi & Router | P0 | ✅ | 2026-11-28 | 2026-11-28 | typecheck ✅ · test 4/4 ✅ · build ✅ | `lint` (opsional) belum dibuat; script `test:e2e` siap, browser Playwright belum di-install |
 | 1 — Autentikasi & Sesi | P0 | ⬜ | — | — | — | — |
 | 2 — Shell & Profil | P0 | ⬜ | — | — | — | — |
 | 3 — Dasbor 3 Peran | P1 | ⬜ | — | — | — | — |
@@ -515,6 +515,7 @@ frontend/
 | Tanggal | Fase | Ringkasan | File utama | Hasil tes | Commit |
 |---|---|---|---|---|---|
 | 2026-11-28 | — | Dokumen rencana frontend MVP 1 dibuat ulang (menggantikan versi status lama) | `IMPLEMENTATION_PLAN_MVP1_FRONTEND.md` | — | — |
+| 2026-11-28 | 0 | Fondasi selesai: React Router 6 path-based + redirect legacy `?page=`, guard RequireAuth/RequireRole, http.ts (refresh mutex+queue, ApiError), authStore baru (memori+sessionStorage, status booting, login mock sementara), AppProviders (QueryClient+Devtools), UI kit `components/ui/` (11 komponen), `lib/format.ts` (id-ID, ISO 8601 ber-offset), MSW handlers + smoke test 4 kasus; `App.jsx`/`main.jsx` diganti `.tsx`, halaman lama jadi adapter di `routes/legacy.tsx` | `src/routes/index.tsx`, `src/services/http.ts`, `src/stores/authStore.ts`, `src/components/ui/` | `npm run typecheck` 0 error · `npm run test` 4/4 · `npm run build` ✅ | belum commit |
 
 **Format baris baru:**
 

@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
 export const apiClient = axios.create({
   baseURL: '/api',
@@ -57,7 +57,7 @@ export const dosenApi = {
   /**
    * Get attendance recap
    */
-  async getAttendanceRecap(classId, params = {}) {
+  async getAttendanceRecap(classId: any, params = {}) {
     const response = await apiClient.get(`/dosen/classes/${classId}/attendance`, { params });
     return response.data;
   },
@@ -73,17 +73,17 @@ export const adminApi = {
     return response.data;
   },
 
-  async createCourse(data) {
+  async createCourse(data: any) {
     const response = await apiClient.post('/admin/courses', data);
     return response.data;
   },
 
-  async updateCourse(id, data) {
+  async updateCourse(id: any, data: any) {
     const response = await apiClient.put(`/admin/courses/${id}`, data);
     return response.data;
   },
 
-  async deactivateCourse(id) {
+  async deactivateCourse(id: any) {
     const response = await apiClient.delete(`/admin/courses/${id}`);
     return response.data;
   },
@@ -94,17 +94,17 @@ export const adminApi = {
     return response.data;
   },
 
-  async createClass(data) {
+  async createClass(data: any) {
     const response = await apiClient.post('/admin/classes', data);
     return response.data;
   },
 
-  async updateClass(id, data) {
+  async updateClass(id: any, data: any) {
     const response = await apiClient.put(`/admin/classes/${id}`, data);
     return response.data;
   },
 
-  async deleteClass(id) {
+  async deleteClass(id: any) {
     const response = await apiClient.delete(`/admin/classes/${id}`);
     return response.data;
   },
