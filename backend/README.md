@@ -203,15 +203,27 @@ Seeder juga membuat 5 master mata kuliah (`TIF101`–`TIF105`) dan 2 kelas perku
   - CRUD kelas dengan filter akademik, validasi mata kuliah/dosen aktif, jejak audit, dan perlindungan kapasitas serta enrollment.
   - Suite backend saat ini mencakup Fase 2–6; jumlah aktual ditampilkan oleh `npm test`.
   - Pengujian Fase 6 menambahkan validasi kepatuhan, kapasitas enrollment konkuren, dan dokumentasi handoff OpenAPI.
+- ✅ **MVP 3 — Tugas, Submission & Penilaian (Selesai)**
+  - CRUD tugas per pertemuan (instruksi, berkas soal privat, bobot, deadline, publikasi).
+  - Submission/resubmission dengan validasi ekstensi/MIME/magic-byte, penguncian setelah dinilai, unduh privat.
+  - Penilaian skor 0–100 + feedback, roster dosen, dan audit `GRADE_SUBMISSION`.
+- ✅ **MVP 4 — Timeline, Kuis & Notifikasi (Selesai — 327 test, 59 suite)**
+  - Central timeline kronologis (tugas, kuis, pertemuan/ujian) dengan filter tipe/kelas/rentang waktu.
+  - Kuis interaktif: bank soal PG/esai, timer server, attempt/submit/auto-submit, penilaian esai, roster lengkap (`NOT_STARTED`) + ekspor CSV.
+  - Notifikasi internal: tugas, kuis, presensi, nilai rilis, pengingat deadline (scope kelas + throttle), deep-link, unread count.
+  - Pengerasan pasca-review PR #80 (R-01..R-14) dan OpenAPI **1.4.1**; lihat [IMPLEMENTATION_PLAN_MVP4_BACKEND.md](../IMPLEMENTATION_PLAN_MVP4_BACKEND.md).
 
 ### Modul SRS yang **belum diimplementasikan**
 
-Sesuai prioritas MVP (SRS Bab 27), modul berikut menjadi tahapan selanjutnya:
+Sesuai prioritas MVP (SRS Bab 27), hanya tahap berikut yang masih tersisa:
 
-| MVP | Modul | Entitas SRS |
-| --- | --- | --- |
-| **MVP 1 (Fase 5)** | Direct Enrollment & Dasbor Kontekstual | `Enrollment` |
-| **MVP 2** | Ruang Kelas 16 Pertemuan, Materi, Presensi Digital | `Meeting`, `Material`, `Attendance` |
-| **MVP 3** | Tugas, Validasi File, Submission, Penilaian Skor 0–100 | `Assignment`, `Submission` |
-| **MVP 4** | Timeline Pembelajaran, Kuis, Notifikasi | `Quiz`, `Notification` |
-| **MVP 5** | UTS/UAS + Gatekeeping Presensi, Rekap Nilai, Audit Lanjut | exam gate, grade recap |
+| MVP | Modul | Entitas SRS | Rencana |
+| --- | --- | --- | --- |
+| **MVP 5** | UTS/UAS + Gatekeeping Presensi, Rekap Nilai, Monitoring & Audit Lanjut | exam gate, grade recap | [IMPLEMENTATION_PLAN_MVP5_BACKEND.md](../IMPLEMENTATION_PLAN_MVP5_BACKEND.md) |
+
+### Keterbatasan yang diterima (MVP 4)
+
+1. **Throttle pengingat in-memory** — `lastRunAt` bersifat per proses; pada deployment multi-instance, materialisasi maksimal sekali per instance per 60 detik. Solusi jangka panjang: job terjadwal.
+2. **Dedupe berbasis timestamp** — notifikasi regrade memakai `grade:<submissionId>:<updated_at ISO>`; dua perubahan pada milidetik yang sama dapat terdedupe (kemungkinan sangat kecil, diterima).
+3. **Pengingat lazy tanpa scheduler** — pengingat deadline dimaterialisasi saat mahasiswa membaca notifikasi, bukan oleh cron; tidak ada scheduler produksi pada MVP 4.
+4. **Transport email `log`** — diizinkan eksplisit di produksi dengan `console.warn`; token reset dapat tercatat bila operator memilih `MAIL_TRANSPORT=log`. Default produksi tetap `smtp` dan gagal cepat tanpa `SMTP_HOST`.

@@ -42,6 +42,7 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **Penilaian Skor 0–100** | FR-022, FR-035, BR-006, FR-058 | Epic 9: Penilaian Skor E-Learning | TC-013, TC-014, mvp3-phase4..5 | ✅ Implemented (MVP 3) |
 | **Timeline Pembelajaran** | FR-009 s.d. FR-012, BR-013 | Epic 3: Central Timeline | TC-006, mvp4-phase2 | ✅ Implemented (MVP 4) |
 | **Kuis Interaktif** | FR-025, FR-040, FR-041 | Epic 11: Kuis Pembelajaran | mvp4-phase3..4 | ✅ Implemented (MVP 4) |
+| **Notifikasi Internal** | FR-057 | Epic 12: Notifikasi Pembelajaran | mvp4-phase5 | ✅ Implemented (MVP 4) |
 | **Evaluasi UTS / UAS** | FR-026, FR-027, FR-042, FR-050, FR-056, BR-012 | Epic 11: Gatekeeping UTS/UAS | TC-018 s.d. TC-020 | ⛔ Blocked by Roadmap (MVP 5) |
 | **Keamanan & Audit Trail** | FR-052, FR-058, NFR-001 s.d. NFR-009, BR-015 | Epic 13: Keamanan & Audit Trail | TC-SECR-01 s.d. 03, TC-AUDT-01, SEC-01 s.d. 13, AUD-01 s.d. 15 | 🟡 Ready to Test |
 
@@ -121,7 +122,7 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **BR-003** | Otoritas Akses Kelas: mahasiswa hanya bisa akses kelas hasil enrollment | Middleware kelas | TC-MATR-02, ENR-08, ENR-10 | 🟡 Ready to Test |
 | **BR-004** | Struktur Baku 16 Pertemuan: P-8 untuk UTS, P-16 untuk UAS otomatis terbuat | Auto-generate pertemuan | TC-CLSS-01, CLS-01, MTG-01 | 🟡 Ready to Test |
 | **BR-005** | Fleksibilitas Aktivitas: item belum dipublikasi tidak tampak di mahasiswa | Kolom `is_published` | MTG-04, MAT-04 | 🟡 Ready to Test |
-| **BR-006** | Standar Penilaian Skor Numerik E-Learning (0–100) | Validasi Zod rentang 0–100 | TC-013, TC-014 | ⛔ Blocked (MVP 3) |
+| **BR-006** | Standar Penilaian Skor Numerik E-Learning (0–100) | Validasi Zod rentang 0–100 | TC-013, TC-014, mvp3-phase4..5 | ✅ Implemented (MVP 3) |
 | **BR-007** | Whitelist Ekstensi File: `.pdf`, `.docx`, `.xlsx`, `.zip` | Multer filter & MIME validation | TC-MATR-01, MAT-02, TC-010 | 🟡 Ready to Test |
 | **BR-008** | Size Limit File: batas maksimal 5MB s.d. 10MB | Multer file size limits | TC-MATR-01, MAT-03, TC-011 | 🟡 Ready to Test |
 | **BR-009** | Penyimpanan Terproteksi: berkas di private storage disajikan lewat streaming | Storage private, no static serve | TC-PROF-01, TC-MATR-02, SEC-09 | 🟡 Ready to Test |

@@ -4,11 +4,11 @@
 
 ---
 
-> **Acuan:** [PRD.md](PRD.md) (*Bab 2, 3, 5, 7 — MVP 5*), [SRS.md](SRS.md) (*Bab 7.8, 8.7, FR-026/027/042/043/049–052/055/056/058, 27*), [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), [IMPLEMENTATION_PLAN_MVP1_FRONTEND.md](IMPLEMENTATION_PLAN_MVP1_FRONTEND.md), [IMPLEMENTATION_PLAN_MVP4_FRONTEND.md](IMPLEMENTATION_PLAN_MVP4_FRONTEND.md), dan [backend/docs/openapi.yaml](backend/docs/openapi.yaml) **v1.4.1**.
+> **Acuan:** [PRD.md](PRD.md) (*Bab 2, 3, 5, 7 — MVP 5*), [SRS.md](SRS.md) (*Bab 7.8, 8.7, FR-026/027/042/043/049–052/055/056/058, 27*), [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), [IMPLEMENTATION_PLAN_MVP1_FRONTEND.md](IMPLEMENTATION_PLAN_MVP1_FRONTEND.md), [IMPLEMENTATION_PLAN_MVP4_FRONTEND.md](IMPLEMENTATION_PLAN_MVP4_FRONTEND.md), [IMPLEMENTATION_PLAN_MVP5_BACKEND.md](IMPLEMENTATION_PLAN_MVP5_BACKEND.md) (rencana & kontrak usulan backend), dan [backend/docs/openapi.yaml](backend/docs/openapi.yaml) **v1.4.1**.
 >
 > **Definisi MVP 5 (PRD Bab 7):** *"Evaluasi Ujian (UTS P-8 & UAS P-16), Gatekeeping Kehadiran & Audit Trail."*
 >
-> **⚠️ Status dependensi backend:** belum ada `IMPLEMENTATION_PLAN_MVP5_BACKEND.md` dan OpenAPI 1.4.1 **belum memuat** endpoint ujian, gatekeeping, rekap nilai, atau ekspor nilai. Dokumen ini membedakan tegas:
+> **⚠️ Status dependensi backend:** `IMPLEMENTATION_PLAN_MVP5_BACKEND.md` **sudah tersedia**, tetapi OpenAPI 1.4.1 **belum memuat** endpoint ujian, gatekeeping, rekap nilai, atau ekspor nilai (rencana belum diimplementasikan). Dokumen ini membedakan tegas:
 > - **Dapat dikerjakan sekarang** — konfigurasi ambang kehadiran, monitoring audit, dan kesiapan UI yang memakai endpoint eksisting.
 > - **Terblokir backend** — halaman ujian, gatekeeping, rekap nilai, ekspor. Kontrak di Bab 4.2 adalah **usulan** yang harus disepakati sebelum implementasi; jangan membuat mock permanen yang diklaim selesai.
 >

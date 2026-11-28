@@ -29,7 +29,10 @@ Ruang lingkup sistem sengaja dipisahkan dari modul administrasi kampus (SIA, PMB
 | **Audit Trail** | Pencatatan mutasi data sensitif + endpoint peninjauan audit untuk Admin | ✅ Backend |
 | **Antarmuka UI** | Seluruh halaman dasbor, ruang kelas, modul admin, dosen, dan mahasiswa | 🟡 UI selesai, data masih mock |
 | **Integrasi Frontend–API** | Koneksi HTTP client, sesi, dan pemanggilan endpoint | 🟡 Sebagian (logout terintegrasi) |
-| **Tugas, Kuis, UTS/UAS, Rekap Nilai** | MVP 3–5 (lihat roadmap) | ⬜ Belum |
+| **Tugas & Penilaian** | Penerbitan tugas, validasi berkas submission, penilaian skor 0–100 + feedback | ✅ Backend |
+| **Timeline & Kuis Interaktif** | Timeline terpusat, bank soal PG/esai, attempt berbasis timer, roster lengkap & ekspor CSV | ✅ Backend |
+| **Notifikasi Internal** | Notifikasi tugas, kuis, presensi, nilai rilis, dan pengingat deadline | ✅ Backend |
+| **UTS/UAS & Rekap Nilai** | Gatekeeping kehadiran, rekap nilai akhir, ekspor, monitoring admin | ⬜ Belum (MVP 5) |
 
 > **Catatan status frontend:** seluruh halaman sudah tersedia dan dapat dinavigasi, tetapi sebagian besar masih memakai data *fixture*/*mock* lokal. Login saat ini masih berupa *mock login* di sisi klien, dan hanya aksi logout yang memanggil API backend. Integrasi penuh ke endpoint backend adalah pekerjaan lanjutan.
 
@@ -58,8 +61,8 @@ Ruang lingkup sistem sengaja dipisahkan dari modul administrasi kampus (SIA, PMB
 rpl-lms/
 ├── backend/
 │   ├── prisma/
-│   │   ├── schema.prisma          # 14 model + 6 enum (MVP 1 & MVP 2)
-│   │   ├── migrations/            # 3 artefak migrasi
+│   │   ├── schema.prisma          # 24 model + 9 enum (MVP 1–4)
+│   │   ├── migrations/            # 7 artefak migrasi
 │   │   └── seed.js                # Seeder idempoten
 │   ├── docs/
 │   │   └── openapi.yaml           # Dokumentasi OpenAPI 3.0
@@ -75,10 +78,11 @@ rpl-lms/
 │   │   ├── middlewares/           # auth, rbac, audit, validate, error, rateLimit, upload
 │   │   ├── modules/               # auth, profile, users, courses, classes,
 │   │   │                          # enrollments, meetings, materials, attendance,
-│   │   │                          # dashboard, audit-log
+│   │   │                          # assignments, submissions, timeline, quizzes,
+│   │   │                          # notifications, config, dashboard, audit-log
 │   │   └── utils/                 # apiResponse, errors, password, token, storage, ownership
 │   ├── storage/private/           # Berkas privat: avatars, materials, submissions
-│   └── tests/                     # Suite pengujian backend (MVP 1 & MVP 2)
+│   └── tests/                     # Suite pengujian backend (MVP 1–4)
 ├── frontend/
 │   ├── src/
 │   │   ├── components/            # AppShell, Sidebar, Header, widget dasbor
@@ -364,6 +368,53 @@ Seluruh endpoint menggunakan path flat `/api/...` (bukan `/api/v1/...`). Format 
 
 Sesi presensi memiliki `tolerance_minutes` (default 15 menit). Sesi yang melewati batas toleransi ditutup otomatis, dan mahasiswa yang belum check-in dicatat `ALPA` dengan penanda `is_auto_generated`.
 
+### Tugas & Submission (MVP 3)
+
+| Method | Endpoint | Deskripsi | Akses |
+| --- | --- | --- | --- |
+| `POST` | `/api/meetings/:meetingId/assignments` | Terbitkan tugas (multipart: instruksi, file soal, bobot, deadline) | Dosen (pengampu), Admin |
+| `GET` | `/api/classes/:classId/assignments` | Daftar tugas kelas | Mahasiswa (enrolled), Dosen, Admin |
+| `GET` | `/api/assignments/:id` | Detail tugas | Mahasiswa (enrolled), Dosen, Admin |
+| `PUT` | `/api/assignments/:id` | Ubah tugas | Dosen (pengampu), Admin |
+| `DELETE` | `/api/assignments/:id` | Hapus tugas | Dosen (pengampu), Admin |
+| `GET` | `/api/assignments/:id/download` | Unduh berkas soal terproteksi | Mahasiswa (enrolled), Dosen, Admin |
+| `POST` | `/api/assignments/:assignmentId/submissions` | Unggah/resubmission jawaban | Mahasiswa (enrolled) |
+| `GET` | `/api/assignments/:assignmentId/submission` | Submission milik mahasiswa | Mahasiswa (enrolled) |
+| `GET` | `/api/assignments/:assignmentId/submissions` | Roster submission kelas | Dosen (pengampu), Admin |
+| `GET` | `/api/submissions/:id/download` | Unduh berkas jawaban terproteksi | Mahasiswa (pemilik), Dosen, Admin |
+| `PUT` | `/api/submissions/:id/grade` | Nilai tugas (skor 0–100 + feedback) | Dosen (pengampu), Admin |
+
+### Timeline & Notifikasi (MVP 4)
+
+| Method | Endpoint | Deskripsi | Akses |
+| --- | --- | --- | --- |
+| `GET` | `/api/timeline` | Timeline kronologis (`types`, `class_id`, rentang waktu) | Mahasiswa, Dosen |
+| `GET` | `/api/notifications` | Daftar notifikasi pengguna (filter tipe, paginasi) | Terotentikasi |
+| `GET` | `/api/notifications/unread-count` | Jumlah notifikasi belum dibaca | Terotentikasi |
+| `PATCH` | `/api/notifications/:id/read` | Tandai satu notifikasi dibaca | Terotentikasi |
+| `PATCH` | `/api/notifications/read-all` | Tandai seluruh notifikasi dibaca | Terotentikasi |
+
+### Kuis Interaktif (MVP 4)
+
+| Method | Endpoint | Deskripsi | Akses |
+| --- | --- | --- | --- |
+| `POST` | `/api/meetings/:meetingId/quizzes` | Buat kuis pada pertemuan reguler | Dosen (pengampu), Admin |
+| `GET` | `/api/classes/:classId/quizzes` | Daftar kuis kelas (mahasiswa hanya yang terbit) | Mahasiswa, Dosen, Admin |
+| `GET` | `/api/quizzes/:id` | Detail kuis (kunci jawaban tidak dikirim ke mahasiswa) | Mahasiswa, Dosen, Admin |
+| `PUT` | `/api/quizzes/:id` | Ubah metadata kuis | Dosen (pengampu), Admin |
+| `DELETE` | `/api/quizzes/:id` | Hapus kuis | Dosen (pengampu), Admin |
+| `PATCH` | `/api/quizzes/:id/publish` | Publikasi/nonaktifkan kuis | Dosen (pengampu), Admin |
+| `POST` | `/api/quizzes/:id/questions` | Tambah butir soal (PG/esai) | Dosen (pengampu), Admin |
+| `PUT` | `/api/quizzes/:id/questions/:questionId` | Ubah butir soal | Dosen (pengampu), Admin |
+| `DELETE` | `/api/quizzes/:id/questions/:questionId` | Hapus butir soal | Dosen (pengampu), Admin |
+| `POST` | `/api/quizzes/:id/attempts` | Mulai percobaan kuis | Mahasiswa (enrolled) |
+| `GET` | `/api/quizzes/:id/attempts` | Roster hasil kuis seluruh mahasiswa ter-enrolled | Dosen (pengampu), Admin |
+| `GET` | `/api/quizzes/:id/attempts/export` | Ekspor roster kuis (CSV) | Dosen (pengampu), Admin |
+| `GET` | `/api/quiz-attempts/:attemptId` | Detail percobaan & jawaban | Mahasiswa (pemilik), Dosen, Admin |
+| `PUT` | `/api/quiz-attempts/:attemptId/answers` | Simpan jawaban parsial | Mahasiswa (pemilik) |
+| `POST` | `/api/quiz-attempts/:attemptId/submit` | Kumpulkan percobaan (PG dinilai otomatis) | Mahasiswa (pemilik) |
+| `PUT` | `/api/quiz-attempts/:attemptId/grade` | Nilai soal esai (poin + feedback) | Dosen (pengampu), Admin |
+
 ### Admin — Pengguna
 
 | Method | Endpoint | Deskripsi |
@@ -394,6 +445,13 @@ Sesi presensi memiliki `tolerance_minutes` (default 15 menit). Sesi yang melewat
 | `POST` | `/api/admin/enrollments` | Daftarkan mahasiswa (individu/batch) |
 | `DELETE` | `/api/admin/enrollments/:id` | Cabut kepesertaan |
 
+### Admin — Konfigurasi
+
+| Method | Endpoint | Deskripsi |
+| --- | --- | --- |
+| `GET` | `/api/admin/config` | Baca konfigurasi global (validasi file & ambang kehadiran ujian) |
+| `PUT` | `/api/admin/config` | Ubah konfigurasi (dicatat pada audit trail) |
+
 ### Admin — Jejak Audit
 
 | Method | Endpoint | Deskripsi |
@@ -406,7 +464,7 @@ Dokumentasi OpenAPI lengkap: [`backend/docs/openapi.yaml`](backend/docs/openapi.
 
 ## Skema Database
 
-`schema.prisma` mencakup **14 model** dan **6 enum**:
+`schema.prisma` mencakup **24 model** dan **9 enum** (MVP 1–4):
 
 | Model | Keterangan |
 | --- | --- |
@@ -415,23 +473,37 @@ Dokumentasi OpenAPI lengkap: [`backend/docs/openapi.yaml`](backend/docs/openapi.
 | `Mahasiswa` | `nim` (unik), `prodi`, `angkatan` — relasi 1:1 ke `User` |
 | `Dosen` | `nidn`/`nip` (unik), `gelar_depan`, `gelar_belakang` — relasi 1:1 ke `User` |
 | `RefreshToken` | Token refresh di-hash (SHA-256) dan disimpan di database |
+| `PasswordResetToken` | Token reset kata sandi (hash + kedaluwarsa), dibersihkan oleh skrip housekeeping |
 | `Course` | Master mata kuliah: `code` (unik), `name`, `credits`, `is_active` |
 | `Class` | Pembukaan kelas: `course`, `lecturer`, `academic_year`, `semester`, `capacity` |
 | `Enrollment` | Kepesertaan mahasiswa, unik per `(class_id, student_id)` |
-| `Meeting` | 16 pertemuan per kelas; `meeting_number`, `title`, `description`, `is_exam`, `exam_type`, `is_published` |
+| `Meeting` | 16 pertemuan per kelas; `meeting_number`, `is_exam`, `exam_type`, `scheduled_at`, `is_published` |
 | `Material` | Materi per pertemuan; metadata `File` + judul/deskripsi |
-| `AttendanceSession` | Sesi presensi per pertemuan (1:1); `status` `OPEN`/`CLOSED`, `opened_at`, `closed_at`, `tolerance_minutes` |
-| `AttendanceRecord` | Kehadiran mahasiswa per sesi; `HADIR`/`SAKIT`/`IZIN`/`ALPA`, `notes`, `is_auto_generated` |
+| `AttendanceSession` | Sesi presensi per pertemuan (1:1); `status` `OPEN`/`CLOSED`, `tolerance_minutes` |
+| `AttendanceRecord` | Kehadiran mahasiswa per sesi; `HADIR`/`SAKIT`/`IZIN`/`ALPA`, `is_auto_generated` |
+| `Assignment` | Tugas pada pertemuan; `weight_percentage`, `due_date`, `allow_late`, `is_published` |
+| `Submission` | Jawaban mahasiswa; `file`, `submitted_at`, `is_late`, `score` (0–100), `feedback` |
 | `File` | Metadata berkas privat: nama, path, mime, ukuran, pengunggah |
+| `SystemConfig` | Konfigurasi global key-value (validasi file & ambang kehadiran) |
 | `AuditLog` | Jejak audit: action, entity, old/new values, IP address |
+| `Quiz` | Kuis terikat pertemuan; `duration_minutes`, `open_at`, `close_at`, `is_published` |
+| `QuizQuestion` | Butir soal PG/esai; `points`, `answer_key`, `order_index` |
+| `QuizOption` | Opsi pilihan ganda; `is_correct` hanya dipakai server |
+| `QuizAttempt` | Percobaan mahasiswa; satu per `(quiz_id, student_id)`, `deadline_at`, `score`, `status` |
+| `QuizAnswer` | Jawaban per soal; `points_awarded` untuk PG otomatis dan esai manual |
+| `Notification` | Notifikasi internal per pengguna; `type`, `dedupe_key`, `is_read`, `link` |
 
-Enum: `UserRole`, `UserStatus`, `Semester`, `ExamType`, `AttendanceStatus`, `PresenceStatus`.
+Enum: `UserRole`, `UserStatus`, `Semester`, `ExamType`, `AttendanceStatus`, `PresenceStatus`, `QuizQuestionType`, `QuizAttemptStatus`, `NotificationType`.
 
 ### Migrasi
 
 1. `20261012000000_init_spada_mvp1` — fondasi MVP 1.
 2. `20261113125204_add_elearning_mvp2_meetings_attendance` — pertemuan, materi, presensi.
 3. `20261116193012_add_is_auto_generated_attendance_record` — penanda kehadiran otomatis.
+4. `20261127163147_add_elearning_mvp3_assignments_submissions` — tugas, submission, penilaian.
+5. `20261128133547_add_password_reset_tokens` — token reset kata sandi.
+6. `20261128133909_add_system_configs` — konfigurasi global (validasi file & ambang kehadiran).
+7. `20261128134556_add_elearning_mvp4_quizzes_notifications` — kuis interaktif & notifikasi internal.
 
 ## Status Implementasi
 
@@ -439,9 +511,9 @@ Enum: `UserRole`, `UserStatus`, `Semester`, `ExamType`, `AttendanceStatus`, `Pre
 
 - ✅ **MVP 1** — Autentikasi, RBAC, profil, manajemen pengguna, mata kuliah, kelas, direct enrollment, dasbor, audit trail, keamanan HTTP, dokumentasi OpenAPI.
 - ✅ **MVP 2** — 16 pertemuan terstruktur, distribusi materi terproteksi, sesi presensi, check-in mandiri, koreksi kehadiran, rekap persentase, auto-close sesi.
-- ⬜ **MVP 3** — Tugas, validasi berkas submission, penilaian skor 0–100 & feedback.
-- ⬜ **MVP 4** — Central Timeline lanjutan, kuis interaktif, notifikasi internal.
-- ⬜ **MVP 5** — UTS/UAS, *gatekeeping* kehadiran ≥70%, rekap nilai akhir, audit lanjutan.
+- ✅ **MVP 3** — Tugas, validasi berkas submission, penilaian skor 0–100 & feedback, audit perubahan nilai.
+- ✅ **MVP 4** — Central Timeline, kuis interaktif (PG/esai, timer server, roster & CSV), notifikasi internal dengan deep-link, keamanan email/token reset.
+- ⬜ **MVP 5** — UTS/UAS, *gatekeeping* kehadiran ≥70%, rekap nilai akhir, ekspor, dan monitoring audit lanjutan.
 
 ### Frontend
 
@@ -460,9 +532,9 @@ Enum: `UserRole`, `UserStatus`, `Semester`, `ExamType`, `AttendanceStatus`, `Pre
 | --- | --- |
 | **MVP 1** | Fondasi & Akun — ✅ selesai |
 | **MVP 2** | Ruang Kelas & Materi, Presensi Digital — ✅ backend selesai; integrasi UI berjalan |
-| **MVP 3** | Tugas, Validasi File, Submission, Penilaian 0–100 |
-| **MVP 4** | Central Timeline, Kuis, Notifikasi |
-| **MVP 5** | UTS/UAS, Gatekeeping Presensi ≥70%, Rekap Nilai, Audit Lanjutan |
+| **MVP 3** | Tugas, Validasi File, Submission, Penilaian 0–100 — ✅ backend selesai |
+| **MVP 4** | Central Timeline, Kuis, Notifikasi — ✅ backend selesai |
+| **MVP 5** | UTS/UAS, Gatekeeping Presensi ≥70%, Rekap Nilai, Audit Lanjutan — ⬜ berikutnya |
 
 ## Dokumen Referensi
 
