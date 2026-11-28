@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../stores/authStore';
-import { userFixtures } from '../features/shell/fixtures';
+import { useAvatarQuery } from '../hooks/queries/useProfile';
 import ThemeToggle from './ThemeToggle';
 
 function Header({
@@ -12,17 +12,19 @@ function Header({
   onNavigate,
 }) {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [serverTime, setServerTime] = useState('08:30 WIB');
+  const [deviceTime, setDeviceTime] = useState('—');
   const profileMenuRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Dynamic server time clock
+  // Jam perangkat. OpenAPI MVP 1 belum menyediakan endpoint server_time
+  // (hanya ada pada respons kuis MVP 4), sehingga label memakai waktu
+  // perangkat secara eksplisit — bukan klaim waktu server.
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
-      setServerTime(`${hours}:${minutes} WIB`);
+      setDeviceTime(`${hours}:${minutes}`);
     };
     updateTime();
     const timer = setInterval(updateTime, 30000);
@@ -55,17 +57,21 @@ function Header({
     return () => window.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Determine user identity from store or unified fixture
+  // Identitas pengguna dari sesi (authStore) — tanpa fallback fixture.
   const storeUser = useAuthStore((s) => s.user);
-  const fixture = userFixtures[activeRole] || userFixtures.mahasiswa;
+  const avatarQuery = useAvatarQuery();
 
-  const userName = storeUser?.name || fixture.name;
+  const userName = storeUser?.name || storeUser?.username || 'Pengguna';
   const userSub = storeUser?.identifier
     ? `${storeUser.identifier} • ${storeUser.role}`
-    : `${fixture.identifier} • ${fixture.sub}`;
-  const userInitials = storeUser?.name
-    ? storeUser.name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
-    : fixture.initials;
+    : `${storeUser?.email ?? ''} • ${storeUser?.role ?? activeRole}`;
+  const userInitials = userName
+    .split(' ')
+    .map((n) => n[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   const handleLogoutClick = (e) => {
     e.preventDefault();
@@ -136,54 +142,7 @@ function Header({
         <div className="flex items-center gap-space-xs sm:gap-space-sm shrink-0">
           <div className="hidden xl:flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm mr-1">
             <span className="material-symbols-outlined text-[16px]">schedule</span>
-            <span>Server: {serverTime}</span>
-          </div>
-
-          {/* Role Switcher Pill */}
-          <div
-            role="tablist"
-            aria-label="Pemilih Peran Pengguna"
-            className="flex items-center bg-surface-container-low p-0.5 sm:p-space-xs rounded-lg gap-0.5 sm:gap-space-xs border border-outline-variant/30"
-          >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeRole === 'mahasiswa'}
-              onClick={() => onRoleChange && onRoleChange('mahasiswa')}
-              className={`px-2 sm:px-space-sm py-1 sm:py-space-xs rounded font-label-sm text-[12px] sm:text-label-sm transition-colors ${
-                activeRole === 'mahasiswa'
-                  ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
-              }`}
-            >
-              Mhs
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeRole === 'dosen'}
-              onClick={() => onRoleChange && onRoleChange('dosen')}
-              className={`px-2 sm:px-space-sm py-1 sm:py-space-xs rounded font-label-sm text-[12px] sm:text-label-sm transition-colors ${
-                activeRole === 'dosen'
-                  ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
-              }`}
-            >
-              Dosen
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeRole === 'admin'}
-              onClick={() => onRoleChange && onRoleChange('admin')}
-              className={`px-2 sm:px-space-sm py-1 sm:py-space-xs rounded font-label-sm text-[12px] sm:text-label-sm transition-colors ${
-                activeRole === 'admin'
-                  ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
-              }`}
-            >
-              Admin
-            </button>
+            <span>Waktu Perangkat: {deviceTime}</span>
           </div>
 
           {/* Theme Toggle */}
@@ -208,8 +167,12 @@ function Header({
               type="button"
               onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-on-primary font-bold text-xs sm:text-sm shadow-sm shrink-0">
-                {userInitials}
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-on-primary font-bold text-xs sm:text-sm shadow-sm shrink-0 overflow-hidden">
+                {avatarQuery.data ? (
+                  <img src={avatarQuery.data} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span aria-hidden="true">{userInitials}</span>
+                )}
               </div>
               <div className="hidden md:flex flex-col text-left max-w-[130px] lg:max-w-[180px] truncate">
                 <span className="font-label-md text-label-md text-on-surface leading-tight truncate">

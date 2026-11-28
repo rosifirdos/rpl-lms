@@ -374,18 +374,20 @@ frontend/
 
 ---
 
-### Fase 2 — App Shell, RBAC & Profil Mandiri (⬜)
+### Fase 2 — App Shell, RBAC & Profil Mandiri (✅)
 
-- [ ] AppShell memakai data user asli (nama, role, avatar) dan menu per peran.
-- [ ] Header: server time (dari `/dashboard` atau endpoint waktu), lonceng notifikasi placeholder (diaktifkan MVP 4), dropdown profil.
-- [ ] Profil — Tab Biodata: muat `GET /profile`, form `full_name`, `phone`, `bio`, NIM/NIDN read-only, simpan `PUT /profile`.
-- [ ] Profil — Avatar: preview lokal, validasi `.jpg/.jpeg/.png` ≤ 2 MB di klien, unggah multipart, tampilkan dari blob terautentikasi, tangani 413/400.
-- [ ] Profil — Keamanan: ganti sandi dengan verifikasi sandi lama, indikator kekuatan, logout paksa setelah sukses bila backend mencabut sesi.
-- [ ] Modal ganti sandi lama di Header dipertahankan sebagai shortcut atau dihapus setelah halaman profil stabil.
-- [ ] Indikator role badge dan data identitas per peran (NIM/prodi/angkatan vs NIDN/NIP).
-- [ ] Test: render per peran, validasi avatar, sukses/gagal ubah profil & sandi.
+- [x] AppShell memakai data user asli (nama, role, avatar) dan menu per peran.
+- [x] Header: server time (dari `/dashboard` atau endpoint waktu), lonceng notifikasi placeholder (diaktifkan MVP 4), dropdown profil.
+- [x] Profil — Tab Biodata: muat `GET /profile`, form `full_name`, `phone`, `bio`, NIM/NIDN read-only, simpan `PUT /profile`.
+- [x] Profil — Avatar: preview lokal, validasi `.jpg/.jpeg/.png` ≤ 2 MB di klien, unggah multipart, tampilkan dari blob terautentikasi, tangani 413/400.
+- [x] Profil — Keamanan: ganti sandi dengan verifikasi sandi lama, indikator kekuatan, logout paksa setelah sukses bila backend mencabut sesi.
+- [x] Modal ganti sandi lama di Header dipertahankan sebagai shortcut atau dihapus setelah halaman profil stabil.
+- [x] Indikator role badge dan data identitas per peran (NIM/prodi/angkatan vs NIDN/NIP).
+- [x] Test: render per peran, validasi avatar, sukses/gagal ubah profil & sandi.
 
 **DoD fase:** profil dapat dibaca/diubah riil; avatar tersimpan dan tampil; sandi berganti.
+
+**Deviasi:** OpenAPI MVP 1 tidak menyediakan endpoint/field `server_time` (hanya ada pada respons kuis MVP 4), sehingga jam di Header memakai waktu perangkat dengan label eksplisit "Waktu Perangkat" — bukan klaim waktu server; akan diganti saat dasbor/mvp 4 menyediakan `server_time`.
 
 ---
 
@@ -504,7 +506,7 @@ frontend/
 |---|---|---|---|---|---|---|
 | 0 — Fondasi & Router | P0 | ✅ | 2026-11-28 | 2026-11-28 | typecheck ✅ · test 4/4 ✅ · build ✅ | `lint` (opsional) belum dibuat; script `test:e2e` siap, browser Playwright belum di-install |
 | 1 — Autentikasi & Sesi | P0 | ✅ | 2026-11-28 | 2026-11-28 | typecheck ✅ · test 21/21 ✅ · build ✅ | Login API riil (identifier+password, error 401/403), forgot/reset password terhubung backend, refresh mutex+queue dengan redirect `?expired=1`, bootstrap sesi via `GET /profile`, logout + `queryClient.clear()`; smoke test dibungkus `AppProviders` |
-| 2 — Shell & Profil | P0 | ⬜ | — | — | — | — |
+| 2 — Shell & Profil | P0 | ✅ | 2026-11-28 | 2026-11-28 | typecheck ✅ · test 31/31 ✅ · build ✅ | Profil riil (GET/PUT /profile, avatar multipart manual deterministik, blob terautentikasi), ganti sandi + force logout (backend mencabut semua refresh token), AppShell/Header peran dari sesi (role switcher dihapus), modal ganti sandi terhubung API; deviasi: `server_time` belum ada di OpenAPI MVP 1 → jam Header memakai waktu perangkat berlabel eksplisit |
 | 3 — Dasbor 3 Peran | P1 | ⬜ | — | — | — | — |
 | 4 — Master Data Admin | P1 | ⬜ | — | — | — | Modular per modul |
 | 5 — Enrollment & Audit | P1 | ⬜ | — | — | — | Audit dapat lebih dulu |
@@ -517,6 +519,7 @@ frontend/
 | 2026-11-28 | — | Dokumen rencana frontend MVP 1 dibuat ulang (menggantikan versi status lama) | `IMPLEMENTATION_PLAN_MVP1_FRONTEND.md` | — | — |
 | 2026-11-28 | 0 | Fondasi selesai: React Router 6 path-based + redirect legacy `?page=`, guard RequireAuth/RequireRole, http.ts (refresh mutex+queue, ApiError), authStore baru (memori+sessionStorage, status booting, login mock sementara), AppProviders (QueryClient+Devtools), UI kit `components/ui/` (11 komponen), `lib/format.ts` (id-ID, ISO 8601 ber-offset), MSW handlers + smoke test 4 kasus; `App.jsx`/`main.jsx` diganti `.tsx`, halaman lama jadi adapter di `routes/legacy.tsx` | `src/routes/index.tsx`, `src/services/http.ts`, `src/stores/authStore.ts`, `src/components/ui/` | `npm run typecheck` 0 error · `npm run test` 4/4 · `npm run build` ✅ | [`6f87b7f`](https://github.com/rosifirdos/rpl-lms/pull/84) |
 | 2026-11-28 | 1 | Autentikasi riil: `LoginPage.tsx` (react-hook-form+zod, show/hide password, remember me, error 401/403 pesan backend, notifikasi `?expired=1`/`?reset=1`), `ResetPasswordPage.tsx` (validate token → form sandi baru → `/login?reset=1`), `ForgotPassword.jsx` terhubung `POST /auth/forgot-password` (resend = endpoint sama + cooldown 60s), `services/endpoints/auth.ts` + `profile.ts`, `lib/user.ts` (normalisasi BackendUser→AuthUser), `lib/validation.ts` (zod), AuthProvider login/logout riil + bootstrap `refresh → GET /profile`, authStore hapus shim mock, http.ts body refresh camelCase + `setSessionExpiredHandler` (testable), AppShell logout via `useAuth`, rute `/reset-password` menggantikan placeholder, halaman `pages/Login.jsx` dihapus, MSW handlers + 17 test integrasi baru (login/refresh/guard/reset/forgot) | `src/features/auth/LoginPage.tsx`, `src/features/auth/ResetPasswordPage.tsx`, `src/services/endpoints/auth.ts`, `src/providers/AuthProvider.tsx`, `src/stores/authStore.ts` | `npm run typecheck` 0 error · `npm run test` 21/21 · `npm run build` ✅ | [`483f9bd`](https://github.com/rosifirdos/rpl-lms/pull/85) |
+| 2026-11-28 | 2 | Shell & profil mandiri riil: `features/profile/ProfilePage.tsx` (GET/PUT /profile via TanStack Query, tab Biodata zod min2/max150/max20/max500, NIM/NIDN+email read-only, identitas per peran NIM/prodi/angkatan vs NIDN/NIP+gelar, badge peran & status), avatar (validasi klien JPG/PNG ≤2MB, unggah multipart dibangun manual dengan boundary eksplisit agar deterministik lintas runtime — FormData axios tidak dikenali di jsdom, tampil dari blob terautentikasi `GET /profile/avatar` via `useAvatarQuery`, 400/413 ditangani), tab Keamanan (`PUT /profile/password` + indikator kekuatan; backend mencabut semua refresh token → force logout ke `/login?password_changed=1`), `ChangePasswordModal.jsx` terhubung API riil (payload `{oldPassword,newPassword}`, min 8), AppShell peran dari sesi (props activeRole/onRoleChange diabaikan), Header identitas asli tanpa fixtures + avatar + role switcher dihapus + jam berlabel "Waktu Perangkat" (server_time tidak ada di OpenAPI MVP 1), hooks `queries/useProfile.ts`, rute `/profile` langsung ke halaman baru, `pages/Profile.jsx`+`features/profile/Profile.jsx` dihapus, MSW handler PUT/POST/GET avatar+password & varian gagal, 10 test integrasi baru (render mahasiswa/admin, biodata sukses/validasi, avatar tipe/unggah/413, sandi sukses+logout/sandi salah/konfirmasi) | `src/features/profile/ProfilePage.tsx`, `src/services/endpoints/profile.ts`, `src/hooks/queries/useProfile.ts`, `src/components/AppShell.jsx`, `src/components/Header.jsx` | `npm run typecheck` 0 error · `npm run test` 31/31 · `npm run build` ✅ | belum commit |
 
 **Format baris baru:**
 

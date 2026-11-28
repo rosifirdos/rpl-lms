@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { apiClient } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../providers/AuthProvider';
+import { profileApi } from '../../services/endpoints/profile';
+import { HttpApiError } from '../../types/api';
 
 /**
  * ChangePasswordModal
  *
- * Modal otentikasi untuk mengganti kata sandi pengguna aktif tanpa memicu full page reload.
- * Terintegrasi dengan endpoint PUT /api/profile/password (atau PUT /api/auth/change-password).
+ * Modal ganti kata sandi mandiri terhubung `PUT /profile/password`
+ * (FR-008, payload `{ oldPassword, newPassword }`).
+ *
+ * Backend MENCABUT seluruh refresh token aktif setelah sukses
+ * (auth.service.js), sehingga sesi tak dapat dipulihkan: modal memaksa
+ * logout dan mengarahkan ke `/login?password_changed=1`.
  */
 export default function ChangePasswordModal({ isOpen, onClose, onSuccess }) {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -14,6 +21,8 @@ export default function ChangePasswordModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -35,8 +44,8 @@ export default function ChangePasswordModal({ isOpen, onClose, onSuccess }) {
       setError('Kata sandi saat ini wajib diisi');
       return;
     }
-    if (newPassword.length < 6) {
-      setError('Kata sandi baru minimal 6 karakter');
+    if (newPassword.length < 8) {
+      setError('Kata sandi baru minimal 8 karakter');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -46,33 +55,22 @@ export default function ChangePasswordModal({ isOpen, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      // Backend routes: PUT /api/profile/password atau PUT /api/auth/change-password
-      await apiClient.put('/profile/password', {
-        currentPassword,
-        newPassword,
-      }).catch(async () => {
-        // Fallback coba /auth/change-password jika /profile/password mengembalikan 404
-        return apiClient.put('/auth/change-password', {
-          currentPassword,
-          newPassword,
-        });
-      });
+      await profileApi.changePassword({ oldPassword: currentPassword, newPassword });
 
+      // Seluruh refresh token telah dicabut backend — bersihkan sesi lokal
+      // dan minta pengguna masuk kembali dengan kata sandi baru.
       if (onSuccess) {
-        onSuccess('Kata sandi berhasil diperbarui!');
+        onSuccess('Kata sandi berhasil diperbarui. Silakan masuk kembali.');
       }
       onClose();
+      await logout();
+      navigate('/login?password_changed=1', { replace: true });
     } catch (err) {
-      // Di mode mock / tanpa backend live, tetap berikan konfirmasi responsif
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        // Simulasi fallback untuk lingkungan preview terisolasi
-        if (onSuccess) {
-          onSuccess('Kata sandi berhasil disimpan (Simulasi Terintegrasi)');
-        }
-        onClose();
-      }
+      setError(
+        err instanceof HttpApiError && err.message
+          ? err.message
+          : 'Gagal mengubah kata sandi. Periksa koneksi Anda dan coba lagi.'
+      );
     } finally {
       setLoading(false);
     }
@@ -148,10 +146,10 @@ export default function ChangePasswordModal({ isOpen, onClose, onSuccess }) {
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
-                minLength={6}
+                minLength={8}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Minimal 6 karakter"
+                placeholder="Minimal 8 karakter"
                 className="w-full px-space-md py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-body-md placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors"
               />
             </div>
