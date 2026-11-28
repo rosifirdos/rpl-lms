@@ -21,11 +21,14 @@ const getIsMobile = () =>
  */
 export default function AppShell({
   children,
-  activeRole = 'mahasiswa',
-  onRoleChange,
   activeNavPath,
-  onNavChange,
+  onNavChange = undefined,
 }) {
+  // Peran bersumber dari sesi (RBAC, Bab 3.5) — bukan dari state UI yang
+  // dapat dimanipulasi. Props `activeRole`/`onRoleChange` dari halaman lama
+  // diabaikan demi keamanan.
+  const sessionRole = useAuthStore((s) => s.getCurrentRole());
+  const noopRoleChange = () => {};
   // Di mobile drawer mulai tertutup agar konten tidak tertutup overlay.
   const [sidebarOpen, setSidebarOpen] = useState(() => !getIsMobile());
   const [isMobile, setIsMobile] = useState(getIsMobile);
@@ -128,8 +131,8 @@ export default function AppShell({
       {/* Reusable Header */}
       <Header
         onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
-        activeRole={activeRole}
-        onRoleChange={onRoleChange}
+        activeRole={sessionRole}
+        onRoleChange={noopRoleChange}
         onOpenChangePassword={() => setChangePasswordOpen(true)}
         onLogout={handleLogout}
         onNavigate={onNavChange}
@@ -147,8 +150,8 @@ export default function AppShell({
       {/* RBAC Filtered Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}
-        activeRole={activeRole}
-        onRoleChange={onRoleChange}
+        activeRole={sessionRole}
+        onRoleChange={noopRoleChange}
         activeNavPath={activeNavPath}
         onNavChange={handleSidebarNav}
       />

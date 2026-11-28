@@ -38,6 +38,7 @@ export default function LoginPage() {
   const from = (location.state as { from?: string } | null)?.from;
   const expired = searchParams.get('expired') === '1';
   const resetSuccess = searchParams.get('reset') === '1';
+  const passwordChanged = searchParams.get('password_changed') === '1';
 
   const {
     register,
@@ -131,6 +132,11 @@ export default function LoginPage() {
         {resetSuccess && (
           <Alert variant="success" className="mb-space-md">
             Kata sandi berhasil diatur ulang. Silakan masuk dengan kata sandi baru Anda.
+          </Alert>
+        )}
+        {passwordChanged && (
+          <Alert variant="success" className="mb-space-md">
+            Kata sandi berhasil diperbarui. Silakan masuk dengan kata sandi baru Anda.
           </Alert>
         )}
 

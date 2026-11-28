@@ -21,6 +21,7 @@ import {
 import LoginPage from '../features/auth/LoginPage';
 import ResetPasswordPage from '../features/auth/ResetPasswordPage';
 import ForgotPasswordPage from '../pages/ForgotPassword';
+import ProfilePage from '../features/profile/ProfilePage';
 import DasborAdminPage from '../pages/DasborAdmin';
 import DasborDosenPage from '../pages/DasborDosen';
 import ManajemenPenggunaPage from '../pages/ManajemenPengguna';
@@ -29,7 +30,6 @@ import PembukaanKelasPage from '../pages/PembukaanKelas';
 import DirectEnrollmentPage from '../pages/DirectEnrollment';
 import JejakAuditPage from '../pages/JejakAudit';
 import KonfigurasiSistemPage from '../pages/KonfigurasiSistem';
-import ProfilePage from '../pages/Profile';
 import MahasiswaDashboardLegacy from '../features/dashboard/MahasiswaDashboardLegacy';
 import { useAuthStore } from '../stores/authStore';
 
@@ -161,7 +161,7 @@ export function AppRoutes() {
         {/* Rute privat */}
         <Route element={<RequireAuth />}>
           <Route path="/dashboard" element={<DashboardRouter />} />
-          <Route path="/profile" element={<ProfileRoute />} />
+          <Route path="/profile" element={<ProfilePage />} />
 
           {/* Rute admin — guard peran */}
           <Route path="/admin" element={<RequireRole roles={['admin']} />}>
@@ -206,14 +206,3 @@ export function AppRoutes() {
   );
 }
 
-function ProfileRoute() {
-  const navigate = useLegacyNavigate();
-  const role = useAuthStore((s) => s.getCurrentRole());
-  return (
-    <ProfilePage
-      onNavigate={navigate}
-      onRoleChange={() => navigate('/dashboard')}
-      activeRole={role}
-    />
-  );
-}

@@ -90,6 +90,51 @@ export const handlers = [
     })
   ),
 
+  http.put(`${API}/profile`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({
+      success: true,
+      message: 'Profil berhasil diperbarui',
+      data: {
+        ...mockBackendUser,
+        profile: { ...mockBackendUser.profile, ...body },
+      },
+    });
+  }),
+
+  http.post(`${API}/profile/avatar`, async () =>
+    HttpResponse.json({
+      success: true,
+      message: 'Foto profil berhasil diperbarui',
+      data: {
+        ...mockBackendUser,
+        profile: {
+          ...mockBackendUser.profile,
+          avatar_file: {
+            id: 'file-avatar-1',
+            original_name: 'avatar.png',
+            mime_type: 'image/png',
+            size_bytes: 1024,
+          },
+        },
+      },
+    })
+  ),
+
+  http.get(`${API}/profile/avatar`, async () =>
+    HttpResponse.arrayBuffer(new TextEncoder().encode('fake-png-bytes').buffer as ArrayBuffer, {
+      headers: { 'Content-Type': 'image/png', 'Content-Disposition': 'inline; filename="avatar.png"' },
+    })
+  ),
+
+  http.put(`${API}/profile/password`, async () =>
+    HttpResponse.json({
+      success: true,
+      message: 'Kata sandi berhasil diperbarui. Silakan masuk kembali.',
+      data: null,
+    })
+  ),
+
   http.get(`${API}/dashboard`, async () =>
     HttpResponse.json({
       success: true,
@@ -133,4 +178,26 @@ export const invalidResetTokenHandler = http.post(`${API}/auth/reset-password/va
     { success: false, message: 'Token reset tidak valid, telah digunakan, atau kedaluwarsa' },
     { status: 400 }
   )
+);
+
+// ---------------------------------------------------------------------------
+// Handler varian profil (dipakai via server.use(...))
+// ---------------------------------------------------------------------------
+
+export const wrongOldPasswordHandler = http.put(`${API}/profile/password`, async () =>
+  HttpResponse.json(
+    { success: false, message: 'Kata sandi lama tidak sesuai' },
+    { status: 400 }
+  )
+);
+
+export const avatarTooLargeHandler = http.post(`${API}/profile/avatar`, async () =>
+  HttpResponse.json(
+    { success: false, message: 'Ukuran berkas melebihi batas maksimal yang diizinkan (maks. 2MB)' },
+    { status: 413 }
+  )
+);
+
+export const noAvatarHandler = http.get(`${API}/profile/avatar`, async () =>
+  HttpResponse.json({ success: false, message: 'Foto profil belum diunggah' }, { status: 404 })
 );
