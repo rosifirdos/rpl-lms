@@ -515,7 +515,7 @@ frontend/
 | Tanggal | Fase | Ringkasan | File utama | Hasil tes | Commit |
 |---|---|---|---|---|---|
 | 2026-11-28 | — | Dokumen rencana frontend MVP 1 dibuat ulang (menggantikan versi status lama) | `IMPLEMENTATION_PLAN_MVP1_FRONTEND.md` | — | — |
-| 2026-11-28 | 0 | Fondasi selesai: React Router 6 path-based + redirect legacy `?page=`, guard RequireAuth/RequireRole, http.ts (refresh mutex+queue, ApiError), authStore baru (memori+sessionStorage, status booting, login mock sementara), AppProviders (QueryClient+Devtools), UI kit `components/ui/` (11 komponen), `lib/format.ts` (id-ID, ISO 8601 ber-offset), MSW handlers + smoke test 4 kasus; `App.jsx`/`main.jsx` diganti `.tsx`, halaman lama jadi adapter di `routes/legacy.tsx` | `src/routes/index.tsx`, `src/services/http.ts`, `src/stores/authStore.ts`, `src/components/ui/` | `npm run typecheck` 0 error · `npm run test` 4/4 · `npm run build` ✅ | belum commit |
+| 2026-11-28 | 0 | Fondasi selesai: React Router 6 path-based + redirect legacy `?page=`, guard RequireAuth/RequireRole, http.ts (refresh mutex+queue, ApiError), authStore baru (memori+sessionStorage, status booting, login mock sementara), AppProviders (QueryClient+Devtools), UI kit `components/ui/` (11 komponen), `lib/format.ts` (id-ID, ISO 8601 ber-offset), MSW handlers + smoke test 4 kasus; `App.jsx`/`main.jsx` diganti `.tsx`, halaman lama jadi adapter di `routes/legacy.tsx` | `src/routes/index.tsx`, `src/services/http.ts`, `src/stores/authStore.ts`, `src/components/ui/` | `npm run typecheck` 0 error · `npm run test` 4/4 · `npm run build` ✅ | [`6f87b7f`](https://github.com/rosifirdos/rpl-lms/pull/84) |
 
 **Format baris baru:**
 
