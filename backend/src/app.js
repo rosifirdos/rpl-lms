@@ -83,6 +83,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(attachAuditHelper);
 
 if (ENV.NODE_ENV !== 'test') {
+  // R-13: endpoint auth tidak boleh merekam query string pada access log —
+  // token reset kata sandi bersifat sensitif dan berlaku sekali pakai.
+  morgan.token('url', (req) => {
+    const url = req.originalUrl || req.url;
+    if (url.startsWith('/api/auth')) {
+      return url.split('?')[0];
+    }
+    return url;
+  });
   app.use(morgan('dev'));
 }
 

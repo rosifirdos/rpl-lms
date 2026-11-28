@@ -241,6 +241,7 @@ export class AttendanceService {
     const template = buildAttendanceOpenedNotification({
       meetingTitle: meeting.title,
       className: meeting.class.name,
+      classId: meeting.class_id,
     });
     await NotificationService.notifyMany({
       userIds: recipientIds,
@@ -501,6 +502,7 @@ export class AttendanceService {
         const template = buildAttendanceUpdatedNotification({
           meetingTitle: existing.session.meeting.title,
           newStatus: record.status,
+          classId: existing.session.meeting.class_id,
         });
         await NotificationService.notify({
           userId: studentUserId,

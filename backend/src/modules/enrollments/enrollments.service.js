@@ -352,7 +352,10 @@ export class EnrollmentsService {
     for (const enrollment of createdEnrollments) {
       const template = buildEnrollmentCreatedNotification({
         className: enrollment.class.name,
-        courseName: enrollment.class.course.code,
+        // R-07: nama mata kuliah (bukan kode) agar pesan dikenali mahasiswa.
+        courseName: enrollment.class.course.name,
+        courseCode: enrollment.class.course.code,
+        classId: enrollment.class_id,
       });
       await NotificationService.notify({
         userId: enrollment.student.user.id,

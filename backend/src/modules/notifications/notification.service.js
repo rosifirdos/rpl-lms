@@ -186,6 +186,8 @@ export class NotificationService {
         const template = buildDeadlineReminderNotification({
           assignmentTitle: assignment.title,
           dueDate: assignment.due_date,
+          classId: assignment.meeting.class_id,
+          assignmentId: assignment.id,
         });
 
         await this.notifyMany({

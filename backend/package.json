@@ -12,6 +12,7 @@
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.js",
     "db:backfill-meetings": "node scripts/backfill-meetings.js",
+    "prune:reset-tokens": "node scripts/prune-password-reset-tokens.js",
     "db:studio": "prisma studio",
     "prisma:generate": "prisma generate"
   },

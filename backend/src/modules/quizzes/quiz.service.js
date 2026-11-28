@@ -403,6 +403,8 @@ export class QuizService {
         quizTitle: updated.title,
         closeAt: updated.close_at,
         className: quiz.meeting.class.name,
+        classId: quiz.meeting.class_id,
+        quizId: updated.id,
       });
       await NotificationService.notifyMany({
         userIds: recipientIds,
@@ -445,28 +447,38 @@ export class QuizService {
     });
     const orderIndex = payload.order_index ?? (lastQuestion?.order_index ?? 0) + 1;
 
-    const question = await prisma.quizQuestion.create({
-      data: {
-        quiz_id: quizId,
-        question_text: payload.question_text,
-        type: payload.type,
-        points: payload.points ?? 1,
-        answer_key: payload.type === QUIZ_QUESTION_TYPES.ESSAY ? payload.answer_key ?? null : null,
-        order_index: orderIndex,
-        ...(payload.type === QUIZ_QUESTION_TYPES.MULTIPLE_CHOICE
-          ? {
-              options: {
-                create: payload.options.map((option, index) => ({
-                  option_text: option.option_text,
-                  is_correct: option.is_correct,
-                  order_index: option.order_index ?? index + 1,
-                })),
-              },
-            }
-          : {}),
-      },
-      include: { options: { orderBy: { order_index: 'asc' } } },
-    });
+    let question;
+    try {
+      question = await prisma.quizQuestion.create({
+        data: {
+          quiz_id: quizId,
+          question_text: payload.question_text,
+          type: payload.type,
+          points: payload.points ?? 1,
+          answer_key: payload.type === QUIZ_QUESTION_TYPES.ESSAY ? payload.answer_key ?? null : null,
+          order_index: orderIndex,
+          ...(payload.type === QUIZ_QUESTION_TYPES.MULTIPLE_CHOICE
+            ? {
+                options: {
+                  create: payload.options.map((option, index) => ({
+                    option_text: option.option_text,
+                    is_correct: option.is_correct,
+                    order_index: option.order_index ?? index + 1,
+                  })),
+                },
+              }
+            : {}),
+        },
+        include: { options: { orderBy: { order_index: 'asc' } } },
+      });
+    } catch (error) {
+      // R-12: konflik unique (quiz_id, order_index) menjadi 409 yang
+      // informatif, bukan 500.
+      if (error?.code === 'P2002') {
+        throw new AppError('Nomor urut soal sudah dipakai pada kuis ini', 409);
+      }
+      throw error;
+    }
 
     await AuditLogService.record({
       userId: user.id,
@@ -509,28 +521,48 @@ export class QuizService {
     const question = await this.#getQuestionOrThrow(quizId, questionId);
     await this.#assertNoAttempts(quizId);
 
-    const updated = await prisma.quizQuestion.update({
-      where: { id: questionId },
-      data: {
-        ...(payload.question_text !== undefined ? { question_text: payload.question_text } : {}),
-        ...(payload.points !== undefined ? { points: payload.points } : {}),
-        ...(payload.answer_key !== undefined ? { answer_key: payload.answer_key } : {}),
-        ...(payload.order_index !== undefined ? { order_index: payload.order_index } : {}),
-        ...(payload.options !== undefined
-          ? {
-              options: {
-                deleteMany: {},
-                create: payload.options.map((option, index) => ({
-                  option_text: option.option_text,
-                  is_correct: option.is_correct,
-                  order_index: option.order_index ?? index + 1,
-                })),
-              },
-            }
-          : {}),
-      },
-      include: { options: { orderBy: { order_index: 'asc' } } },
-    });
+    // R-11: soal esai tidak boleh diberi opsi jawaban saat diperbarui
+    // (validasi DTO tidak mengetahui tipe soal yang tersimpan).
+    if (
+      question.type === QUIZ_QUESTION_TYPES.ESSAY &&
+      payload.options !== undefined &&
+      payload.options.length > 0
+    ) {
+      throw new AppError('Soal esai tidak boleh memiliki opsi jawaban', 400);
+    }
+
+    let updated;
+    try {
+      updated = await prisma.quizQuestion.update({
+        where: { id: questionId },
+        data: {
+          ...(payload.question_text !== undefined ? { question_text: payload.question_text } : {}),
+          ...(payload.points !== undefined ? { points: payload.points } : {}),
+          ...(payload.answer_key !== undefined ? { answer_key: payload.answer_key } : {}),
+          ...(payload.order_index !== undefined ? { order_index: payload.order_index } : {}),
+          ...(payload.options !== undefined
+            ? {
+                options: {
+                  deleteMany: {},
+                  create: payload.options.map((option, index) => ({
+                    option_text: option.option_text,
+                    is_correct: option.is_correct,
+                    order_index: option.order_index ?? index + 1,
+                  })),
+                },
+              }
+            : {}),
+        },
+        include: { options: { orderBy: { order_index: 'asc' } } },
+      });
+    } catch (error) {
+      // R-12: konflik unique (quiz_id, order_index) menjadi 409 yang
+      // informatif, bukan 500.
+      if (error?.code === 'P2002') {
+        throw new AppError('Nomor urut soal sudah dipakai pada kuis ini', 409);
+      }
+      throw error;
+    }
 
     await AuditLogService.record({
       userId: user.id,
@@ -571,7 +603,12 @@ export class QuizService {
   }
 
   /**
-   * Roster hasil kuis untuk seluruh mahasiswa (FR-041).
+   * Roster hasil kuis untuk seluruh mahasiswa ter-enroll (FR-041).
+   *
+   * R-10: mahasiswa yang belum memulai percobaan tetap muncul dengan status
+   * `NOT_STARTED`; `total_enrolled` dan `total_started` ditambahkan secara
+   * aditif, sementara `total_students` dipertahankan sebagai alias
+   * `total_started` demi kompatibilitas kontrak lama.
    */
   static async getQuizRoster({ quizId, user }) {
     const quiz = await this.#getQuizOrThrow(quizId, {
@@ -580,24 +617,84 @@ export class QuizService {
     });
     this.#ensureCanManageQuiz(quiz, user);
 
-    const attempts = await prisma.quizAttempt.findMany({
-      where: { quiz_id: quizId },
-      orderBy: { started_at: 'asc' },
-      include: {
-        student: {
-          include: {
-            user: {
-              select: {
-                username: true,
-                profile: { select: { full_name: true } },
+    const [attempts, enrollments] = await Promise.all([
+      prisma.quizAttempt.findMany({
+        where: { quiz_id: quizId },
+        orderBy: { started_at: 'asc' },
+        include: {
+          student: {
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  profile: { select: { full_name: true } },
+                },
               },
             },
           },
         },
-      },
-    });
+      }),
+      prisma.enrollment.findMany({
+        where: { class_id: quiz.meeting.class_id },
+        orderBy: { student: { nim: 'asc' } },
+        include: {
+          student: {
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  profile: { select: { full_name: true } },
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
 
     const totalPoints = quiz.questions.reduce((sum, question) => sum + Number(question.points), 0);
+    const attemptsByStudentId = new Map(attempts.map((attempt) => [attempt.student_id, attempt]));
+
+    const serializeAttemptRow = (attempt) => ({
+      attempt_id: attempt.id,
+      student_id: attempt.student_id,
+      nim: attempt.student.nim,
+      full_name: attempt.student.user.profile?.full_name ?? attempt.student.user.username,
+      status: attempt.status,
+      score: attempt.score != null ? Number(attempt.score) : null,
+      started_at: attempt.started_at.toISOString(),
+      submitted_at: attempt.submitted_at ? attempt.submitted_at.toISOString() : null,
+      graded_at: attempt.graded_at ? attempt.graded_at.toISOString() : null,
+    });
+
+    // Seluruh mahasiswa ter-enroll, terurut NIM; yang belum memulai mendapat
+    // baris NOT_STARTED tanpa attempt.
+    const roster = enrollments.map((enrollment) => {
+      const attempt = attemptsByStudentId.get(enrollment.student_id);
+      if (!attempt) {
+        return {
+          attempt_id: null,
+          student_id: enrollment.student_id,
+          nim: enrollment.student.nim,
+          full_name: enrollment.student.user.profile?.full_name ?? enrollment.student.user.username,
+          status: 'NOT_STARTED',
+          score: null,
+          started_at: null,
+          submitted_at: null,
+          graded_at: null,
+        };
+      }
+      return serializeAttemptRow(attempt);
+    });
+
+    // Attempt tanpa enrollment aktif (mis. mahasiswa sudah di-unenroll) tetap
+    // dilampirkan di akhir agar tidak hilang dari rekap.
+    const enrolledStudentIds = new Set(enrollments.map((enrollment) => enrollment.student_id));
+    for (const attempt of attempts) {
+      if (!enrolledStudentIds.has(attempt.student_id)) {
+        roster.push(serializeAttemptRow(attempt));
+      }
+    }
 
     return {
       quiz: {
@@ -607,18 +704,10 @@ export class QuizService {
         question_count: quiz.questions.length,
         is_published: quiz.is_published,
       },
+      total_enrolled: enrollments.length,
+      total_started: attempts.length,
       total_students: attempts.length,
-      roster: attempts.map((attempt) => ({
-        attempt_id: attempt.id,
-        student_id: attempt.student_id,
-        nim: attempt.student.nim,
-        full_name: attempt.student.user.profile?.full_name ?? attempt.student.user.username,
-        status: attempt.status,
-        score: attempt.score != null ? Number(attempt.score) : null,
-        started_at: attempt.started_at.toISOString(),
-        submitted_at: attempt.submitted_at ? attempt.submitted_at.toISOString() : null,
-        graded_at: attempt.graded_at ? attempt.graded_at.toISOString() : null,
-      })),
+      roster,
     };
   }
 

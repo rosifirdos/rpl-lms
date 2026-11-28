@@ -117,7 +117,9 @@ export class AuthController {
 
   static async validateResetToken(req, res, next) {
     try {
-      const { token } = req.query;
+      // R-13: jalur resmi membaca token dari body; GET lama (deprecated)
+      // masih membaca dari query selama masa transisi frontend.
+      const token = req.body?.token ?? req.query?.token;
 
       const result = await AuthService.validateResetToken({ token });
 

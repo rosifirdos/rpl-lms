@@ -152,6 +152,77 @@ describe('Workstream A: pemulihan kata sandi via email (FR-003)', () => {
     assert.equal(invalid.status, 400);
   });
 
+  test('R-13: POST /reset-password/validate — token valid 200, invalid/tanpa token 400', async () => {
+    const { rawToken } = await requestResetToken(username);
+
+    const valid = await request('/api/auth/reset-password/validate', {
+      method: 'POST',
+      body: { token: rawToken },
+    });
+    const validPayload = await valid.json();
+    assert.equal(valid.status, 200, validPayload.message);
+    assert.equal(validPayload.data.valid, true);
+    assert.ok(validPayload.data.expires_at);
+
+    const invalid = await request('/api/auth/reset-password/validate', {
+      method: 'POST',
+      body: { token: 'f'.repeat(64) },
+    });
+    assert.equal(invalid.status, 400);
+
+    // Token yang sudah terpakai ditolak (ditandai langsung di database agar
+    // kata sandi pengguna uji tidak berubah dan suite lain tetap konsisten).
+    await prisma.passwordResetToken.update({
+      where: { token_hash: hashToken(rawToken) },
+      data: { used_at: new Date() },
+    });
+    const reuse = await request('/api/auth/reset-password/validate', {
+      method: 'POST',
+      body: { token: rawToken },
+    });
+    assert.equal(reuse.status, 400);
+
+    const missing = await request('/api/auth/reset-password/validate', {
+      method: 'POST',
+      body: {},
+    });
+    assert.equal(missing.status, 400);
+  });
+
+  test('R-14: prune token menghapus token terpakai/kedaluwarsa dan idempoten', async () => {
+    const { prunePasswordResetTokens } = await import('../scripts/prune-password-reset-tokens.js');
+
+    // Token aktif yang harus SELAMAT dari pembersihan.
+    const { rawToken: freshToken } = await requestResetToken(username);
+    const freshHash = hashToken(freshToken);
+
+    // Baris buatan: terpakai dan kedaluwarsa lebih lama dari 7 hari.
+    const staleExpired = await prisma.passwordResetToken.create({
+      data: {
+        user_id: testUser.id,
+        token_hash: hashToken(`stale-expired-${suffix}`),
+        expires_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    const deleted = await prunePasswordResetTokens();
+    assert.ok(deleted >= 2, `minimal dua baris terhapus (terpakai + kedaluwarsa): ${deleted}`);
+
+    const goneExpired = await prisma.passwordResetToken.findUnique({
+      where: { token_hash: staleExpired.token_hash },
+    });
+    assert.equal(goneExpired, null, 'token kedaluwarsa > 7 hari terhapus');
+
+    const keptFresh = await prisma.passwordResetToken.findUnique({
+      where: { token_hash: freshHash },
+    });
+    assert.ok(keptFresh, 'token aktif belum kedaluwarsa tidak terhapus');
+
+    // Idempoten: eksekusi kedua tanpa baris baru mengembalikan 0.
+    const deletedAgain = await prunePasswordResetTokens();
+    assert.equal(deletedAgain, 0, 'eksekusi ulang tidak menghapus apa pun');
+  });
+
   test('password lemah ditolak dan password lama tetap berlaku', async () => {
     const { rawToken } = await requestResetToken(username);
 

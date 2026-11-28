@@ -304,6 +304,80 @@ describe('Fase 3 MVP 4: manajemen kuis oleh dosen', () => {
     assert.equal((await updateQuestion.json()).data.points, 15);
   });
 
+  test('R-11: update soal esai dengan opsi ditolak 400; update opsi PG valid diterima', async () => {
+    const list = await request(`/api/quizzes/${quiz.id}`);
+    const questions = (await list.json()).data.questions;
+    const mcQuestion = questions.find((item) => item.type === 'MULTIPLE_CHOICE');
+    const essayQuestion = questions.find((item) => item.type === 'ESSAY');
+
+    // Esai dengan opsi ditolak. Opsi dikirim dalam bentuk yang sah untuk PG
+    // (2–10 opsi, tepat satu kunci) sehingga yang menolak adalah aturan
+    // layanan berdasarkan tipe soal tersimpan (R-11), bukan sekadar DTO.
+    const essayWithOptions = await request(
+      `/api/quizzes/${quiz.id}/questions/${essayQuestion.id}`,
+      {
+        method: 'PUT',
+        body: {
+          options: [
+            { option_text: 'Ya', is_correct: true },
+            { option_text: 'Tidak', is_correct: false },
+          ],
+        },
+      }
+    );
+    const essayPayload = await essayWithOptions.json();
+    assert.equal(essayWithOptions.status, 400);
+    assert.match(essayPayload.message, /esai tidak boleh memiliki opsi/i);
+
+    // PG dengan opsi valid diterima.
+    const mcWithValidOptions = await request(
+      `/api/quizzes/${quiz.id}/questions/${mcQuestion.id}`,
+      {
+        method: 'PUT',
+        body: {
+          options: [
+            { option_text: 'Entity Relationship Diagram', is_correct: true },
+            { option_text: 'Extended Relational Data', is_correct: false },
+            { option_text: 'Entity Relation Definition', is_correct: false },
+          ],
+        },
+      }
+    );
+    const mcPayload = await mcWithValidOptions.json();
+    assert.equal(mcWithValidOptions.status, 200, mcPayload.message);
+    assert.equal(mcPayload.data.options.length, 3);
+    assert.equal(mcPayload.data.options.filter((option) => option.is_correct).length, 1);
+  });
+
+  test('R-12: order_index duplikat ditolak 409, bukan 500', async () => {
+    // Tambah soal dengan order_index yang sudah dipakai (1 dan 2 ada).
+    const duplicateAdd = await request(`/api/quizzes/${quiz.id}/questions`, {
+      method: 'POST',
+      body: {
+        question_text: 'Soal urutan duplikat?',
+        type: 'ESSAY',
+        points: 5,
+        order_index: 1,
+      },
+    });
+    const duplicateAddPayload = await duplicateAdd.json();
+    assert.equal(duplicateAdd.status, 409, `status: ${duplicateAdd.status}`);
+    assert.match(duplicateAddPayload.message, /nomor urut soal/i);
+
+    // Update soal memakai order_index milik soal lain juga 409.
+    const list = await request(`/api/quizzes/${quiz.id}`);
+    const questions = (await list.json()).data.questions;
+    const essayQuestion = questions.find((item) => item.type === 'ESSAY');
+    const duplicateUpdate = await request(
+      `/api/quizzes/${quiz.id}/questions/${essayQuestion.id}`,
+      {
+        method: 'PUT',
+        body: { order_index: 1 },
+      }
+    );
+    assert.equal(duplicateUpdate.status, 409);
+  });
+
   test('Daftar kuis kelas: mahasiswa hanya melihat yang terbit', async () => {
     // Buat kuis draft kedua.
     const draft = await request(`/api/meetings/${meeting.id}/quizzes`, {

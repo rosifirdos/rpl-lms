@@ -67,6 +67,7 @@ export const REQUIRED_OPERATIONS = Object.freeze([
   ['/auth/forgot-password', 'post'],
   ['/auth/reset-password', 'post'],
   ['/auth/reset-password/validate', 'get'],
+  ['/auth/reset-password/validate', 'post'],
   ['/auth/change-password', 'put'],
   ['/profile', 'get'],
   ['/profile', 'put'],
@@ -163,6 +164,7 @@ export const PUBLIC_OPERATIONS = Object.freeze(
     'post /auth/forgot-password',
     'post /auth/reset-password',
     'get /auth/reset-password/validate',
+    'post /auth/reset-password/validate',
   ])
 );
 

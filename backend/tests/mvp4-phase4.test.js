@@ -303,6 +303,11 @@ describe('Fase 4 MVP 4: pengerjaan kuis & penilaian', () => {
     const detail = await request(`/api/quiz-attempts/${attempt.id}`, { token: lecturerToken });
     const detailPayload = await detail.json();
     assert.equal(detail.status, 200);
+    // R-08: detail attempt untuk dosen memuat nama profil mahasiswa, bukan
+    // jatuh ke username (NIM). Nama profil dapat diubah suite lain yang
+    // berbagi database, jadi cukup pastikan bukan username.
+    assert.ok(detailPayload.data.attempt.student.full_name, 'full_name terisi');
+    assert.notEqual(detailPayload.data.attempt.student.full_name, '2024001001');
     const essayAnswer = detailPayload.data.answers.find(
       (entry) => entry.question_id === quiz.questions[2].id
     );
@@ -719,5 +724,71 @@ describe('Fase 4 MVP 4: pengerjaan kuis & penilaian', () => {
       where: { action: 'START_QUIZ_ATTEMPT', entity_id: payload1.data.attempt.id },
     });
     assert.equal(auditCount, 1, 'audit start hanya boleh sekali');
+  });
+
+  test('R-10: roster memuat mahasiswa yang belum memulai (NOT_STARTED) dan CSV ikut memuatnya', async () => {
+    // Kuis baru yang belum dikerjakan siapa pun; kelas sudah memuat tiga
+    // mahasiswa ter-enroll (A, B, C) dari tes sebelumnya.
+    const created = await request(`/api/meetings/${meeting.id}/quizzes`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        title: 'Kuis Roster Lengkap',
+        duration_minutes: 30,
+        open_at: iso(now - 3600 * 1000),
+        close_at: iso(now + 24 * 3600 * 1000),
+      },
+    });
+    const rosterQuiz = (await created.json()).data;
+    await request(`/api/quizzes/${rosterQuiz.id}/questions`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        question_text: 'Satu dikali satu?',
+        type: 'MULTIPLE_CHOICE',
+        points: 10,
+        options: [
+          { option_text: '1', is_correct: true },
+          { option_text: '2', is_correct: false },
+        ],
+      },
+    });
+    await request(`/api/quizzes/${rosterQuiz.id}/publish`, {
+      token: lecturerToken,
+      method: 'PATCH',
+      body: { is_published: true },
+    });
+
+    const roster = await request(`/api/quizzes/${rosterQuiz.id}/attempts`, {
+      token: lecturerToken,
+    });
+    const rosterPayload = await roster.json();
+    assert.equal(roster.status, 200);
+
+    assert.equal(rosterPayload.data.total_enrolled, 3, 'tiga mahasiswa ter-enroll');
+    assert.equal(rosterPayload.data.total_started, 0, 'belum ada yang memulai');
+    assert.equal(rosterPayload.data.total_students, 0, 'total_students alias total_started');
+    assert.equal(rosterPayload.data.roster.length, 3);
+
+    const nims = rosterPayload.data.roster.map((entry) => entry.nim).sort();
+    assert.deepEqual(nims, ['2024001001', '2024001002', '2024001003']);
+    for (const entry of rosterPayload.data.roster) {
+      assert.equal(entry.status, 'NOT_STARTED');
+      assert.equal(entry.attempt_id, null);
+      assert.equal(entry.score, null);
+      assert.equal(entry.started_at, null);
+      assert.ok(entry.full_name && entry.full_name !== entry.nim, 'full_name terisi dari profil');
+    }
+
+    // CSV memuat baris NOT_STARTED untuk seluruh mahasiswa.
+    const csv = await request(`/api/quizzes/${rosterQuiz.id}/attempts/export`, {
+      token: lecturerToken,
+    });
+    assert.equal(csv.status, 200);
+    const text = await csv.text();
+    for (const nim of ['2024001001', '2024001002', '2024001003']) {
+      assert.ok(text.includes(nim), `CSV memuat NIM ${nim}`);
+    }
+    assert.ok(text.includes('NOT_STARTED'), 'CSV memuat status NOT_STARTED');
   });
 });
