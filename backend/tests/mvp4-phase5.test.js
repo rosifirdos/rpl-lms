@@ -145,6 +145,8 @@ describe('Fase 5 MVP 4: notifikasi internal', () => {
     assert.equal(notifications.length, 1);
     assert.match(notifications[0].message, /Kuis Notifikasi/);
     assert.equal(notifications[0].dedupe_key, `quiz:${quiz.id}:published`);
+    // R-09: notifikasi membawa deep-link yang dapat dinavigasi.
+    assert.equal(notifications[0].link, `/classes/${testClass.id}/quizzes/${quiz.id}`);
   });
 
   test('Terbitkan ulang kuis tidak menggandakan notifikasi (dedupe)', async () => {
@@ -179,6 +181,8 @@ describe('Fase 5 MVP 4: notifikasi internal', () => {
     });
     assert.ok(notifications.length >= 1);
     assert.match(notifications[0].message, /Pertemuan Notif/);
+    // R-09: deep-link presensi mengikuti konvensi timeline.
+    assert.equal(notifications[0].link, `/classes/${testClass.id}/meetings`);
   });
 
   test('Daftar notifikasi: hanya milik pengguna, terurut terbaru, terpaginasi', async () => {
@@ -282,6 +286,8 @@ describe('Fase 5 MVP 4: notifikasi internal', () => {
       },
     });
     assert.ok(reminder, 'pengingat H-1 harus dibuat untuk mahasiswa yang belum mengumpulkan');
+    // R-09: pengingat deadline memuat deep-link ke tugas.
+    assert.equal(reminder.link, `/classes/${testClass.id}/assignments/${assignment.id}`);
 
     // Mahasiswa B yang sudah mengumpulkan TIDAK menerima pengingat.
     const studentB = await prisma.mahasiswa.findFirst({ where: { nim: '2024001002' } });
@@ -486,6 +492,8 @@ describe('Fase 5 MVP 4: notifikasi internal', () => {
     });
     assert.equal(afterFirst.length, 1);
     assert.match(afterFirst[0].message, /80/);
+    // R-09: notifikasi nilai memuat deep-link ke tugas terkait.
+    assert.equal(afterFirst[0].link, `/classes/${testClass.id}/assignments/${assignment.id}`);
 
     // Regrade 80 → 90: notifikasi kedua dengan skor baru.
     const second = await grade(90);
@@ -549,5 +557,54 @@ describe('Fase 5 MVP 4: notifikasi internal', () => {
     });
     assert.equal(afterSecond.length, 2, 'koreksi kedua harus menghasilkan notifikasi');
     assert.ok(afterSecond.some((item) => /ALPA/.test(item.message)));
+    // R-09: koreksi presensi juga membawa deep-link.
+    assert.ok(afterSecond.every((item) => item.link === `/classes/${testClass.id}/meetings`));
+  });
+
+  test('R-07: notifikasi enrollment memuat nama mata kuliah, bukan kode', async () => {
+    // Kelas baru dengan nama mata kuliah yang berbeda dari kodenya.
+    const admin = await prisma.user.findUnique({ where: { username: 'admin' } });
+    const lecturer = await prisma.dosen.findFirst({ where: { nidn: '198501152010121002' } });
+    const studentA = await prisma.mahasiswa.findFirst({ where: { nim: '2024001001' } });
+
+    const courseNew = await prisma.course.create({
+      data: { code: `ENR${suffix}`, name: `Rekayasa Perangkat Lunak ${suffix}`, credits: 3 },
+    });
+    const classNew = await prisma.class.create({
+      data: {
+        course_id: courseNew.id,
+        lecturer_id: lecturer.id,
+        name: `TEST-ENR-${suffix}`,
+        academic_year: '2026/2027',
+        semester: 'ganjil',
+      },
+    });
+
+    await prisma.notification.deleteMany({
+      where: { user_id: studentUserId, type: 'ENROLLMENT_CREATED' },
+    });
+
+    const response = await request('/api/admin/enrollments', {
+      token: adminToken,
+      method: 'POST',
+      body: { class_id: classNew.id, student_id: studentA.id },
+    });
+    assert.ok([200, 201].includes(response.status), (await response.json()).message);
+
+    const notifications = await prisma.notification.findMany({
+      where: { user_id: studentUserId, type: 'ENROLLMENT_CREATED' },
+    });
+    assert.equal(notifications.length, 1, 'satu notifikasi enrollment terkirim');
+
+    const message = notifications[0].message;
+    assert.ok(
+      message.includes(`Rekayasa Perangkat Lunak ${suffix}`),
+      `pesan memuat nama mata kuliah: ${message}`
+    );
+    assert.ok(!message.includes(`(ENR${suffix})`), 'kode tidak menggantikan nama mata kuliah');
+    assert.ok(message.includes(`TEST-ENR-${suffix}`), 'pesan memuat nama kelas');
+
+    // R-09: deep-link ke halaman kelas.
+    assert.equal(notifications[0].link, `/classes/${classNew.id}`);
   });
 });

@@ -27,7 +27,17 @@ const quizAttemptInclude = {
     },
   },
   student: {
-    include: { user: { select: { id: true, username: true } } },
+    include: {
+      user: {
+        select: {
+          id: true,
+          username: true,
+          // R-08: profil dimuat agar detail attempt untuk dosen memuat
+          // `full_name`, bukan jatuh ke username (NIM).
+          profile: { select: { full_name: true } },
+        },
+      },
+    },
   },
   answers: true,
 };

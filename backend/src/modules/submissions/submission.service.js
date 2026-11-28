@@ -357,6 +357,8 @@ export class SubmissionService {
       const template = buildGradePublishedNotification({
         assignmentTitle: submission.assignment.title,
         score: number(payload.score),
+        classId: submission.assignment.meeting.class_id,
+        assignmentId: submission.assignment.id,
       });
       await NotificationService.notify({
         userId: studentUserId,

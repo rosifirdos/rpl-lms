@@ -121,3 +121,10 @@ export const resetPasswordSchema = z
 export const resetTokenQuerySchema = z.object({
   token: z.string().min(1, 'Token reset kata sandi wajib diisi'),
 });
+
+/** R-13: bentuk body resmi untuk validasi token reset (pengganti query string). */
+export const resetTokenBodySchema = z.object({
+  token: z
+    .string({ message: 'Token reset kata sandi wajib diisi' })
+    .min(1, 'Token reset kata sandi wajib diisi'),
+});

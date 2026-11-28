@@ -1683,6 +1683,13 @@ components:
                       type: boolean
                 total_students:
                   type: integer
+                  description: Alias kompatibilitas dari `total_started` (R-10)
+                total_started:
+                  type: integer
+                  description: Jumlah mahasiswa yang sudah memulai percobaan
+                total_enrolled:
+                  type: integer
+                  description: Jumlah seluruh mahasiswa ter-enroll pada kelas kuis
                 roster:
                   type: array
                   items:
@@ -1691,6 +1698,8 @@ components:
                       attempt_id:
                         type: string
                         format: uuid
+                        nullable: true
+                        description: null bila mahasiswa belum memulai (R-10)
                       student_id:
                         type: string
                         format: uuid
@@ -1700,13 +1709,14 @@ components:
                         type: string
                       status:
                         type: string
-                        enum: [IN_PROGRESS, SUBMITTED, GRADED]
+                        enum: [NOT_STARTED, IN_PROGRESS, SUBMITTED, GRADED]
                       score:
                         type: number
                         nullable: true
                       started_at:
                         type: string
                         format: date-time
+                        nullable: true
                       submitted_at:
                         type: string
                         format: date-time
@@ -1859,6 +1869,12 @@ paths:
     get:
       tags: [Auth]
       summary: Precheck validitas token reset kata sandi (FR-003)
+      deprecated: true
+      description: >-
+        Deprecated (R-13): token sensitif pada query string berpotensi
+        tercatat di access log. Gunakan `POST /auth/reset-password/validate`
+        dengan body `{ token }`. Endpoint GET akan dihapus setelah frontend
+        bermigrasi.
       parameters:
         - in: query
           name: token
@@ -1866,6 +1882,36 @@ paths:
           schema:
             type: string
           description: Token mentah dari tautan email
+      responses:
+        '200':
+          description: Token masih berlaku
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateResetTokenResponse'
+        '400':
+          description: Token tidak valid atau telah kedaluwarsa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    post:
+      tags: [Auth]
+      summary: Precheck validitas token reset kata sandi via body (R-13)
+      description: >-
+        Jalur resmi precheck token reset (FR-003). Token dikirim pada body
+        agar tidak terekam pada access log sebagai query string.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  description: Token mentah dari tautan email
       responses:
         '200':
           description: Token masih berlaku

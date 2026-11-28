@@ -9,6 +9,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   resetTokenQuerySchema,
+  resetTokenBodySchema,
 } from './auth.validation.js';
 
 const router = Router();
@@ -32,10 +33,19 @@ router.post('/logout', optionalAuth, AuthController.logout);
 // POST /api/auth/forgot-password
 router.post('/forgot-password', validate(forgotPasswordSchema), AuthController.forgotPassword);
 
-// GET /api/auth/reset-password/validate (precheck tautan reset — FR-003)
+// GET /api/auth/reset-password/validate — DEPRECATED (R-13): token sensitif
+// pada query string berpotensi tercatat di access log. Gunakan POST dengan
+// body `{ token }`; endpoint GET akan dihapus setelah frontend bermigrasi.
 router.get(
   '/reset-password/validate',
   validate({ query: resetTokenQuerySchema }),
+  AuthController.validateResetToken
+);
+
+// POST /api/auth/reset-password/validate (jalur resmi — R-13)
+router.post(
+  '/reset-password/validate',
+  validate({ body: resetTokenBodySchema }),
   AuthController.validateResetToken
 );
 

@@ -159,6 +159,8 @@ export class AssignmentService {
           assignmentTitle: result.title,
           dueDate: result.due_date,
           className: classRow?.name ?? '',
+          classId: meeting.class_id,
+          assignmentId: result.id,
         });
         await NotificationService.notifyMany({
           userIds: recipientIds,
@@ -334,6 +336,8 @@ export class AssignmentService {
           assignmentTitle: updated.title,
           dueDate: updated.due_date,
           className: classRow?.name ?? '',
+          classId: updated.meeting.class_id,
+          assignmentId: updated.id,
         });
         await NotificationService.notifyMany({
           userIds: recipientIds,

@@ -65,7 +65,8 @@ rpl-lms/
 │   │   └── openapi.yaml           # Dokumentasi OpenAPI 3.0
 │   ├── scripts/
 │   │   ├── run-pg.js              # Embedded PostgreSQL (port 5433)
-│   │   └── backfill-meetings.js   # Backfill 16 pertemuan kelas lama
+│   │   ├── backfill-meetings.js   # Backfill 16 pertemuan kelas lama
+│   │   └── prune-password-reset-tokens.js # Housekeeping token reset (jalankan berkala)
 │   ├── src/
 │   │   ├── app.js                 # Express app + registrasi rute
 │   │   ├── server.js              # Entry point
@@ -231,8 +232,14 @@ Sesuaikan `DATABASE_URL` menjadi `postgresql://postgres:password@localhost:5433/
 | `npm run db:push` | `prisma db push` (tanpa artefak migrasi) |
 | `npm run db:seed` | Seed data awal |
 | `npm run db:backfill-meetings` | Membuat 16 pertemuan untuk kelas lama yang belum memilikinya |
+| `npm run prune:reset-tokens` | Menghapus token reset kata sandi yang terpakai/kedaluwarsa (>7 hari) |
 | `npm run db:studio` | Membuka Prisma Studio |
 | `npm run prisma:generate` | Regenerasi Prisma Client |
+
+> **Operasional (R-14):** `npm run prune:reset-tokens` dijalankan berkala
+> (cron/automation, mis. harian) di luar request path untuk membersihkan
+> `password_reset_tokens` yang sudah terpakai atau kedaluwarsa lebih dari
+> 7 hari. Skrip idempoten dan aman dijalankan berulang.
 
 ### Frontend
 
