@@ -718,7 +718,7 @@ components:
         due_date:
           type: string
           format: date-time
-          description: Deadline berbasis waktu server (ISO 8601 UTC).
+          description: Deadline berbasis waktu server (ISO 8601; offset zona waktu diterima, disimpan sebagai UTC).
         allow_late:
           type: boolean
         is_published:
@@ -915,7 +915,7 @@ components:
         due_date:
           type: string
           format: date-time
-          description: Wajib berada di masa depan saat tugas dibuat.
+          description: Wajib berada di masa depan saat tugas dibuat. Menerima ISO 8601 dengan zona waktu (mis. 2026-12-01T23:59:00+07:00).
         allow_late:
           type: boolean
           default: false
@@ -943,9 +943,11 @@ components:
           type: number
           minimum: 0
           maximum: 100
+          description: Bobot penilaian tugas (0–100, maksimal 2 desimal).
         due_date:
           type: string
           format: date-time
+          description: Wajib berada di masa depan. Menerima ISO 8601 dengan zona waktu.
         allow_late:
           type: boolean
         is_published:

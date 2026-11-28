@@ -340,4 +340,77 @@ describe('Fase 2 MVP 3: penerbitan tugas', () => {
     });
     assert.equal(lecturerDelete.status, 200);
   });
+
+  test('kontrak due_date ber-offset, bobot dua desimal, dan penolakan pertemuan ujian', async () => {
+    const pad = (value) => String(value).padStart(2, '0');
+    // Instan target dibulatkan ke detik agar dapat dibandingkan dengan string
+    // ISO 8601 yang tidak membawa milidetik.
+    const target = new Date(Math.floor((Date.now() + 2 * 86400000) / 1000) * 1000);
+    const local = new Date(target.getTime() + 7 * 3600 * 1000); // wall-clock +07:00
+    const offsetDate =
+      `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}` +
+      `T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}:${pad(local.getUTCSeconds())}+07:00`;
+
+    const buildForm = ({ title = 'Tugas Kontrak', weight = '20', dueDate = offsetDate } = {}) => {
+      const form = new FormData();
+      form.append('title', title);
+      form.append('weight_percentage', weight);
+      form.append('due_date', dueDate);
+      form.append('allow_late', 'false');
+      form.append('is_published', 'true');
+      return form;
+    };
+
+    // due_date dengan offset zona waktu (handoff Bab 10.2) harus diterima dan
+    // disimpan sebagai instan UTC yang sama.
+    const offsetResponse = await request(`/api/meetings/${meeting.id}/assignments`, {
+      method: 'POST',
+      form: buildForm({ title: 'Tugas Due Date Offset' }),
+    });
+    const offsetPayload = await offsetResponse.json();
+    assert.equal(offsetResponse.status, 201, offsetPayload.message);
+    assert.equal(new Date(offsetPayload.data.due_date).getTime(), target.getTime());
+
+    const offsetUpdate = await request(`/api/assignments/${offsetPayload.data.id}`, {
+      method: 'PUT',
+      body: { due_date: offsetDate },
+    });
+    assert.equal(offsetUpdate.status, 200);
+
+    // Bobot dua desimal yang sah tidak boleh ditolak karena floating-point.
+    const createdIds = [offsetPayload.data.id];
+    for (const [weight, expected] of [['1.1', 1.1], ['0.29', 0.29], ['33.33', 33.33]]) {
+      const response = await request(`/api/meetings/${meeting.id}/assignments`, {
+        method: 'POST',
+        form: buildForm({ title: `Tugas Bobot ${weight}`, weight }),
+      });
+      const payload = await response.json();
+      assert.equal(response.status, 201, payload.message);
+      assert.equal(payload.data.weight_percentage, expected);
+      createdIds.push(payload.data.id);
+    }
+
+    const tooPrecise = await request(`/api/meetings/${meeting.id}/assignments`, {
+      method: 'POST',
+      form: buildForm({ title: 'Tugas Bobot Tiga Desimal', weight: '1.111' }),
+    });
+    assert.equal(tooPrecise.status, 400);
+
+    // Pertemuan UTS/UAS bukan tempat tugas biasa (BR-004).
+    const examMeeting = await prisma.meeting.findFirst({
+      where: { class_id: testClass.id, meeting_number: 8 },
+    });
+    const examResponse = await request(`/api/meetings/${examMeeting.id}/assignments`, {
+      method: 'POST',
+      form: buildForm({ title: 'Tugas pada UTS' }),
+    });
+    const examPayload = await examResponse.json();
+    assert.equal(examResponse.status, 400);
+    assert.match(examPayload.message, /UTS\/UAS/);
+
+    for (const id of createdIds) {
+      const removed = await request(`/api/assignments/${id}`, { method: 'DELETE' });
+      assert.equal(removed.status, 200);
+    }
+  });
 });
