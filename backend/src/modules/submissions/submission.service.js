@@ -294,15 +294,21 @@ export class SubmissionService {
 
     ensureCanManageClass(submission.assignment.meeting.class, user);
 
-    const oldValues = {
-      score: number(submission.score),
-      feedback: submission.feedback,
-    };
-
-    const newFeedback = payload.feedback !== undefined ? payload.feedback : submission.feedback;
     const gradedAt = new Date();
 
     const updated = await prisma.$transaction(async (tx) => {
+      // Kunci baris submission agar pembacaan nilai lama dan penulisan nilai
+      // baru bersifat atomik. Tanpa lock, dua penilaian bersamaan dapat
+      // merekam old_values yang basi pada audit (FR-058, TC-024).
+      const [current] = await tx.$queryRaw`
+        SELECT score, feedback FROM submissions WHERE id = ${submissionId}::uuid FOR UPDATE
+      `;
+      if (!current) {
+        throw new AppError('Submission tidak ditemukan', 404);
+      }
+
+      const newFeedback = payload.feedback !== undefined ? payload.feedback : current.feedback;
+
       const res = await tx.submission.update({
         where: { id: submissionId },
         data: {
@@ -317,7 +323,10 @@ export class SubmissionService {
         action: 'GRADE_SUBMISSION',
         entity: AUDIT_ENTITIES.SUBMISSIONS,
         entityId: submissionId,
-        oldValues,
+        oldValues: {
+          score: number(current.score),
+          feedback: current.feedback,
+        },
         newValues: {
           score: number(payload.score),
           feedback: newFeedback,

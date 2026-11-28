@@ -19,6 +19,7 @@ describe('Fase 4 MVP 3: penilaian submission (skor 0-100 & feedback)', () => {
   let assignment;
   let student;
   let otherStudent;
+  let studentSubmissionId;
 
   const suffix = Date.now().toString().slice(-8);
   const request = (url, { method = 'GET', token = lecturerToken, body } = {}) =>
@@ -141,6 +142,7 @@ describe('Fase 4 MVP 3: penilaian submission (skor 0-100 & feedback)', () => {
     );
     assert.ok([200, 201].includes(uploadResponse.status));
     const submissionId = uploadPayload.data.id;
+    studentSubmissionId = submissionId;
 
     const graded = await request(`/api/submissions/${submissionId}/grade`, {
       method: 'PUT',
@@ -189,6 +191,10 @@ describe('Fase 4 MVP 3: penilaian submission (skor 0-100 & feedback)', () => {
       assert.equal((await ok.json()).data.score, score);
     }
 
+    // Feedback yang tidak dikirim mempertahankan nilai sebelumnya (partial update).
+    const retained = await request(`/api/assignments/${assignment.id}/submission`, { token: studentToken });
+    assert.equal((await retained.json()).data.feedback, 'Struktur sudah baik, lengkapi kardinalitas.');
+
     // Nilai tidak valid ditolak 400
     for (const body of [
       { score: -0.01 },
@@ -202,6 +208,32 @@ describe('Fase 4 MVP 3: penilaian submission (skor 0-100 & feedback)', () => {
       const bad = await request(`/api/submissions/${submissionId}/grade`, { method: 'PUT', token: lecturerToken, body });
       assert.equal(bad.status, 400, `body ${JSON.stringify(body)} harus ditolak`);
     }
+
+    // Pesan validasi mengikuti kontrak Bab 4.4
+    const rangeError = await request(`/api/submissions/${submissionId}/grade`, {
+      method: 'PUT', token: lecturerToken, body: { score: 100.01 },
+    });
+    assert.ok(
+      (await rangeError.json()).errors.some(
+        (item) => item.field === 'score' && item.message === 'Nilai harus berupa angka di antara 0 hingga 100'
+      )
+    );
+    const decimalError = await request(`/api/submissions/${submissionId}/grade`, {
+      method: 'PUT', token: lecturerToken, body: { score: 85.555 },
+    });
+    assert.ok(
+      (await decimalError.json()).errors.some(
+        (item) => item.field === 'score' && item.message === 'Score dapat memiliki maksimal 2 digit desimal'
+      )
+    );
+    const feedbackError = await request(`/api/submissions/${submissionId}/grade`, {
+      method: 'PUT', token: lecturerToken, body: { score: 80, feedback: 'x'.repeat(2001) },
+    });
+    assert.ok(
+      (await feedbackError.json()).errors.some(
+        (item) => item.field === 'feedback' && item.message === 'Feedback maksimal 2000 karakter'
+      )
+    );
 
     // Perubahan skor 70 -> 85 menghasilkan entri audit baru dengan nilai lama/baru benar
     const countBefore = await prisma.auditLog.count({ where: { action: 'GRADE_SUBMISSION', entity_id: submissionId } });
@@ -247,11 +279,28 @@ describe('Fase 4 MVP 3: penilaian submission (skor 0-100 & feedback)', () => {
     // Mahasiswa hanya melihat submission pribadi, bukan milik mahasiswa lain
     const mine = await request(`/api/assignments/${assignment.id}/submission`, { token: studentToken });
     const minePayload = await mine.json();
-    assert.notEqual(minePayload.data?.id, submissionId);
-    assert.notEqual(minePayload.data?.score, 90);
+    assert.equal(minePayload.data.id, studentSubmissionId);
+    assert.equal(minePayload.data.score, 85);
+    assert.notEqual(minePayload.data.id, submissionId);
+    assert.notEqual(minePayload.data.score, 90);
 
     // Mahasiswa tidak boleh mengakses roster
     const roster = await request(`/api/assignments/${assignment.id}/submissions`, { token: studentToken });
     assert.equal(roster.status, 403);
+  });
+
+  test('menolak submission tidak ditemukan dan parameter UUID tidak valid', async () => {
+    const missing = await request('/api/submissions/00000000-0000-0000-0000-000000000000/grade', {
+      method: 'PUT', token: lecturerToken, body: { score: 80 },
+    });
+    assert.equal(missing.status, 404);
+    assert.equal((await missing.json()).message, 'Submission tidak ditemukan');
+
+    const invalid = await request('/api/submissions/bukan-uuid/grade', {
+      method: 'PUT', token: lecturerToken, body: { score: 80 },
+    });
+    assert.equal(invalid.status, 400);
+    const invalidPayload = await invalid.json();
+    assert.ok(invalidPayload.errors.some((item) => item.field === 'id'));
   });
 });

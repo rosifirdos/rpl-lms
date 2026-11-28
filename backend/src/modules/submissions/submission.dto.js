@@ -16,8 +16,10 @@ export const submissionIdParamSchema = {
  * - `score`: required numeric value in the range 0-100 with at most two decimal
  *   places. The `refine` guard guarantees the precision required by the SRS
  *   (FR-035).
- * - `feedback`: optional free-text comment up to 2000 characters. It may be
- *   omitted or sent as `null` to clear existing feedback.
+ * - `feedback`: optional free-text comment up to 2000 characters. When the field
+ *   is omitted the previously stored feedback is kept, while sending `null`
+ *   clears it (partial update semantics). Frontend must send `null` explicitly
+ *   to empty the feedback.
  */
 export const gradeSubmissionSchema = {
   params: z.object({ id: uuid('ID submission') }),
@@ -31,8 +33,7 @@ export const gradeSubmissionSchema = {
       // being rejected because of binary floating-point representation.
       .refine((v) => Math.abs(v * 100 - Math.round(v * 100)) < 1e-9, {
         message: 'Score dapat memiliki maksimal 2 digit desimal',
-      })
-      .refine(Number.isFinite, { message: 'Nilai harus berupa angka di antara 0 hingga 100' }),
+      }),
     // Optional; when present it may be `null` or a string up to 2000 characters.
     feedback: z.union([z.string().trim().max(2000, 'Feedback maksimal 2000 karakter'), z.null()]).optional(),
   }).strict(),
