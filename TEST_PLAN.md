@@ -10,8 +10,8 @@
 | Item | Keterangan |
 | --- | --- |
 | **Nama Dokumen** | Test Plan — E-Learning Kampus (RPL LMS) |
-| **Versi** | 1.1 |
-| **Tanggal** | 26 November 2026 |
+| **Versi** | 1.2 |
+| **Tanggal** | 28 November 2026 |
 | **Status** | Aktif |
 | **Pemilik** | Divisi Tester / QA (SRS Bab 28) |
 | **Disetujui oleh** | Project Manager · Tech Lead · QA Lead |
@@ -23,6 +23,7 @@
 | --- | --- | --- | --- |
 | 1.0 | 26 Nov 2026 | Divisi QA | Penyusunan awal Test Plan menyeluruh |
 | 1.1 | 26 Nov 2026 | Divisi QA | Menambahkan referensi dokumentasi API OpenAPI (`backend/docs/openapi.yaml`) pada daftar dokumen terkait |
+| 1.2 | 28 Nov 2026 | Divisi QA | Sinkronisasi skenario MVP 4 review follow-up (R-01, R-03, R-04, R-05, R-10): skor kuis dari total poin seluruh soal, pengingat deadline per kelas mahasiswa, `scheduled_at` pertemuan pada timeline, dedupe regrade/koreksi presensi, roster kuis `NOT_STARTED`; OpenAPI 1.4.1 |
 
 ---
 
@@ -75,13 +76,17 @@ E-Learning Kampus adalah LMS standalone untuk universitas dengan 3 role (**Admin
 | 4 | Master Mata Kuliah | CRUD, validasi SKS 1–6, penonaktifan tanpa menghapus riwayat |
 | 5 | Pembukaan Kelas | CRUD kelas, penetapan dosen, validasi kapasitas, auto-generate 16 pertemuan (P-8 = UTS, P-16 = UAS) |
 | 6 | Direct Enrollment | Enroll individu/batch, pencabutan, validasi duplikat & kapasitas |
-| 7 | Ruang Kelas & 16 Pertemuan | Daftar/detail pertemuan, ubah topik/deskripsi/publikasi |
+| 7 | Ruang Kelas & 16 Pertemuan | Daftar/detail pertemuan, ubah topik/deskripsi/publikasi, jadwal `scheduled_at` (R-04) |
 | 8 | Materi Perkuliahan | Unggah (PDF/DOCX/XLSX/ZIP ≤ 10MB), ubah metadata, hapus, unduh terproteksi (streaming) |
 | 9 | Presensi Digital | Buka/tutup sesi, check-in saat `OPEN`, koreksi status, auto-close berbasis toleransi, penanda `is_auto_generated` |
 | 10 | Rekap Kehadiran | Matriks 16 pertemuan, persentase kehadiran per mahasiswa |
 | 11 | Dasbor Kontekstual | Metrik per role (Admin/Dosen/Mahasiswa) |
 | 12 | Audit Trail | Pencatatan seluruh mutasi kritis, endpoint peninjauan + filter/paginasi |
 | 13 | Keamanan HTTP | Helmet, CORS, rate limit, body limit, storage privat, anti user-enumeration, anti path traversal |
+| 14 | Timeline Pembelajaran (MVP 4) | Timeline terpusat kronologis (tugas/kuis/pertemuan/ujian), item `MEETING`/`EXAM` dari `scheduled_at`, filter tipe |
+| 15 | Kuis Interaktif (MVP 4) | Bank soal PG/esai, timer durasi, start/submit attempt, penilaian otomatis PG + esai oleh dosen (skor dari total poin seluruh soal — R-01), roster lengkap termasuk `NOT_STARTED` (R-10), ekspor CSV |
+| 16 | Notifikasi Internal (MVP 4) | Materialisasi pengingat deadline per kelas mahasiswa + throttle (R-03), dedupe regrade/koreksi presensi (R-05), deep-link notifikasi, unread count |
+| 17 | Keamanan Email & Token Reset | Transport email fail-fast produksi (R-02), validasi token reset via `POST` body (R-13), housekeeping token kedaluwarsa (R-14) |
 
 #### B. Frontend (status 🟡 UI selesai, data masih mock)
 
@@ -117,7 +122,7 @@ E-Learning Kampus adalah LMS standalone untuk universitas dengan 3 role (**Admin
 
 | # | Item | Alasan |
 | --- | --- | --- |
-| 1 | Antarmuka Swagger UI (dokumentasi API interaktif) | Belum diekspos; kontrak terdokumentasi di openapi.yaml 1.4.0 |
+| 1 | Antarmuka Swagger UI (dokumentasi API interaktif) | Belum diekspos; kontrak terdokumentasi di openapi.yaml 1.4.1 |
 | 2 | Modul MVP 5 — UTS/UAS, gatekeeping kehadiran ≥70%, rekap nilai akhir | Belum diimplementasikan |
 | 3 | Load/stress testing & pengukuran throughput produksi | Tidak tersedia environment bertingkat; dilakukan pada fase rilis lanjutan |
 | 4 | Penetration testing penuh / eksploitasi nyata | Di luar wewenang QA; cukup security review statis + uji dasar |
@@ -138,7 +143,7 @@ E-Learning Kampus adalah LMS standalone untuk universitas dengan 3 role (**Admin
 | MVP 3 backend (tugas, submission, validasi berkas, penilaian 0–100) | ✅ di `main` | Ya |
 | Frontend SPA (semua halaman, data mock; logout terintegrasi) | 🟡 di `main` | Ya, dengan catatan data mock |
 | Fase 5 (enrollment endpoint, dashboard) di branch `feat/backend-fase-5-...` | ⚠️ cek status merge saat eksekusi | Ya jika sudah merge; jika belum, uji di branch terpisah |
-| MVP 4 backend (timeline, kuis, notifikasi) | ✅ di working tree (suite mvp4-phase2..5) | Ya |
+| MVP 4 backend (timeline, kuis, notifikasi + perbaikan pasca-review R-01..R-14) | ✅ di `main` (suite mvp4-phase2..5, mvp4-review-config) | Ya |
 | MVP 5 | ❌ belum ada | Tidak — out-of-scope |
 
 ---
@@ -426,6 +431,10 @@ Suatu rilis/siklus dinyatakan **selesai dan layak** hanya jika seluruh syarat be
 | FR-013–FR-015, FR-030–FR-031 (Ruang Kelas & Materi — MVP 2) | MTG-*, MAT-* (menyusul implementasi) | ⬜ | |
 | FR-023–FR-039 (Presensi — MVP 2) | ATT-* (menyusul implementasi) | ⬜ | |
 | FR-016–FR-035 (Tugas, Submission & Validasi File — MVP 3) | TC-009…014, TC-023, mvp3-phase2…5 | ✅ Terverifikasi | `backend/tests/mvp3-phase2..5.test.js` |
+| FR-009–FR-012, BR-013 (Timeline — MVP 4) | TC-006, mvp4-phase2 (termasuk R-04: `scheduled_at` → item MEETING/EXAM) | ✅ Terverifikasi | `backend/tests/mvp4-phase2.test.js` |
+| FR-025, FR-040–FR-041 (Kuis — MVP 4) | mvp4-phase3…4 (termasuk R-01 skor esai kosong, R-06 start paralel, R-10 roster `NOT_STARTED`, R-11/R-12 validasi soal) | ✅ Terverifikasi | `backend/tests/mvp4-phase3.test.js`, `backend/tests/mvp4-phase4.test.js` |
+| FR-057 (Notifikasi internal — MVP 4) | mvp4-phase5 (termasuk R-03 scope+throttle pengingat, R-05 dedupe regrade/koreksi, R-07 nama mata kuliah, R-09 deep-link) | ✅ Terverifikasi | `backend/tests/mvp4-phase5.test.js` |
+| FR-003, R-02/R-13/R-14 (Keamanan email & token reset) | mvp4-review-config, mvp-gap-auth-reset | ✅ Terverifikasi | `backend/tests/mvp4-review-config.test.js`, `backend/tests/mvp-gap-auth-reset.test.js` |
 | FR-026–FR-042, FR-056 (UTS/UAS — MVP 5) | ⛔ Blocked by roadmap | — | |
 | NFR-001 (Hashing) | SEC-11 | ⬜ | |
 | NFR-002 (RBAC) | RBAC-01…08 | ⬜ | |

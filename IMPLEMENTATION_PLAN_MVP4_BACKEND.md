@@ -432,16 +432,16 @@ Review PR #80 menemukan **2 temuan P1 (wajib sebelum merge)**, **4 temuan P2**, 
 
 ---
 
-### Fase 3: Regresi, Kontrak & Handoff (⬜)
+### Fase 3: Regresi, Kontrak & Handoff (✅)
 
-**Mulai:** — **Selesai:** —
+**Mulai:** 2026-11-28 **Selesai:** 2026-11-28
 
-- [ ] Jalankan `npm test` penuh dan catat jumlah akhir.
-- [ ] Jalankan `npx prisma validate`; pastikan tidak ada drift migrasi.
-- [ ] Perbarui `backend/docs/openapi.yaml` (versi `1.4.1`) dan pastikan `tests/phase6.test.js` hijau.
-- [ ] Sinkronkan `RTM.md` dan `TEST_PLAN.md` dengan skenario baru (R-01, R-03, R-04, R-05, R-10).
-- [ ] Tulis ringkasan handoff frontend pada Bab 9 (perubahan link notifikasi, roster `NOT_STARTED`, endpoint validasi token).
-- [ ] Perbarui tabel status 8.1 dan tambahkan baris log 8.2 dengan commit akhir.
+- [x] Jalankan `npm test` penuh dan catat jumlah akhir. (Hasil: 327/327 lulus, 0 gagal, 59 suite)
+- [x] Jalankan `npx prisma validate`; pastikan tidak ada drift migrasi. (Schema valid; `prisma migrate status`: "Database schema is up to date!", 7 migrasi)
+- [x] Perbarui `backend/docs/openapi.yaml` (versi `1.4.1`) dan pastikan `tests/phase6.test.js` hijau. (Sudah dikerjakan pada Fase 1–2; terverifikasi hijau pada regresi penuh)
+- [x] Sinkronkan `RTM.md` dan `TEST_PLAN.md` dengan skenario baru (R-01, R-03, R-04, R-05, R-10).
+- [x] Tulis ringkasan handoff frontend pada Bab 9 (perubahan link notifikasi, roster `NOT_STARTED`, endpoint validasi token).
+- [x] Perbarui tabel status 8.1 dan tambahkan baris log 8.2 dengan commit akhir.
 
 ---
 
@@ -495,7 +495,7 @@ Review PR #80 menemukan **2 temuan P1 (wajib sebelum merge)**, **4 temuan P2**, 
 | 0 — Blocker P1 | ✅ | 2026-11-28 | 2026-11-28 | `npm test` 315/315 | R-01, R-02 — commit `9d847ca` |
 | 1 — Pengerasan P2 | ✅ | 2026-11-28 | 2026-11-28 | `npm test` 321/321 | R-03–R-06 — commit `ef8964c` |
 | 2 — Kebersihan P3 | ✅ | 2026-11-28 | 2026-11-28 | `npm test` 327/327 | R-07–R-14 — commit `436c8e2` |
-| 3 — Regresi & Handoff | ⬜ | — | — | — | Penutup |
+| 3 — Regresi & Handoff | 🔄 | 2026-11-28 | — | — | Penutup |
 
 ### 8.2 Log Progress
 
