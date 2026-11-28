@@ -117,16 +117,15 @@ E-Learning Kampus adalah LMS standalone untuk universitas dengan 3 role (**Admin
 
 | # | Item | Alasan |
 | --- | --- | --- |
-| 1 | Modul MVP 3 — Tugas, validasi berkas submission, penilaian skor 0–100 | Belum diimplementasikan (roadmap) |
-| 2 | Modul MVP 4 — Central Timeline lanjutan, kuis interaktif, notifikasi internal | Belum diimplementasikan |
-| 3 | Modul MVP 5 — UTS/UAS, gatekeeping kehadiran ≥70%, rekap nilai akhir | Belum diimplementasikan |
-| 4 | Load/stress testing & pengukuran throughput produksi | Tidak tersedia environment bertingkat; dilakukan pada fase rilis lanjutan |
-| 5 | Penetration testing penuh / eksploitasi nyata | Di luar wewenang QA; cukup security review statis + uji dasar |
-| 6 | Pengujian infrastruktur deployment (Docker/CD, domain, TLS) | Belum ada konfigurasi deployment |
-| 7 | Pengujian email delivery nyata (forgot password) | Belum ada SMTP provider; diuji sebagai respons API |
-| 8 | Pengujian mobile native | Tidak ada aplikasi native; hanya web responsif |
-| 9 | Integrasi pihak ketiga (SSO kampus, payment, dsb.) | Tidak dalam lingkup sistem |
-| 10 | Perbaikan kode oleh QA | Prinsip kerja: **QA tidak memperbaiki kode** — QA membuktikan perilaku dan melaporkan |
+| 1 | Modul MVP 4 — Central Timeline lanjutan, kuis interaktif, notifikasi internal | Belum diimplementasikan |
+| 2 | Modul MVP 5 — UTS/UAS, gatekeeping kehadiran ≥70%, rekap nilai akhir | Belum diimplementasikan |
+| 3 | Load/stress testing & pengukuran throughput produksi | Tidak tersedia environment bertingkat; dilakukan pada fase rilis lanjutan |
+| 4 | Penetration testing penuh / eksploitasi nyata | Di luar wewenang QA; cukup security review statis + uji dasar |
+| 5 | Pengujian infrastruktur deployment (Docker/CD, domain, TLS) | Belum ada konfigurasi deployment |
+| 6 | Pengujian email delivery nyata (forgot password) | Belum ada SMTP provider; diuji sebagai respons API |
+| 7 | Pengujian mobile native | Tidak ada aplikasi native; hanya web responsif |
+| 8 | Integrasi pihak ketiga (SSO kampus, payment, dsb.) | Tidak dalam lingkup sistem |
+| 9 | Perbaikan kode oleh QA | Prinsip kerja: **QA tidak memperbaiki kode** — QA membuktikan perilaku dan melaporkan |
 
 > **Aturan pelaporan:** fitur yang termasuk kategori out-of-scope **tidak dilaporkan sebagai bug**. Jika test case SRS Bab 26 terkait modul tersebut dieksekusi, gunakan status **"Blocked by roadmap"**, bukan "Failed" (lihat QA_TESTING_GUIDE §2.2).
 
@@ -136,9 +135,10 @@ E-Learning Kampus adalah LMS standalone untuk universitas dengan 3 role (**Admin
 | --- | --- | --- |
 | MVP 1 backend (auth, RBAC, profil, master data, audit, keamanan) | ✅ di `main` | Ya |
 | MVP 2 backend (pertemuan, materi, presensi, rekap) | ✅ di `main` | Ya |
+| MVP 3 backend (tugas, submission, validasi berkas, penilaian 0–100) | ✅ di `main` | Ya |
 | Frontend SPA (semua halaman, data mock; logout terintegrasi) | 🟡 di `main` | Ya, dengan catatan data mock |
 | Fase 5 (enrollment endpoint, dashboard) di branch `feat/backend-fase-5-...` | ⚠️ cek status merge saat eksekusi | Ya jika sudah merge; jika belum, uji di branch terpisah |
-| MVP 3–5 | ❌ belum ada | Tidak — out-of-scope |
+| MVP 4–5 | ❌ belum ada | Tidak — out-of-scope |
 
 ---
 
