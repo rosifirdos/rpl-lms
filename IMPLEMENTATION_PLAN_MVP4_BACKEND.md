@@ -414,19 +414,19 @@ Review PR #80 menemukan **2 temuan P1 (wajib sebelum merge)**, **4 temuan P2**, 
 
 ---
 
-### Fase 2: Kebersihan P3 (⬜)
+### Fase 2: Kebersihan P3 (✅)
 
-**Mulai:** — **Selesai:** —
+**Mulai:** 2026-11-28 **Selesai:** 2026-11-28
 
-- [ ] **R-07** Nama mata kuliah pada notifikasi enrollment + tes.
-- [ ] **R-08** `profile.full_name` pada include attempt dosen + tes.
-- [ ] **R-09** Deep-link seluruh template notifikasi + tes.
-- [ ] **R-10** Roster kuis lengkap (`NOT_STARTED`, `total_enrolled`, ekspor CSV) + tes + OpenAPI.
-- [ ] **R-11** Tolak opsi pada soal esai saat update + tes.
-- [ ] **R-12** Petakan `P2002` `order_index` menjadi 409 + tes.
-- [ ] **R-13** `POST /api/auth/reset-password/validate` (GET deprecated) + tes + OpenAPI.
-- [ ] **R-14** Skrip housekeeping token + script npm + catatan operasional.
-- [ ] Jalankan `npm test` → seluruh suite hijau.
+- [x] **R-07** Nama mata kuliah pada notifikasi enrollment + tes.
+- [x] **R-08** `profile.full_name` pada include attempt dosen + tes.
+- [x] **R-09** Deep-link seluruh template notifikasi + tes.
+- [x] **R-10** Roster kuis lengkap (`NOT_STARTED`, `total_enrolled`, ekspor CSV) + tes + OpenAPI.
+- [x] **R-11** Tolak opsi pada soal esai saat update + tes.
+- [x] **R-12** Petakan `P2002` `order_index` menjadi 409 + tes.
+- [x] **R-13** `POST /api/auth/reset-password/validate` (GET deprecated) + tes + OpenAPI.
+- [x] **R-14** Skrip housekeeping token + script npm + catatan operasional.
+- [x] Jalankan `npm test` → seluruh suite hijau. (Hasil: 327/327)
 
 **Definition of Done fase:** seluruh temuan P3 tertutup atau dipindahkan eksplisit ke issue dengan persetujuan reviewer; tidak ada penurunan cakupan tes.
 
@@ -494,7 +494,7 @@ Review PR #80 menemukan **2 temuan P1 (wajib sebelum merge)**, **4 temuan P2**, 
 |---|---|---|---|---|---|
 | 0 — Blocker P1 | ✅ | 2026-11-28 | 2026-11-28 | `npm test` 315/315 | R-01, R-02 — commit `9d847ca` |
 | 1 — Pengerasan P2 | ✅ | 2026-11-28 | 2026-11-28 | `npm test` 321/321 | R-03–R-06 — commit `ef8964c` |
-| 2 — Kebersihan P3 | ⬜ | — | — | — | R-07–R-14 |
+| 2 — Kebersihan P3 | ✅ | 2026-11-28 | 2026-11-28 | `npm test` 327/327 | R-07–R-14 — commit `436c8e2` |
 | 3 — Regresi & Handoff | ⬜ | — | — | — | Penutup |
 
 ### 8.2 Log Progress
@@ -504,6 +504,7 @@ Review PR #80 menemukan **2 temuan P1 (wajib sebelum merge)**, **4 temuan P2**, 
 | 2026-11-28 | — | Dokumen plan perbaikan pasca-review PR #80 dibuat (belum ada implementasi) | `IMPLEMENTATION_PLAN_MVP4_BACKEND.md` | — | — |
 | 2026-11-28 | 0 | R-01: skor kuis dihitung dari total poin seluruh soal, esai tak dijawab mendapat baris `QuizAnswer` kosong saat submit (dalam transaksi), syarat `GRADED` berbasis seluruh esai; R-02: `resolveMailTransport` murni — produksi default `smtp` + gagal cepat tanpa `SMTP_HOST`, `log`/`memory` di produksi selalu `console.warn`, `test` tetap `memory`. Catatan: T-01 dieksekusi sebagai "2 PG dijawab, 1 benar" agar konsisten dengan ekspektasi skor 33.33 pada R-01/T-02 | `quiz.service.js`, `quizAttempt.service.js`, `env.js`, `.env.example`, `mvp4-phase4.test.js`, `mvp4-review-config.test.js` | `npm test` 315/315 lulus, 0 gagal (baseline 302 + 13 baru) | `9d847ca` |
 | 2026-11-28 | 1 | R-03: materialisasi pengingat hanya untuk MAHASISWA, discope ke kelas ter-enroll pemanggil + throttle 60 detik/proses (opsi `force` untuk uji); R-04: `scheduled_at` di OpenAPI 1.4.1 + seed idempoten mingguan dari `SEMESTER_START_DATE`; R-05: notifikasi regrade berbasis versi `updated_at`, koreksi presensi tanpa dedupe statis; R-06: `P2002` start kuis ditangani (rival dibaca ulang / 409, audit sekali). Penyimpangan kecil: signature service memakai `{ user, force }` (bukan `{ userId, force }`) agar pemeriksaan role ada di service | `notification.service.js`, `notification.controller.js`, `submission.service.js`, `attendance.service.js`, `quizAttempt.service.js`, `openapi.yaml`, `seed.js`, `mvp4-phase2/4/5.test.js` | `npm test` 321/321 lulus, 0 gagal (315 + 6 baru) | `ef8964c` |
+| 2026-11-28 | 2 | R-07: pesan enrollment memakai nama mata kuliah (`courseName` + `courseCode` sebagai pelengkap); R-08: `quizAttemptInclude` memuat `profile.full_name`; R-09: seluruh 8 template notifikasi menerima ID terkait dan mengembalikan deep-link konvensi timeline (`/classes/:classId/...`), semua pemanggil (assignment, attendance, submission, quiz, enrollment, deadline reminder) meneruskan ID; R-10: roster memuat seluruh mahasiswa ter-enroll — baris `NOT_STARTED` (`attempt_id`/`started_at` null), field aditif `total_enrolled`/`total_started`, `total_students` dipertahankan sebagai alias `total_started`, CSV ikut memuat baris NOT_STARTED, skema OpenAPI diperbarui; R-11: `updateQuestion` menolak opsi pada soal esai tersimpan (400) — validasi bentuk PG tetap di DTO; R-12: `P2002` unique `(quiz_id, order_index)` pada add/update question dipetakan ke 409 "Nomor urut soal sudah dipakai"; R-13: `POST /api/auth/reset-password/validate` dengan body `{ token }` sebagai jalur resmi, GET ditandai deprecated di route & OpenAPI, token dibaca dari body ?? query, morgan `url` token menghapus query string pada `/api/auth/*`, `REQUIRED_OPERATIONS` + `PUBLIC_OPERATIONS` diperbarui; R-14: `scripts/prune-password-reset-tokens.js` (ekspor `prunePasswordResetTokens`, idempoten, retensi 7 hari) + script npm `prune:reset-tokens` + catatan operasional README. Catatan tes: asersi nama profil tidak memakai nama eksak karena suite lain yang berbagi database `rpl_review` dapat mengubahnya — cukup diverifikasi bukan username | `notification.templates.js`, `enrollments.service.js`, `quizAttempt.service.js`, `quiz.service.js`, `auth.routes.js`, `auth.validation.js`, `auth.controller.js`, `app.js`, `prune-password-reset-tokens.js`, `package.json`, `openapi.yaml`, `tests/openapi.js`, `README.md`, `mvp4-phase3/4/5.test.js`, `mvp-gap-auth-reset.test.js` | `npm test` 327/327 lulus, 0 gagal (321 + 6 baru) | `436c8e2` |
 
 **Format acuan baris baru (jangan dihapus; tambahkan baris di bawah tabel):**
 
