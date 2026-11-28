@@ -125,33 +125,56 @@ export class QuizAttemptService {
       (question) => question.type === QUIZ_QUESTION_TYPES.ESSAY
     );
 
-    // Nilai setiap jawaban pilihan ganda: poin penuh bila benar, nol bila salah.
-    for (const question of attempt.quiz.questions) {
-      if (question.type !== QUIZ_QUESTION_TYPES.MULTIPLE_CHOICE) continue;
-      const answer = attempt.answers.find((entry) => entry.question_id === question.id);
-      if (!answer) continue;
-
-      const selected = question.options.find((option) => option.id === answer.selected_option_id);
-      const points = selected?.is_correct ? Number(question.points) : 0;
-
-      await prisma.quizAnswer.update({
-        where: { id: answer.id },
-        data: { points_awarded: points },
-      });
-    }
-
+    // Skor dihitung dari himpunan SOAL penuh (R-01): soal yang tidak dijawab
+    // tetap terhitung dalam penyebut, sehingga mengosongkan soal tidak
+    // menginflasi skor.
     const score = total > 0 ? roundQuizScore((awarded / total) * 100) : 0;
     const status = hasEssay ? QUIZ_ATTEMPT_STATUS.SUBMITTED : QUIZ_ATTEMPT_STATUS.GRADED;
 
-    return prisma.quizAttempt.update({
-      where: { id: attempt.id },
-      data: {
-        submitted_at: submittedAt,
-        status,
-        score,
-        ...(status === QUIZ_ATTEMPT_STATUS.GRADED ? { graded_at: submittedAt } : {}),
-      },
-      include: quizAttemptInclude,
+    return prisma.$transaction(async (tx) => {
+      // Nilai setiap jawaban pilihan ganda: poin penuh bila benar, nol bila salah.
+      for (const question of attempt.quiz.questions) {
+        if (question.type !== QUIZ_QUESTION_TYPES.MULTIPLE_CHOICE) continue;
+        const answer = attempt.answers.find((entry) => entry.question_id === question.id);
+        if (!answer) continue;
+
+        const selected = question.options.find((option) => option.id === answer.selected_option_id);
+        const points = selected?.is_correct ? Number(question.points) : 0;
+
+        await tx.quizAnswer.update({
+          where: { id: answer.id },
+          data: { points_awarded: points },
+        });
+      }
+
+      // Soal esai yang tidak dijawab tetap mendapat baris jawaban kosong
+      // (R-01) agar dosen dapat menilai 0 dan attempt dapat mencapai GRADED.
+      for (const question of attempt.quiz.questions) {
+        if (question.type !== QUIZ_QUESTION_TYPES.ESSAY) continue;
+        const answer = attempt.answers.find((entry) => entry.question_id === question.id);
+        if (answer) continue;
+
+        await tx.quizAnswer.create({
+          data: {
+            attempt_id: attempt.id,
+            question_id: question.id,
+            selected_option_id: null,
+            answer_text: null,
+            points_awarded: null,
+          },
+        });
+      }
+
+      return tx.quizAttempt.update({
+        where: { id: attempt.id },
+        data: {
+          submitted_at: submittedAt,
+          status,
+          score,
+          ...(status === QUIZ_ATTEMPT_STATUS.GRADED ? { graded_at: submittedAt } : {}),
+        },
+        include: quizAttemptInclude,
+      });
     });
   }
 

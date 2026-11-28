@@ -730,15 +730,26 @@ export class QuizService {
 
     const refreshedAnswers = await prisma.quizAnswer.findMany({
       where: { attempt_id: attemptId },
-      include: { question: { select: { points: true, type: true } } },
     });
 
-    const totalPoints = refreshedAnswers.reduce((sum, answer) => sum + Number(answer.question.points), 0);
-    const awardedPoints = refreshedAnswers.reduce(
-      (sum, answer) => sum + (answer.points_awarded != null ? Number(answer.points_awarded) : 0),
+    // Skor dihitung dari himpunan SOAL penuh, bukan dari jawaban yang tersimpan
+    // (R-01): soal yang tidak dijawab tetap terhitung dalam penyebut.
+    const answersByQuestionId = new Map(refreshedAnswers.map((answer) => [answer.question_id, answer]));
+    const totalPoints = attempt.quiz.questions.reduce(
+      (sum, question) => sum + Number(question.points),
       0
     );
-    const allGraded = refreshedAnswers.every((answer) => answer.points_awarded != null);
+    const awardedPoints = attempt.quiz.questions.reduce((sum, question) => {
+      const answer = answersByQuestionId.get(question.id);
+      return sum + (answer?.points_awarded != null ? Number(answer.points_awarded) : 0);
+    }, 0);
+    // GRADED hanya bila SELURUH soal esai memiliki nilai (R-01); pilihan ganda
+    // selalu final setelah submit karena dinilai otomatis.
+    const allGraded = attempt.quiz.questions.every((question) => {
+      if (question.type !== QUIZ_QUESTION_TYPES.ESSAY) return true;
+      const answer = answersByQuestionId.get(question.id);
+      return answer?.points_awarded != null;
+    });
     const score = totalPoints > 0 ? roundQuizScore((awardedPoints / totalPoints) * 100) : 0;
 
     const updated = await prisma.quizAttempt.update({

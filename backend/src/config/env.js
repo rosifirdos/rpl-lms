@@ -28,23 +28,79 @@ export const ENV = {
  *   - `log`    : tulis isi email ke console (development tanpa SMTP).
  *   - `memory` : simpan ke outbox in-memory untuk pengujian (tidak pernah kirim).
  *
- * Pada `NODE_ENV=test` transport dipaksa `memory` agar suite pengujian tidak
- * pernah mencoba mengirim email sungguhan, sekalipun `.env` pengembang
- * mengatur `MAIL_TRANSPORT=smtp`.
+ * Aturan resolusi (R-02 — fail-fast, lihat `resolveMailTransport`):
+ *   - `NODE_ENV=test`        : dipaksa `memory` agar suite pengujian tidak
+ *     pernah mengirim email sungguhan, sekalipun `.env` mengatur `smtp`.
+ *   - `NODE_ENV=production`  : default `smtp` dan startup GAGAL bila
+ *     `SMTP_HOST` kosong. `log`/`memory` hanya dipakai bila diminta eksplisit
+ *     dan selalu memunculkan `console.warn` karena token reset dapat bocor
+ *     ke log (transport `log`) atau email tidak pernah terkirim (`memory`).
+ *   - environment lain       : default `log` (perilaku development lama).
  */
-export const MAIL = (() => {
-  const isTest = process.env.NODE_ENV === 'test';
-  const rawTransport = isTest
-    ? 'memory'
-    : (process.env.MAIL_TRANSPORT || 'log').trim().toLowerCase();
-  const transport = ['smtp', 'log', 'memory'].includes(rawTransport) ? rawTransport : 'log';
 
-  if (transport === 'smtp' && !process.env.SMTP_HOST) {
-    throw new Error(
-      '[config] MAIL_TRANSPORT=smtp membutuhkan SMTP_HOST. ' +
-        'Isi SMTP_HOST pada .env atau gunakan MAIL_TRANSPORT=log.'
-    );
+/**
+ * Resolusi transport email murni terhadap input agar seluruh kombinasi
+ * environment dapat diuji tanpa `child_process` (R-02).
+ *
+ * @param {object} [input]
+ * @param {string} [input.nodeEnv] nilai `NODE_ENV`
+ * @param {string} [input.mailTransport] nilai `MAIL_TRANSPORT`
+ * @param {string} [input.smtpHost] nilai `SMTP_HOST`
+ * @returns {'smtp'|'log'|'memory'} transport yang efektif
+ * @throws {Error} bila transport `smtp` (eksplisit maupun default produksi)
+ *   dipilih namun `SMTP_HOST` kosong
+ */
+export function resolveMailTransport({
+  nodeEnv = process.env.NODE_ENV,
+  mailTransport = process.env.MAIL_TRANSPORT,
+  smtpHost = process.env.SMTP_HOST,
+} = {}) {
+  if (nodeEnv === 'test') {
+    return 'memory';
   }
+
+  const raw = (mailTransport ?? '').trim().toLowerCase();
+  const explicit = ['smtp', 'log', 'memory'].includes(raw) ? raw : undefined;
+
+  // Eksplisit `smtp` (environment apa pun) maupun default produksi wajib SMTP_HOST.
+  if (explicit === 'smtp' || (nodeEnv === 'production' && !explicit)) {
+    if (!smtpHost) {
+      throw new Error(
+        '[config] Pengiriman email via SMTP membutuhkan SMTP_HOST. ' +
+          'Isi SMTP_HOST pada .env, atau set MAIL_TRANSPORT=log secara eksplisit ' +
+          'jika benar-benar ingin mencetak email ke log (tidak disarankan di produksi).'
+      );
+    }
+    return 'smtp';
+  }
+
+  if (explicit === 'log') {
+    if (nodeEnv === 'production') {
+      console.warn(
+        '[config] MAIL_TRANSPORT=log pada NODE_ENV=production: isi email — termasuk ' +
+          'tautan/token reset kata sandi — akan tercetak utuh ke log. Gunakan hanya ' +
+          'jika risiko ini dipahami; produksi sebaiknya memakai MAIL_TRANSPORT=smtp.'
+      );
+    }
+    return 'log';
+  }
+
+  if (explicit === 'memory') {
+    if (nodeEnv === 'production') {
+      console.warn(
+        '[config] MAIL_TRANSPORT=memory pada NODE_ENV=production: email tidak akan ' +
+          'pernah terkirim (hanya disimpan di memori proses).'
+      );
+    }
+    return 'memory';
+  }
+
+  // Development / environment lain tanpa nilai valid: perilaku lama dipertahankan.
+  return 'log';
+}
+
+export const MAIL = (() => {
+  const transport = resolveMailTransport();
 
   return {
     TRANSPORT: transport,

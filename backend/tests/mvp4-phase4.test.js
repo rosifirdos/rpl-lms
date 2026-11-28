@@ -18,6 +18,7 @@ describe('Fase 4 MVP 4: pengerjaan kuis & penilaian', () => {
   let otherLecturerToken;
   let studentToken;
   let otherStudentToken;
+  let studentCToken;
   let course;
   let testClass;
   let meeting;
@@ -59,13 +60,14 @@ describe('Fase 4 MVP 4: pengerjaan kuis & penilaian', () => {
       });
     });
 
-    [adminToken, lecturerToken, otherLecturerToken, studentToken, otherStudentToken] =
+    [adminToken, lecturerToken, otherLecturerToken, studentToken, otherStudentToken, studentCToken] =
       await Promise.all([
         login('admin'),
         login('198501152010121002'),
         login('199003202015042001'),
         login('2024001001'),
         login('2024001002'),
+        login('2024001003'),
       ]);
 
     const admin = await prisma.user.findUnique({ where: { username: 'admin' } });
@@ -467,5 +469,201 @@ describe('Fase 4 MVP 4: pengerjaan kuis & penilaian', () => {
       method: 'POST',
     });
     assert.equal(startDraft.status, 404);
+  });
+
+  test('R-01: esai dikosongkan — submit 33.33 SUBMITTED, dosen menilai 0 → GRADED', async () => {
+    // Kuis baru untuk mahasiswa B: 2 PG (10+10) + 1 esai (10) = 30 poin.
+    const created = await request(`/api/meetings/${meeting.id}/quizzes`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        title: 'Kuis Esai Kosong',
+        duration_minutes: 60,
+        open_at: iso(now - 3600 * 1000),
+        close_at: iso(now + 24 * 3600 * 1000),
+      },
+    });
+    const emptyEssayQuiz = (await created.json()).data;
+
+    const mc1 = await request(`/api/quizzes/${emptyEssayQuiz.id}/questions`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        question_text: 'Ibu kota Indonesia?',
+        type: 'MULTIPLE_CHOICE',
+        points: 10,
+        options: [
+          { option_text: 'Jakarta', is_correct: true },
+          { option_text: 'Bandung', is_correct: false },
+        ],
+      },
+    });
+    const mc2 = await request(`/api/quizzes/${emptyEssayQuiz.id}/questions`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        question_text: '2 + 2 sama dengan?',
+        type: 'MULTIPLE_CHOICE',
+        points: 10,
+        options: [
+          { option_text: '3', is_correct: false },
+          { option_text: '4', is_correct: true },
+        ],
+      },
+    });
+    const essay = await request(`/api/quizzes/${emptyEssayQuiz.id}/questions`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        question_text: 'Jelaskan normalisasi.',
+        type: 'ESSAY',
+        points: 10,
+      },
+    });
+    const questions = [
+      (await mc1.json()).data,
+      (await mc2.json()).data,
+      (await essay.json()).data,
+    ];
+    await request(`/api/quizzes/${emptyEssayQuiz.id}/publish`, {
+      token: lecturerToken,
+      method: 'PATCH',
+      body: { is_published: true },
+    });
+
+    // Mahasiswa B menjawab kedua PG (1 benar, 1 salah), esai dikosongkan.
+    const start = await request(`/api/quizzes/${emptyEssayQuiz.id}/attempts`, {
+      token: otherStudentToken,
+      method: 'POST',
+    });
+    const attemptB = (await start.json()).data.attempt;
+    await request(`/api/quiz-attempts/${attemptB.id}/answers`, {
+      token: otherStudentToken,
+      method: 'PUT',
+      body: {
+        answers: [
+          { question_id: questions[0].id, selected_option_id: questions[0].options[0].id }, // benar
+          { question_id: questions[1].id, selected_option_id: questions[1].options[0].id }, // salah
+        ],
+      },
+    });
+
+    const submit = await request(`/api/quiz-attempts/${attemptB.id}/submit`, {
+      token: otherStudentToken,
+      method: 'POST',
+    });
+    const submitPayload = await submit.json();
+    assert.equal(submit.status, 200, submitPayload.message);
+    assert.equal(submitPayload.data.attempt.status, 'SUBMITTED');
+    // Skor dihitung dari seluruh soal (10/30), bukan hanya jawaban yang ada.
+    assert.equal(submitPayload.data.attempt.score, 33.33);
+
+    // Dosen melihat baris jawaban esai kosong dan dapat menilainya 0.
+    const detail = await request(`/api/quiz-attempts/${attemptB.id}`, { token: lecturerToken });
+    const detailPayload = await detail.json();
+    assert.equal(detail.status, 200);
+    const essayAnswer = detailPayload.data.answers.find(
+      (entry) => entry.question_id === questions[2].id
+    );
+    assert.ok(essayAnswer.id, 'baris jawaban esai kosong harus dibuat saat submit');
+    assert.equal(essayAnswer.answer_text, null);
+    assert.equal(essayAnswer.points_awarded, null);
+
+    const grade = await request(`/api/quiz-attempts/${attemptB.id}/grade`, {
+      token: lecturerToken,
+      method: 'PUT',
+      body: {
+        answers: [{ answer_id: essayAnswer.id, points_awarded: 0, feedback: 'Tidak dijawab.' }],
+      },
+    });
+    const gradePayload = await grade.json();
+    assert.equal(grade.status, 200, gradePayload.message);
+    assert.equal(gradePayload.data.fully_graded, true);
+    assert.equal(gradePayload.data.score, 33.33, 'skor tidak boleh terinflasi');
+    assert.equal(gradePayload.data.status, 'GRADED');
+  });
+
+  test('R-01: submit tanpa jawaban apa pun — skor 0, tetap dapat dinilai hingga GRADED', async () => {
+    const admin = await prisma.user.findUnique({ where: { username: 'admin' } });
+    const studentC = await prisma.mahasiswa.findFirst({ where: { nim: '2024001003' } });
+    await prisma.enrollment.create({
+      data: { class_id: testClass.id, student_id: studentC.id, enrolled_by: admin.id },
+    });
+
+    // Kuis baru: 1 PG (10) + 1 esai (10) = 20 poin.
+    const created = await request(`/api/meetings/${meeting.id}/quizzes`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        title: 'Kuis Tanpa Jawaban',
+        duration_minutes: 30,
+        open_at: iso(now - 3600 * 1000),
+        close_at: iso(now + 24 * 3600 * 1000),
+      },
+    });
+    const blankQuiz = (await created.json()).data;
+    await request(`/api/quizzes/${blankQuiz.id}/questions`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        question_text: '1 + 1 sama dengan?',
+        type: 'MULTIPLE_CHOICE',
+        points: 10,
+        options: [
+          { option_text: '2', is_correct: true },
+          { option_text: '3', is_correct: false },
+        ],
+      },
+    });
+    const essay = await request(`/api/quizzes/${blankQuiz.id}/questions`, {
+      token: lecturerToken,
+      method: 'POST',
+      body: {
+        question_text: 'Jelaskan inheritance.',
+        type: 'ESSAY',
+        points: 10,
+      },
+    });
+    const essayQuestion = (await essay.json()).data;
+    await request(`/api/quizzes/${blankQuiz.id}/publish`, {
+      token: lecturerToken,
+      method: 'PATCH',
+      body: { is_published: true },
+    });
+
+    // Mahasiswa C langsung submit tanpa menyimpan jawaban apa pun.
+    const start = await request(`/api/quizzes/${blankQuiz.id}/attempts`, {
+      token: studentCToken,
+      method: 'POST',
+    });
+    const attemptC = (await start.json()).data.attempt;
+
+    const submit = await request(`/api/quiz-attempts/${attemptC.id}/submit`, {
+      token: studentCToken,
+      method: 'POST',
+    });
+    const submitPayload = await submit.json();
+    assert.equal(submit.status, 200, submitPayload.message);
+    assert.equal(submitPayload.data.attempt.status, 'SUBMITTED');
+    assert.equal(submitPayload.data.attempt.score, 0);
+
+    // Esai kosong dinilai 0 → attempt mencapai GRADED dengan skor tetap 0.
+    const detail = await request(`/api/quiz-attempts/${attemptC.id}`, { token: lecturerToken });
+    const detailPayload = await detail.json();
+    const essayAnswer = detailPayload.data.answers.find(
+      (entry) => entry.question_id === essayQuestion.id
+    );
+    assert.ok(essayAnswer.id, 'baris jawaban esai kosong harus dibuat saat submit');
+
+    const grade = await request(`/api/quiz-attempts/${attemptC.id}/grade`, {
+      token: lecturerToken,
+      method: 'PUT',
+      body: { answers: [{ answer_id: essayAnswer.id, points_awarded: 0 }] },
+    });
+    const gradePayload = await grade.json();
+    assert.equal(grade.status, 200, gradePayload.message);
+    assert.equal(gradePayload.data.fully_graded, true);
+    assert.equal(gradePayload.data.score, 0);
+    assert.equal(gradePayload.data.status, 'GRADED');
   });
 });
