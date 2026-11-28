@@ -1,22 +1,43 @@
 /**
  * providers/AuthProvider.tsx
  *
- * Bootstrap sesi saat aplikasi dimuat (Bab 3.4):
- * - Bila refresh token ada di sessionStorage → `POST /auth/refresh`
- *   untuk menerbitkan access token baru, lalu status `authenticated`.
- * - Bila tidak ada / gagal → status `anonymous` TANPA error (pengguna
- *   cukup melihat halaman login).
+ * Pemilik siklus hidup sesi (Bab 3.4):
+ * - Bootstrap saat aplikasi dimuat: refresh token di sessionStorage →
+ *   `POST /auth/refresh` → `GET /profile` → sesi terisi; gagal → login
+ *   tanpa error.
+ * - `login(identifier, password)`: `POST /auth/login`, simpan sesi,
+ *   lalu pemanggil menentukan tujuan navigasi.
+ * - `logout()`: `POST /auth/logout` (best-effort), bersihkan state +
+ *   query cache; guard RequireAuth mengarahkan ke /login.
  *
- * Selama `booting`, children belum dirender (splash minimal) agar guard
- * tidak salah mengarahkan pengguna yang sesinya masih dipulihkan.
+ * Selama `booting`, children belum dirender agar guard tidak salah
+ * mengarahkan pengguna yang sesinya masih dipulihkan.
  */
 
-import { useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
 import { refreshSession } from '../services/http';
+import { authApi } from '../services/endpoints/auth';
+import { profileApi } from '../services/endpoints/profile';
+import { normalizeBackendUser } from '../lib/user';
+import type { BackendUser } from '../types/auth';
+
+interface AuthContextValue {
+  user: ReturnType<typeof useAuthStore.getState>['user'];
+  status: ReturnType<typeof useAuthStore.getState>['status'];
+  login: (payload: { identifier: string; password: string }) => Promise<void>;
+  logout: () => Promise<void>;
+  /** Set ulang user dari data backend (dipakai Fase 2 setelah ubah profil). */
+  syncUser: (raw: BackendUser) => void;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const user = useAuthStore((s) => s.user);
   const status = useAuthStore((s) => s.status);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     let cancelled = false;
@@ -34,21 +55,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const tokens = await refreshSession();
       if (cancelled) return;
 
-      if (tokens) {
-        // Profil lengkap diambil Fase 1 (GET /profile); Fase 0 cukup sesi valid.
-        store.setSession({
-          user: {
-            id: '',
-            username: '',
-            email: '',
-            role: 'mahasiswa',
-            name: '',
-          },
-          accessToken: tokens.accessToken,
-          refreshToken: tokens.refreshToken ?? null,
-        });
-      } else {
+      if (!tokens) {
         store.setStatus('anonymous');
+        return;
+      }
+
+      try {
+        // Access token harus masuk store SEBELUM GET /profile agar
+        // interceptor menyisipkan Authorization.
+        store.setSession({
+          user: { id: '', username: '', email: '', role: 'mahasiswa', name: '' },
+          accessToken: tokens.accessToken,
+        });
+        const profile = await profileApi.getProfile();
+        if (cancelled) return;
+        store.setSession({
+          user: normalizeBackendUser(profile),
+          accessToken: tokens.accessToken,
+        });
+      } catch {
+        if (cancelled) return;
+        store.clearSession();
       }
     }
 
@@ -57,6 +84,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      status,
+      async login({ identifier, password }) {
+        const result = await authApi.login({ identifier, password });
+        useAuthStore.getState().setSession({
+          user: normalizeBackendUser(result.user),
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        });
+      },
+      async logout() {
+        const store = useAuthStore.getState();
+        await authApi.logout(store.getStoredRefreshToken());
+        store.clearSession();
+        // Bersihkan seluruh cache server-state milik sesi lama.
+        queryClient.clear();
+      },
+      syncUser(raw) {
+        useAuthStore.getState().setSession({
+          user: normalizeBackendUser(raw),
+          accessToken: useAuthStore.getState().accessToken ?? '',
+        });
+      },
+    }),
+    [user, status, queryClient]
+  );
 
   if (status === 'booting') {
     return (
@@ -77,5 +133,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error('useAuth harus dipakai di dalam AuthProvider');
+  }
+  return ctx;
 }

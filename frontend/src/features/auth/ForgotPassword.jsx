@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ThemeToggle from '../../components/ThemeToggle';
+import { authApi } from '../../services/endpoints/auth';
 
 /**
  * ForgotPassword — feature component (auth)
  *
  * Digunakan sebagai komponen inti halaman pemulihan kata sandi E-Learning Kampus.
- * Mendukung navigasi SPA via props (onNavigate, onBack) serta API nyata:
- *   POST /api/auth/forgot-password  { email }
- *   POST /api/auth/resend-reset     { email }
+ * Terhubung API nyata (Fase 1):
+ *   POST /api/auth/forgot-password  { email } → pesan generik anti-enumerasi
+ *
+ * Tidak ada endpoint resend terpisah di backend — kirim ulang memakai
+ * endpoint yang sama dengan cooldown 60 detik di sisi klien.
  */
 export default function ForgotPassword({ onNavigate, onBack }) {
   const [email, setEmail] = useState('');
@@ -57,7 +60,7 @@ export default function ForgotPassword({ onNavigate, onBack }) {
   };
 
   /** Validasi & submit permintaan reset password */
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Guard: prevent double submission
     if (loading) return;
@@ -78,25 +81,35 @@ export default function ForgotPassword({ onNavigate, onBack }) {
 
     setLoading(true);
 
-    // TODO: Ganti simulasi ini dengan pemanggilan API nyata:
-    // await apiClient.post('/api/auth/forgot-password', { email: trimmedEmail });
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Respons selalu generik (anti-enumerasi) meski email tidak terdaftar.
+      await authApi.forgotPassword(trimmedEmail);
       setSubmittedEmail(trimmedEmail);
       setEmail('');
       safeSetResendCooldown(60);
-    }, 1100);
+    } catch (error) {
+      setErrorMessage(
+        error?.message || 'Gagal mengirim permintaan. Periksa koneksi Anda dan coba lagi.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /** Kirim ulang tautan setelah cooldown habis */
-  const handleResend = () => {
+  /** Kirim ulang tautan setelah cooldown habis (endpoint yang sama) */
+  const handleResend = async () => {
     if (resendCooldown > 0 || !submittedEmail || loading) return;
     setLoading(true);
-    // TODO: await apiClient.post('/api/auth/resend-reset', { email: submittedEmail });
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await authApi.forgotPassword(submittedEmail);
       safeSetResendCooldown(60);
-    }, 1000);
+    } catch (error) {
+      setErrorMessage(
+        error?.message || 'Gagal mengirim ulang tautan. Coba beberapa saat lagi.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -3,7 +3,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import ChangePasswordModal from '../features/auth/ChangePasswordModal';
 import { useAuthStore } from '../stores/authStore';
-import { apiClient } from '../services/api';
+import { useAuth } from '../providers/AuthProvider';
 
 // Di bawah `lg` sidebar tampil sebagai drawer overlay, bukan kolom permanen.
 const MOBILE_QUERY = '(max-width: 1023px)';
@@ -66,23 +66,22 @@ export default function AppShell({
     }, 3500);
   };
 
+  const { logout } = useAuth();
+
   const handleLogout = async () => {
     try {
-      await apiClient.post('/auth/logout').catch(() => {});
-    } finally {
-      useAuthStore.getState().logout();
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-      }
+      // useAuth.logout: POST /auth/logout (best-effort) + clearSession +
+      // queryClient.clear(); guard RequireAuth mengarahkan ke /login.
+      await logout();
       showToast('Sesi Anda berhasil diakhiri. Token otentikasi telah dibersihkan.');
       if (onNavChange) {
         onNavChange('login');
-      } else if (typeof window !== 'undefined') {
-        const url = new URL(window.location.href);
-        url.search = '?page=login';
-        window.history.pushState({}, '', url);
-        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
+    } catch {
+      showToast('Logout gagal diproses, namun sesi lokal telah dibersihkan.');
+      useAuthStore.getState().clearSession();
+      if (onNavChange) {
+        onNavChange('login');
       }
     }
   };

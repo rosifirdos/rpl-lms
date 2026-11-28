@@ -88,8 +88,8 @@ async function requestRefresh(): Promise<{ accessToken: string; refreshToken?: s
   }
 
   const { data } = await refreshClient.post<RefreshResponseShape>('/auth/refresh', {
-    // Kontrak backend memakai snake_case pada body refresh (Bab 3.3).
-    refresh_token: refreshToken,
+    // Backend auth.validation.js memvalidasi `refreshToken` (camelCase).
+    refreshToken,
   });
 
   const accessToken = data?.data?.accessToken || data?.data?.access_token;
@@ -102,10 +102,25 @@ async function requestRefresh(): Promise<{ accessToken: string; refreshToken?: s
 
 function handleSessionExpired(): void {
   useAuthStore.getState().clearSession();
+  sessionExpiredHandler('/login?expired=1');
+}
+
+type SessionExpiredHandler = (redirectUrl: string) => void;
+
+/** Default: hard redirect agar seluruh state UI ikut direset. */
+let sessionExpiredHandler: SessionExpiredHandler = (redirectUrl) => {
   if (typeof window !== 'undefined') {
-    // Hard redirect agar seluruh state UI ikut direset.
-    window.location.assign('/login?expired=1');
+    window.location.assign(redirectUrl);
   }
+};
+
+/** Ganti penanganan sesi kedaluwarsa (dipakai test untuk memverifikasi redirect). */
+export function setSessionExpiredHandler(handler: SessionExpiredHandler): () => void {
+  const previous = sessionExpiredHandler;
+  sessionExpiredHandler = handler;
+  return () => {
+    sessionExpiredHandler = previous;
+  };
 }
 
 /**

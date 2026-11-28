@@ -357,18 +357,18 @@ frontend/
 
 ---
 
-### Fase 1 — Autentikasi & Manajemen Sesi (⬜)
+### Fase 1 — Autentikasi & Manajemen Sesi (✅)
 
-- [ ] Login: identifier (username/email/NIM/NIDN/NIP) + password, show/hide password, remember me, loading, error 401/403.
-- [ ] Redirect setelah login sesuai peran: mahasiswa → `/dashboard`, dosen → `/dashboard`, admin → `/dashboard` (dasbor berbeda komponen).
-- [ ] Tangani akun `INACTIVE`/`SUSPENDED` dengan pesan khusus dari backend.
-- [ ] Lupa password: submit email → pesan generik; cooldown kirim ulang.
-- [ ] Reset password: baca token dari query, validasi via `POST /auth/reset-password/validate`, form sandi baru + konfirmasi, sukses → `/login?reset=1`.
-- [ ] Refresh token otomatis pada 401; antrekan request paralel; redirect `/login?expired=1` bila gagal.
-- [ ] Logout: panggil API, bersihkan query cache, redirect.
-- [ ] Sesi bootstrap saat reload: refresh token → `GET /profile` (atau data user dari respons refresh) → render.
-- [ ] Halaman `/403` dan `/404`; guard rute privat.
-- [ ] Test: login sukses/gagal, refresh sukses/gagal, guard peran, reset password valid/invalid.
+- [x] Login: identifier (username/email/NIM/NIDN/NIP) + password, show/hide password, remember me, loading, error 401/403.
+- [x] Redirect setelah login sesuai peran: mahasiswa → `/dashboard`, dosen → `/dashboard`, admin → `/dashboard` (dasbor berbeda komponen).
+- [x] Tangani akun `INACTIVE`/`SUSPENDED` dengan pesan khusus dari backend.
+- [x] Lupa password: submit email → pesan generik; cooldown kirim ulang.
+- [x] Reset password: baca token dari query, validasi via `POST /auth/reset-password/validate`, form sandi baru + konfirmasi, sukses → `/login?reset=1`.
+- [x] Refresh token otomatis pada 401; antrekan request paralel; redirect `/login?expired=1` bila gagal.
+- [x] Logout: panggil API, bersihkan query cache, redirect.
+- [x] Sesi bootstrap saat reload: refresh token → `GET /profile` (atau data user dari respons refresh) → render.
+- [x] Halaman `/403` dan `/404`; guard rute privat.
+- [x] Test: login sukses/gagal, refresh sukses/gagal, guard peran, reset password valid/invalid.
 
 **DoD fase:** tidak ada lagi mock login; sesi bertahan setelah reload; rute admin tidak dapat dibuka peran lain.
 
@@ -503,7 +503,7 @@ frontend/
 | Fase | Prioritas | Status | Tanggal mulai | Tanggal selesai | Tes terakhir | Catatan |
 |---|---|---|---|---|---|---|
 | 0 — Fondasi & Router | P0 | ✅ | 2026-11-28 | 2026-11-28 | typecheck ✅ · test 4/4 ✅ · build ✅ | `lint` (opsional) belum dibuat; script `test:e2e` siap, browser Playwright belum di-install |
-| 1 — Autentikasi & Sesi | P0 | ⬜ | — | — | — | — |
+| 1 — Autentikasi & Sesi | P0 | ✅ | 2026-11-28 | 2026-11-28 | typecheck ✅ · test 21/21 ✅ · build ✅ | Login API riil (identifier+password, error 401/403), forgot/reset password terhubung backend, refresh mutex+queue dengan redirect `?expired=1`, bootstrap sesi via `GET /profile`, logout + `queryClient.clear()`; smoke test dibungkus `AppProviders` |
 | 2 — Shell & Profil | P0 | ⬜ | — | — | — | — |
 | 3 — Dasbor 3 Peran | P1 | ⬜ | — | — | — | — |
 | 4 — Master Data Admin | P1 | ⬜ | — | — | — | Modular per modul |
@@ -516,6 +516,7 @@ frontend/
 |---|---|---|---|---|---|
 | 2026-11-28 | — | Dokumen rencana frontend MVP 1 dibuat ulang (menggantikan versi status lama) | `IMPLEMENTATION_PLAN_MVP1_FRONTEND.md` | — | — |
 | 2026-11-28 | 0 | Fondasi selesai: React Router 6 path-based + redirect legacy `?page=`, guard RequireAuth/RequireRole, http.ts (refresh mutex+queue, ApiError), authStore baru (memori+sessionStorage, status booting, login mock sementara), AppProviders (QueryClient+Devtools), UI kit `components/ui/` (11 komponen), `lib/format.ts` (id-ID, ISO 8601 ber-offset), MSW handlers + smoke test 4 kasus; `App.jsx`/`main.jsx` diganti `.tsx`, halaman lama jadi adapter di `routes/legacy.tsx` | `src/routes/index.tsx`, `src/services/http.ts`, `src/stores/authStore.ts`, `src/components/ui/` | `npm run typecheck` 0 error · `npm run test` 4/4 · `npm run build` ✅ | [`6f87b7f`](https://github.com/rosifirdos/rpl-lms/pull/84) |
+| 2026-11-28 | 1 | Autentikasi riil: `LoginPage.tsx` (react-hook-form+zod, show/hide password, remember me, error 401/403 pesan backend, notifikasi `?expired=1`/`?reset=1`), `ResetPasswordPage.tsx` (validate token → form sandi baru → `/login?reset=1`), `ForgotPassword.jsx` terhubung `POST /auth/forgot-password` (resend = endpoint sama + cooldown 60s), `services/endpoints/auth.ts` + `profile.ts`, `lib/user.ts` (normalisasi BackendUser→AuthUser), `lib/validation.ts` (zod), AuthProvider login/logout riil + bootstrap `refresh → GET /profile`, authStore hapus shim mock, http.ts body refresh camelCase + `setSessionExpiredHandler` (testable), AppShell logout via `useAuth`, rute `/reset-password` menggantikan placeholder, halaman `pages/Login.jsx` dihapus, MSW handlers + 17 test integrasi baru (login/refresh/guard/reset/forgot) | `src/features/auth/LoginPage.tsx`, `src/features/auth/ResetPasswordPage.tsx`, `src/services/endpoints/auth.ts`, `src/providers/AuthProvider.tsx`, `src/stores/authStore.ts` | `npm run typecheck` 0 error · `npm run test` 21/21 · `npm run build` ✅ | belum commit |
 
 **Format baris baru:**
 

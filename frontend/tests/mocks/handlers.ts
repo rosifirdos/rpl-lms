@@ -1,20 +1,36 @@
 /**
  * tests/mocks/handlers.ts
  *
- * Handler MSW dasar untuk endpoint auth & sesi (Fase 0).
- * Handler CRUD modul lain ditambahkan per fase mengikuti OpenAPI v1.4.1.
+ * Handler MSW dasar untuk endpoint auth & sesi — bentuk respons mencerminkan
+ * backend (auth.service.js / profile.service.js, OpenAPI v1.4.1).
+ * Handler CRUD modul lain ditambahkan per fase.
  */
 
 import { http, HttpResponse } from 'msw';
 
 const API = '/api';
 
-export const mockUser = {
+/** User mentah sesuai respons backend (role lowercase enum Prisma). */
+export const mockBackendUser = {
   id: 'u-1',
-  username: 'mahasiswa',
-  email: 'mahasiswa@kampus.ac.id',
-  role: 'MAHASISWA',
-  profile: { full_name: 'Dimas Arya Pratama' },
+  username: 'dimas.arya',
+  email: 'dimas.arya@kampus.ac.id',
+  status: 'ACTIVE' as const,
+  role: 'mahasiswa' as const,
+  profile: { full_name: 'Dimas Arya Pratama', phone: null, bio: null, avatar_file: null },
+  mahasiswa: { nim: '22670014', prodi: 'Teknik Informatika', angkatan: 2022 },
+  dosen: null,
+};
+
+export const mockAdminUser = {
+  ...mockBackendUser,
+  id: 'u-admin',
+  username: 'admin',
+  email: 'admin@kampus.ac.id',
+  role: 'admin' as const,
+  profile: { full_name: 'Admin Sistem', phone: null, bio: null, avatar_file: null },
+  mahasiswa: null,
+  dosen: null,
 };
 
 export const handlers = [
@@ -25,7 +41,7 @@ export const handlers = [
       data: {
         accessToken: 'mock-access-token',
         refreshToken: 'mock-refresh-token',
-        user: mockUser,
+        user: mockBackendUser,
       },
     })
   ),
@@ -33,22 +49,35 @@ export const handlers = [
   http.post(`${API}/auth/refresh`, async () =>
     HttpResponse.json({
       success: true,
-      message: 'Token diperbarui',
-      data: {
-        accessToken: 'mock-access-token-2',
-        refreshToken: 'mock-refresh-token-2',
-      },
+      message: 'Access token diperbarui',
+      data: { accessToken: 'mock-access-token-refreshed' },
     })
   ),
 
   http.post(`${API}/auth/logout`, async () =>
-    HttpResponse.json({ success: true, message: 'Sesi dicabut', data: null })
+    HttpResponse.json({ success: true, message: 'Sesi berhasil diakhiri', data: null })
   ),
 
   http.post(`${API}/auth/forgot-password`, async () =>
     HttpResponse.json({
       success: true,
-      message: 'Jika email terdaftar, tautan pemulihan telah dikirim.',
+      message: 'Jika email terdaftar, tautan pemulihan telah dikirimkan.',
+      data: null,
+    })
+  ),
+
+  http.post(`${API}/auth/reset-password/validate`, async () =>
+    HttpResponse.json({
+      success: true,
+      message: 'Token valid',
+      data: { valid: true, expires_at: new Date(Date.now() + 30 * 60_000).toISOString() },
+    })
+  ),
+
+  http.post(`${API}/auth/reset-password`, async () =>
+    HttpResponse.json({
+      success: true,
+      message: 'Kata sandi berhasil diperbarui',
       data: null,
     })
   ),
@@ -57,7 +86,7 @@ export const handlers = [
     HttpResponse.json({
       success: true,
       message: 'Profil ditemukan',
-      data: mockUser,
+      data: mockBackendUser,
     })
   ),
 
@@ -65,7 +94,43 @@ export const handlers = [
     HttpResponse.json({
       success: true,
       message: 'Dasbor dimuat',
-      data: { role: 'MAHASISWA' },
+      data: { role: 'mahasiswa' },
     })
   ),
 ];
+
+// ---------------------------------------------------------------------------
+// Handler varian untuk skenario gagal (dipakai via server.use(...))
+// ---------------------------------------------------------------------------
+
+export const loginUnauthorizedHandler = http.post(`${API}/auth/login`, async () =>
+  HttpResponse.json(
+    { success: false, message: 'Kredensial tidak valid: username/email atau password salah' },
+    { status: 401 }
+  )
+);
+
+export const loginSuspendedHandler = http.post(`${API}/auth/login`, async () =>
+  HttpResponse.json(
+    {
+      success: false,
+      message:
+        'Akses login ditolak: Akun Anda sedang berstatus ditangguhkan (SUSPENDED). Silakan hubungi administrator.',
+    },
+    { status: 403 }
+  )
+);
+
+export const refreshFailureHandler = http.post(`${API}/auth/refresh`, async () =>
+  HttpResponse.json(
+    { success: false, message: 'Refresh token tidak valid atau telah dicabut' },
+    { status: 401 }
+  )
+);
+
+export const invalidResetTokenHandler = http.post(`${API}/auth/reset-password/validate`, async () =>
+  HttpResponse.json(
+    { success: false, message: 'Token reset tidak valid, telah digunakan, atau kedaluwarsa' },
+    { status: 400 }
+  )
+);
