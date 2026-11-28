@@ -9,14 +9,17 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { AppProviders } from '@/providers/AppProviders';
 import { AppRoutes } from '@/routes';
 import { useAuthStore } from '@/stores/authStore';
 
 function renderRoute(initialPath: string) {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <AppRoutes />
-    </MemoryRouter>
+    <AppProviders>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <AppRoutes />
+      </MemoryRouter>
+    </AppProviders>
   );
 }
 

@@ -18,7 +18,8 @@ import {
   useLegacyNavigate,
 } from './legacy';
 
-import LoginPage from '../pages/Login';
+import LoginPage from '../features/auth/LoginPage';
+import ResetPasswordPage from '../features/auth/ResetPasswordPage';
 import ForgotPasswordPage from '../pages/ForgotPassword';
 import DasborAdminPage from '../pages/DasborAdmin';
 import DasborDosenPage from '../pages/DasborDosen';
@@ -135,37 +136,9 @@ function DashboardRouter() {
 // Adapter halaman auth
 // ---------------------------------------------------------------------------
 
-function LoginPageAdapter() {
-  const navigate = useLegacyNavigate();
-  return (
-    <LoginPage
-      onNavigate={navigate}
-      onRoleChange={() => navigate('/dashboard')}
-      onBack={() => navigate('/dashboard')}
-    />
-  );
-}
-
 function ForgotPasswordPageAdapter() {
   const navigate = useLegacyNavigate();
   return <ForgotPasswordPage onNavigate={navigate} onBack={() => navigate('/login')} />;
-}
-
-/** Placeholder rute resmi; halaman penuh dikerjakan Fase 1. */
-function ResetPasswordPlaceholder() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-gutter">
-      <div className="text-center max-w-md bg-surface-container-low rounded-2xl shadow-xl border border-outline-variant/20 p-space-xl">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-primary-container flex items-center justify-center">
-          <span className="material-symbols-outlined text-3xl text-on-primary-container">key</span>
-        </div>
-        <h1 className="font-headline-md text-headline-md text-on-surface font-semibold">Atur Ulang Kata Sandi</h1>
-        <p className="font-body-md text-body-md text-on-surface-variant mt-2">
-          Halaman reset kata sandi akan terhubung ke API pada Fase 1.
-        </p>
-      </div>
-    </div>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -177,9 +150,9 @@ export function AppRoutes() {
     <Routes>
       <Route element={<LegacyQueryParamRedirect />}>
         {/* Rute publik */}
-        <Route path="/login" element={<LoginPageAdapter />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPageAdapter />} />
-        <Route path="/reset-password" element={<ResetPasswordPlaceholder />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Halaman error */}
         <Route path="/403" element={<ForbiddenPage />} />

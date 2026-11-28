@@ -78,28 +78,6 @@ function clearSession(): void {
   });
 }
 
-/**
- * MOCK sementara Fase 0: dipakai halaman Login lama yang belum terhubung API.
- * AKAN DIGANTI di Fase 1 dengan `POST /auth/login` — jangan dibawa ke Fase 2.
- */
-function loginMock(payload: { name: string; role: string }): void {
-  const role = normalizeRole(payload.role);
-  const user: AuthUser = {
-    id: `mock-${role}`,
-    username: payload.name,
-    email: `${payload.name}@kampus.ac.id`,
-    role,
-    name: payload.name,
-    identifier: role === 'mahasiswa' ? 'NIM 22670014' : undefined,
-  };
-  setSession({ user, accessToken: `mock-token-${Date.now()}` });
-}
-
-/** Kompatibilitas komponen lama yang memanggil setAuth(user, token). */
-function setAuth(user: AuthUser, token: string): void {
-  setSession({ user, accessToken: token });
-}
-
 function getCurrentRole(): Role {
   return normalizeRole(state.user?.role);
 }
@@ -121,8 +99,6 @@ const actions = {
   setStatus,
   clearSession,
   logout: clearSession,
-  login: loginMock,
-  setAuth,
   getCurrentRole,
   getStoredRefreshToken,
   /** Sesi lama menyimpan token di localStorage — bersihkan sisa migrasi. */
