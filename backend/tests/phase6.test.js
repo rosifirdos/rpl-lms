@@ -11,6 +11,8 @@ import {
   MULTIPART_MUTATIONS,
   MUTATING_METHODS,
   OPENAPI_PATH,
+  PUBLIC_OPERATIONS,
+  REQUIRED_OPERATIONS,
   collectRefs,
   listOperations,
   loadOpenApiDocument,
@@ -90,66 +92,55 @@ describe('Fase 6: Kepatuhan MVP 1 & Handoff API', () => {
       assert.ok(Object.keys(api.paths).length >= 20);
     });
 
-    test('Seluruh endpoint MVP 1 terdefinisi sebagai operasi HTTP nyata', () => {
-      const required = [
-        ['/auth/login', 'post'],
-        ['/auth/refresh', 'post'],
-        ['/auth/logout', 'post'],
-        ['/auth/forgot-password', 'post'],
-        ['/profile', 'get'],
-        ['/profile', 'put'],
-        ['/profile/avatar', 'post'],
-        ['/profile/password', 'put'],
-        ['/admin/users', 'get'],
-        ['/admin/users', 'post'],
-        ['/admin/courses', 'get'],
-        ['/admin/courses', 'post'],
-        ['/admin/classes', 'get'],
-        ['/admin/classes', 'post'],
-        ['/admin/enrollments', 'post'],
-        ['/admin/classes/{classId}/enrollments', 'get'],
-        ['/admin/classes/{classId}/available-students', 'get'],
-        ['/dashboard', 'get'],
-        ['/classes', 'get'],
-        ['/admin/audit-logs', 'get'],
-        // Modul MVP 2 (Fase 2 — 16 pertemuan terstruktur)
-        ['/classes/{classId}/meetings', 'get'],
-        ['/classes/{classId}/attendance-recap', 'get'],
-        ['/meetings/{id}', 'get'],
-        ['/meetings/{id}', 'put'],
-        // Modul MVP 2 (Fase 3 — distribusi materi terproteksi)
-        ['/meetings/{meetingId}/materials', 'post'],
-        ['/materials/{id}', 'put'],
-        ['/materials/{id}', 'delete'],
-        ['/materials/{id}/download', 'get'],
-        // Modul MVP 2 (Fase 4 — presensi digital)
-        ['/meetings/{meetingId}/attendance/open', 'post'],
-        ['/meetings/{meetingId}/attendance/close', 'post'],
-        ['/attendance/{sessionId}/check-in', 'post'],
-        ['/attendance/{sessionId}/records', 'get'],
-        ['/attendance/records/{id}', 'put'],
-        // Modul MVP 3 (Fase 2 — penerbitan tugas)
-        ['/meetings/{meetingId}/assignments', 'post'],
-        ['/classes/{classId}/assignments', 'get'],
-        ['/assignments/{id}', 'get'],
-        ['/assignments/{id}', 'put'],
-        ['/assignments/{id}', 'delete'],
-        ['/assignments/{id}/download', 'get'],
-        // Modul MVP 3 (Fase 3–4 — submission & penilaian)
-        ['/assignments/{assignmentId}/submissions', 'post'],
-        ['/assignments/{assignmentId}/submission', 'get'],
-        ['/assignments/{assignmentId}/submissions', 'get'],
-        ['/submissions/{id}/download', 'get'],
-        ['/submissions/{id}/grade', 'put'],
-      ];
-
-      for (const [path, method] of required) {
+    test('Seluruh operasi wajib (REQUIRED_OPERATIONS) terdefinisi sebagai operasi HTTP nyata', () => {
+      for (const [path, method] of REQUIRED_OPERATIONS) {
         assert.ok(specification.paths[path], `Path ${path} belum didefinisikan`);
         assert.ok(
           specification.paths[path][method],
           `Operasi ${method.toUpperCase()} ${path} belum didefinisikan`
         );
       }
+    });
+
+    test('Tidak ada operasi di dokumen yang lupa didaftarkan (coverage dua arah)', () => {
+      const documented = new Set(
+        listOperations(specification).map((entry) => `${entry.method} ${entry.path}`)
+      );
+
+      for (const key of documented) {
+        const [method, path] = key.split(' ');
+        assert.ok(
+          REQUIRED_OPERATIONS.some(([p, m]) => p === path && m === method),
+          `Operasi ${method.toUpperCase()} ${path} terdokumentasi tetapi tidak terdaftar pada REQUIRED_OPERATIONS`
+        );
+      }
+
+      // Sebaliknya: setiap entri daftar wajib benar-benar ada di dokumen
+      // (sudah diuji tes sebelumnya) — di sini dipastikan tidak ada duplikat.
+      assert.equal(
+        new Set(REQUIRED_OPERATIONS.map(([p, m]) => `${m} ${p}`)).size,
+        REQUIRED_OPERATIONS.length,
+        'REQUIRED_OPERATIONS tidak boleh memuat duplikat'
+      );
+    });
+
+    test('Operasi non-publik mendeklarasikan security bearerAuth', () => {
+      for (const entry of listOperations(specification)) {
+        const key = `${entry.method} ${entry.path}`;
+        if (PUBLIC_OPERATIONS.has(key)) continue;
+
+        const security = entry.operation.security ?? entry.pathItem.security;
+        assert.ok(
+          Array.isArray(security) && security.some((s) => 'bearerAuth' in s),
+          `${key.toUpperCase()} wajib mendeklarasikan security bearerAuth (bukan operasi publik)`
+        );
+      }
+
+      // Skema keamanan bearerAuth wajib terdefinisi.
+      assert.ok(
+        specification.components?.securitySchemes?.bearerAuth,
+        'components.securitySchemes.bearerAuth wajib didefinisikan'
+      );
     });
 
     test('Setiap operasi mutasi mendefinisikan requestBody dengan skema body yang sah', () => {

@@ -117,7 +117,7 @@ E-Learning Kampus adalah LMS standalone untuk universitas dengan 3 role (**Admin
 
 | # | Item | Alasan |
 | --- | --- | --- |
-| 1 | Modul MVP 4 — Central Timeline lanjutan, kuis interaktif, notifikasi internal | Belum diimplementasikan |
+| 1 | Antarmuka Swagger UI (dokumentasi API interaktif) | Belum diekspos; kontrak terdokumentasi di openapi.yaml 1.4.0 |
 | 2 | Modul MVP 5 — UTS/UAS, gatekeeping kehadiran ≥70%, rekap nilai akhir | Belum diimplementasikan |
 | 3 | Load/stress testing & pengukuran throughput produksi | Tidak tersedia environment bertingkat; dilakukan pada fase rilis lanjutan |
 | 4 | Penetration testing penuh / eksploitasi nyata | Di luar wewenang QA; cukup security review statis + uji dasar |
@@ -138,7 +138,8 @@ E-Learning Kampus adalah LMS standalone untuk universitas dengan 3 role (**Admin
 | MVP 3 backend (tugas, submission, validasi berkas, penilaian 0–100) | ✅ di `main` | Ya |
 | Frontend SPA (semua halaman, data mock; logout terintegrasi) | 🟡 di `main` | Ya, dengan catatan data mock |
 | Fase 5 (enrollment endpoint, dashboard) di branch `feat/backend-fase-5-...` | ⚠️ cek status merge saat eksekusi | Ya jika sudah merge; jika belum, uji di branch terpisah |
-| MVP 4–5 | ❌ belum ada | Tidak — out-of-scope |
+| MVP 4 backend (timeline, kuis, notifikasi) | ✅ di working tree (suite mvp4-phase2..5) | Ya |
+| MVP 5 | ❌ belum ada | Tidak — out-of-scope |
 
 ---
 

@@ -3,6 +3,11 @@ import { AppError } from '../../utils/errors.js';
 import { ROLES } from '../../constants/roles.js';
 import { AUDIT_ENTITIES } from '../../constants/auditEntities.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
+import {
+  buildAttendanceOpenedNotification,
+  buildAttendanceUpdatedNotification,
+} from '../notifications/notification.templates.js';
 import {
   ensureCanManageClass,
   ensureCanReadClass,
@@ -229,6 +234,21 @@ export class AttendanceService {
       newValues: { status: session.status, opened_at: session.opened_at },
       ipAddress,
       userAgent,
+    });
+
+    // Notifikasi best-effort: sesi presensi dibuka (FR-057).
+    const recipientIds = await NotificationService.getEnrolledStudentUserIds(meeting.class_id);
+    const template = buildAttendanceOpenedNotification({
+      meetingTitle: meeting.title,
+      className: meeting.class.name,
+    });
+    await NotificationService.notifyMany({
+      userIds: recipientIds,
+      type: template.type,
+      title: template.title,
+      message: template.message,
+      link: template.link,
+      dedupeKeyFor: () => `attendance:${session.id}:opened`,
     });
 
     return serializeSession(session);
@@ -468,6 +488,33 @@ export class AttendanceService {
       ipAddress,
       userAgent,
     });
+
+    // Notifikasi best-effort: status presensi dikoreksi (FR-057).
+    if (existing.status !== record.status) {
+      const studentUserId = (
+        await prisma.mahasiswa.findUnique({
+          where: { id: record.student_id },
+          select: { user: { select: { id: true } } },
+        })
+      )?.user?.id;
+      if (studentUserId) {
+        const template = buildAttendanceUpdatedNotification({
+          meetingTitle: existing.session.meeting.title,
+          newStatus: record.status,
+        });
+        await NotificationService.notify({
+          userId: studentUserId,
+          type: template.type,
+          title: template.title,
+          message: template.message,
+          link: template.link,
+          // R-05: tanpa dedupe key statis — pengiriman sudah digating oleh
+          // `existing.status !== record.status`, sehingga setiap koreksi
+          // status yang nyata selalu diberitahukan.
+          dedupeKey: null,
+        });
+      }
+    }
 
     return serializeRecord(record, record.student);
   }

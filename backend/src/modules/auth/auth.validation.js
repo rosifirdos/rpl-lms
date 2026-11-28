@@ -79,3 +79,45 @@ export const forgotPasswordSchema = z
   .transform((data) => ({
     identifier: (data.identifier || data.email).trim(),
   }));
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string({ message: 'Token reset kata sandi wajib diisi' }).min(1, 'Token reset kata sandi wajib diisi'),
+    new_password: z.string({ message: 'Password baru wajib diisi' }).optional(),
+    newPassword: z.string().optional(),
+    confirm_password: z.string().optional(),
+    confirmPassword: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const np = data.new_password || data.newPassword;
+      return typeof np === 'string' && np.length >= 8;
+    },
+    {
+      message: 'Password baru minimal 8 karakter',
+      path: ['new_password'],
+    }
+  )
+  .refine(
+    (data) => {
+      const np = data.new_password || data.newPassword;
+      const cp = data.confirm_password || data.confirmPassword;
+      if (cp !== undefined) {
+        return np === cp;
+      }
+      return true;
+    },
+    {
+      message: 'Konfirmasi password baru tidak cocok dengan password baru',
+      path: ['confirm_password'],
+    }
+  )
+  .transform((data) => ({
+    token: data.token.trim(),
+    newPassword: data.new_password || data.newPassword,
+    confirmPassword: data.confirm_password || data.confirmPassword,
+  }));
+
+export const resetTokenQuerySchema = z.object({
+  token: z.string().min(1, 'Token reset kata sandi wajib diisi'),
+});

@@ -3,8 +3,27 @@ import { AppError } from "../../utils/errors.js";
 import { ROLES } from "../../constants/roles.js";
 import { ACADEMIC } from "../../constants/academic.js";
 import { formatLecturerName } from "../../utils/format.js";
+import { TimelineService } from "../timeline/timeline.service.js";
 
 export class DashboardService {
+  /**
+   * Pratinjau 5 item timeline terdekat untuk dasbor mahasiswa/dosen (FR-009).
+   *
+   * Best-effort: kegagalan timeline tidak menggagalkan dasbor.
+   *
+   * @param {object} user pengguna minimal `{ id, role }`
+   * @returns {Promise<Array<object>>}
+   */
+  static async #getTimelinePreview(user) {
+    try {
+      const { items } = await TimelineService.getTimeline({ user, query: { limit: 5 } });
+      return items;
+    } catch (error) {
+      console.error('[DashboardService] Gagal memuat pratinjau timeline:', error.message);
+      return [];
+    }
+  }
+
   /**
    * Dasbor kontekstual untuk Administrator (SRS Bab 4 & IMPLEMENTATION_PLAN Bab 4.3)
    */
@@ -141,6 +160,7 @@ export class DashboardService {
         total_students: totalStudentsTaught,
       },
       teaching_classes: formattedClasses,
+      timeline_preview: await this.#getTimelinePreview({ id: userId, role: ROLES.DOSEN }),
     };
   }
 
@@ -242,6 +262,7 @@ export class DashboardService {
         total_credits: totalCredits,
       },
       enrolled_classes: enrolledClasses,
+      timeline_preview: await this.#getTimelinePreview({ id: userId, role: ROLES.MAHASISWA }),
     };
   }
 

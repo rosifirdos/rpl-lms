@@ -6,6 +6,8 @@ import { STORAGE } from '../../config/env.js';
 import { ROLES } from '../../constants/roles.js';
 import { AUDIT_ENTITIES } from '../../constants/auditEntities.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
+import { buildAssignmentCreatedNotification, buildAssignmentPublishedNotification } from '../notifications/notification.templates.js';
 import { AppError } from '../../utils/errors.js';
 import { ensureCanManageClass, ensureCanReadClass, getStudentRecordOrThrow } from '../../utils/ownership.js';
 import { generateStorageName, resolveStorageSubdir, sanitizeFilename, DOCUMENT_MIME_TYPES } from '../../utils/storage.js';
@@ -104,7 +106,7 @@ export class AssignmentService {
 
     const written = file ? await writeAssignmentFile(file, user.id) : null;
     try {
-      return await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
         let fileRecord = null;
         if (written) {
           fileRecord = await tx.file.create({
@@ -144,6 +146,30 @@ export class AssignmentService {
         });
         return serializeAssignment(created);
       });
+      // Notifikasi best-effort: tugas langsung terbit saat dibuat (FR-057).
+      if (payload.is_published) {
+        const [recipientIds, classRow] = await Promise.all([
+          NotificationService.getEnrolledStudentUserIds(meeting.class_id),
+          prisma.class.findUnique({
+            where: { id: meeting.class_id },
+            select: { name: true },
+          }),
+        ]);
+        const template = buildAssignmentCreatedNotification({
+          assignmentTitle: result.title,
+          dueDate: result.due_date,
+          className: classRow?.name ?? '',
+        });
+        await NotificationService.notifyMany({
+          userIds: recipientIds,
+          type: template.type,
+          title: template.title,
+          message: template.message,
+          link: template.link,
+          dedupeKeyFor: () => `assignment:${result.id}:created`,
+        });
+      }
+      return result;
     } catch (error) {
       if (written) await fs.unlink(written.destination).catch(() => {});
       throw error;
@@ -295,6 +321,29 @@ export class AssignmentService {
         return serializeAssignment(updated);
       });
       if (quarantined) await fs.unlink(quarantined).catch(() => {});
+      // Notifikasi best-effort: transisi draft → terbit (FR-057).
+      if (!assignment.is_published && payload.is_published === true && updated.is_published) {
+        const [recipientIds, classRow] = await Promise.all([
+          NotificationService.getEnrolledStudentUserIds(updated.meeting.class_id),
+          prisma.class.findUnique({
+            where: { id: updated.meeting.class_id },
+            select: { name: true },
+          }),
+        ]);
+        const template = buildAssignmentPublishedNotification({
+          assignmentTitle: updated.title,
+          dueDate: updated.due_date,
+          className: classRow?.name ?? '',
+        });
+        await NotificationService.notifyMany({
+          userIds: recipientIds,
+          type: template.type,
+          title: template.title,
+          message: template.message,
+          link: template.link,
+          dedupeKeyFor: () => `assignment:${updated.id}:published`,
+        });
+      }
       return result;
     } catch (error) {
       if (written) await fs.unlink(written.destination).catch(() => {});

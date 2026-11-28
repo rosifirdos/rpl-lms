@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticateToken } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/rbac.middleware.js';
-import { uploadSubmission } from '../../middlewares/upload.middleware.js';
+import { uploadSubmission, enforceConfiguredUploadPolicy } from '../../middlewares/upload.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { ROLES } from '../../constants/roles.js';
 import { SubmissionController } from './submission.controller.js';
@@ -15,6 +15,7 @@ assignmentSubmissionRoutes.post(
   requireRole(ROLES.MAHASISWA),
   validate(assignmentIdParamSchema),
   uploadSubmission,
+  enforceConfiguredUploadPolicy({ kind: 'submission' }),
   SubmissionController.upload
 );
 

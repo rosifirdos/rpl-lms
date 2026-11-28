@@ -6,6 +6,8 @@ import { ROLES } from '../../constants/roles.js';
 import { AUDIT_ENTITIES } from '../../constants/auditEntities.js';
 import { STORAGE } from '../../config/env.js';
 import { AuditLogService } from '../audit-log/audit-log.service.js';
+import { NotificationService } from '../notifications/notification.service.js';
+import { buildGradePublishedNotification } from '../notifications/notification.templates.js';
 import { AppError } from '../../utils/errors.js';
 import { ensureCanReadClass, ensureCanManageClass, ensureEnrolledInClass, getStudentRecordOrThrow } from '../../utils/ownership.js';
 import { DOCUMENT_MIME_TYPES, generateStorageName, resolveStorageSubdir, sanitizeFilename } from '../../utils/storage.js';
@@ -296,7 +298,7 @@ export class SubmissionService {
 
     const gradedAt = new Date();
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Kunci baris submission agar pembacaan nilai lama dan penulisan nilai
       // baru bersifat atomik. Tanpa lock, dua penilaian bersamaan dapat
       // merekam old_values yang basi pada audit (FR-058, TC-024).
@@ -336,8 +338,35 @@ export class SubmissionService {
         dbClient: tx,
       });
 
-      return res;
+      return { record: res, previousScore: number(current.score) };
     });
+
+    const updated = result.record;
+
+    // Notifikasi best-effort: nilai tugas dirilis (FR-057).
+    // R-05: hanya dikirim bila skor benar-benar berubah (perbaikan skor
+    // nyata), dengan dedupe key berbasis versi (`updated_at`) sehingga
+    // regrade berikutnya tetap diberitahukan.
+    const studentUserId = (
+      await prisma.mahasiswa.findUnique({
+        where: { id: updated.student_id },
+        select: { user: { select: { id: true } } },
+      })
+    )?.user?.id;
+    if (studentUserId && number(updated.score) !== result.previousScore) {
+      const template = buildGradePublishedNotification({
+        assignmentTitle: submission.assignment.title,
+        score: number(payload.score),
+      });
+      await NotificationService.notify({
+        userId: studentUserId,
+        type: template.type,
+        title: template.title,
+        message: template.message,
+        link: template.link,
+        dedupeKey: `grade:${submissionId}:${updated.updated_at.toISOString()}`,
+      });
+    }
 
     return serializeSubmission(updated);
   }

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticateToken } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/rbac.middleware.js';
-import { uploadAssignmentFile } from '../../middlewares/upload.middleware.js';
+import { uploadAssignmentFile, enforceConfiguredUploadPolicy } from '../../middlewares/upload.middleware.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { ROLES } from '../../constants/roles.js';
 import { AssignmentController } from './assignment.controller.js';
@@ -20,6 +20,7 @@ meetingAssignmentRoutes.post(
   requireRole(ROLES.DOSEN, ROLES.ADMIN),
   validate(meetingIdParamSchema),
   uploadAssignmentFile,
+  enforceConfiguredUploadPolicy({ kind: 'assignment' }),
   validate(createAssignmentSchema),
   AssignmentController.create
 );
@@ -36,6 +37,6 @@ classAssignmentRoutes.get(
 export const assignmentRoutes = Router();
 assignmentRoutes.use(authenticateToken);
 assignmentRoutes.get('/:id', requireRole(ROLES.MAHASISWA, ROLES.DOSEN, ROLES.ADMIN), validate(assignmentIdParamSchema), AssignmentController.detail);
-assignmentRoutes.put('/:id', requireRole(ROLES.DOSEN, ROLES.ADMIN), validate(assignmentIdParamSchema), uploadAssignmentFile, validate(updateAssignmentSchema), AssignmentController.update);
+assignmentRoutes.put('/:id', requireRole(ROLES.DOSEN, ROLES.ADMIN), validate(assignmentIdParamSchema), uploadAssignmentFile, enforceConfiguredUploadPolicy({ kind: 'assignment' }), validate(updateAssignmentSchema), AssignmentController.update);
 assignmentRoutes.delete('/:id', requireRole(ROLES.DOSEN, ROLES.ADMIN), validate(assignmentIdParamSchema), AssignmentController.delete);
 assignmentRoutes.get('/:id/download', requireRole(ROLES.MAHASISWA, ROLES.DOSEN, ROLES.ADMIN), validate(assignmentIdParamSchema), AssignmentController.download);

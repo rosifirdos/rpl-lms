@@ -37,6 +37,13 @@ export const AUDIT_ENTITIES = {
   // MVP 3 (Fase 2–5): penerbitan tugas & pengumpulan/penilaian submission
   ASSIGNMENTS: 'assignments',
   SUBMISSIONS: 'submissions',
+
+  // Workstream B (FR-049/FR-050): konfigurasi sistem oleh Admin
+  CONFIG: 'config',
+
+  // MVP 4: kuis interaktif (FR-025, FR-040–FR-041)
+  QUIZZES: 'quizzes',
+  QUIZ_ATTEMPTS: 'quiz_attempts',
 };
 
 /**

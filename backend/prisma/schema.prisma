@@ -66,12 +66,16 @@ model User {
   updated_at    DateTime   @updatedAt
 
   // Relations
-  profile        Profile?
-  mahasiswa      Mahasiswa?
-  dosen          Dosen?
-  refresh_tokens RefreshToken[]
-  audit_logs     AuditLog[]
-  uploaded_files File[]
+  profile                Profile?
+  mahasiswa              Mahasiswa?
+  dosen                  Dosen?
+  refresh_tokens         RefreshToken[]
+  password_reset_tokens  PasswordResetToken[]
+  audit_logs             AuditLog[]
+  uploaded_files         File[]
+  config_updates         SystemConfig[] @relation("ConfigUpdater")
+  notifications          Notification[]
+  quiz_grades            QuizAttempt[]  @relation("QuizGrader")
 
   @@map("users")
 }
@@ -107,6 +111,7 @@ model Mahasiswa {
   enrollments        Enrollment[]
   attendance_records AttendanceRecord[]
   submissions        Submission[]
+  quiz_attempts      QuizAttempt[]
 
   @@map("mahasiswa")
 }
@@ -129,7 +134,7 @@ model Dosen {
 }
 
 // ---------------------------------------------------------------------------
-// Auth — Refresh Token
+// Auth — Refresh Token & Reset Kata Sandi (FR-003)
 // ---------------------------------------------------------------------------
 
 model RefreshToken {
@@ -145,6 +150,29 @@ model RefreshToken {
 
   @@index([user_id, revoked_at])
   @@map("refresh_tokens")
+}
+
+/**
+ * Token pemulihan kata sandi (FR-003).
+ *
+ * Hanya hash SHA-256 dari token mentah yang disimpan; token mentah dikirim
+ * eksklusif melalui email. Token bersifat sekali pakai (`used_at`) dan
+ * kedaluwarsa (`expires_at`).
+ */
+model PasswordResetToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  user_id    String    @db.Uuid
+  token_hash String    @unique @db.VarChar(64)
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, used_at])
+  @@index([expires_at])
+  @@map("password_reset_tokens")
 }
 
 // ---------------------------------------------------------------------------
@@ -226,6 +254,8 @@ model Meeting {
   materials          Material[]
   assignments        Assignment[]
   attendance_session AttendanceSession?
+  scheduled_at       DateTime?
+  quizzes            Quiz[]
 
   @@unique([class_id, meeting_number])
   @@map("meetings")
@@ -354,6 +384,29 @@ model File {
 }
 
 // ---------------------------------------------------------------------------
+// Konfigurasi Sistem (FR-049, FR-050)
+// ---------------------------------------------------------------------------
+
+/**
+ * Konfigurasi global sistem berbentuk key-value (FR-049, FR-050).
+ *
+ * Nilai disimpan sebagai JSON agar tipe fleksibel (array/number). Default
+ * perilaku didefinisikan di `src/constants/config.js`; baris yang belum ada
+ * berarti memakai default tersebut.
+ */
+model SystemConfig {
+  key        String   @id @db.VarChar(60)
+  value      Json
+  updated_by String?  @db.Uuid
+  updated_at DateTime @updatedAt
+
+  // Relations
+  updater User? @relation("ConfigUpdater", fields: [updated_by], references: [id], onDelete: SetNull)
+
+  @@map("system_configs")
+}
+
+// ---------------------------------------------------------------------------
 // Audit Trail (NFR-009, FR-058)
 // ---------------------------------------------------------------------------
 
@@ -375,4 +428,156 @@ model AuditLog {
   @@index([entity, entity_id])
   @@index([user_id])
   @@map("audit_logs")
+}
+// ---------------------------------------------------------------------------
+// MVP 4 — Kuis Interaktif (FR-025, FR-040–FR-041)
+// ---------------------------------------------------------------------------
+
+enum QuizQuestionType {
+  MULTIPLE_CHOICE
+  ESSAY
+}
+
+enum QuizAttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+/// Kuis terikat pertemuan; terpisah dari Assignment (kuis bukan tugas).
+model Quiz {
+  id               String   @id @default(uuid()) @db.Uuid
+  meeting_id       String   @db.Uuid
+  title            String   @db.VarChar(150)
+  instructions     String?  @db.Text
+  duration_minutes Int
+  open_at          DateTime
+  close_at         DateTime
+  is_published     Boolean  @default(false)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  // Relations
+  meeting   Meeting       @relation(fields: [meeting_id], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@index([meeting_id])
+  @@index([open_at, close_at])
+  @@map("quizzes")
+}
+
+/// Butir soal kuis; kunci jawaban tidak pernah dikirim ke mahasiswa.
+model QuizQuestion {
+  id            String           @id @default(uuid()) @db.Uuid
+  quiz_id       String           @db.Uuid
+  question_text String           @db.Text
+  type          QuizQuestionType
+  points        Decimal          @db.Decimal(5, 2) @default(1)
+  answer_key    String?          @db.Text
+  order_index   Int
+  created_at    DateTime         @default(now())
+  updated_at    DateTime         @updatedAt
+
+  // Relations
+  quiz    Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  options QuizOption[]
+  answers QuizAnswer[]
+
+  @@unique([quiz_id, order_index])
+  @@map("quiz_questions")
+}
+
+/// Opsi jawaban pilihan ganda; `is_correct` hanya untuk penilaian server.
+model QuizOption {
+  id          String  @id @default(uuid()) @db.Uuid
+  question_id String  @db.Uuid
+  option_text String  @db.VarChar(500)
+  is_correct  Boolean @default(false)
+  order_index Int
+
+  // Relations
+  question QuizQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  answers  QuizAnswer[]
+
+  @@unique([question_id, order_index])
+  @@map("quiz_options")
+}
+
+/// Percobaan pengerjaan kuis — satu per mahasiswa per kuis.
+model QuizAttempt {
+  id           String            @id @default(uuid()) @db.Uuid
+  quiz_id      String            @db.Uuid
+  student_id   String            @db.Uuid
+  started_at   DateTime          @default(now())
+  deadline_at  DateTime
+  submitted_at DateTime?
+  status       QuizAttemptStatus @default(IN_PROGRESS)
+  score        Decimal?          @db.Decimal(5, 2)
+  graded_at    DateTime?
+  graded_by    String?           @db.Uuid
+
+  // Relations
+  quiz     Quiz         @relation(fields: [quiz_id], references: [id], onDelete: Cascade)
+  student  Mahasiswa    @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  grader   User?        @relation("QuizGrader", fields: [graded_by], references: [id], onDelete: SetNull)
+  answers  QuizAnswer[]
+
+  @@unique([quiz_id, student_id])
+  @@index([student_id])
+  @@map("quiz_attempts")
+}
+
+/// Jawaban mahasiswa per soal; pilihan ganda dinilai otomatis, esai manual.
+model QuizAnswer {
+  id                 String   @id @default(uuid()) @db.Uuid
+  attempt_id         String   @db.Uuid
+  question_id        String   @db.Uuid
+  selected_option_id String?  @db.Uuid
+  answer_text        String?  @db.Text
+  points_awarded     Decimal? @db.Decimal(5, 2)
+  feedback           String?  @db.Text
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  attempt         QuizAttempt  @relation(fields: [attempt_id], references: [id], onDelete: Cascade)
+  question        QuizQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+  selected_option QuizOption?  @relation(fields: [selected_option_id], references: [id], onDelete: SetNull)
+
+  @@unique([attempt_id, question_id])
+  @@map("quiz_answers")
+}
+
+// ---------------------------------------------------------------------------
+// MVP 4 — Notifikasi Internal (FR-057)
+// ---------------------------------------------------------------------------
+
+enum NotificationType {
+  ASSIGNMENT_CREATED
+  DEADLINE_REMINDER
+  ATTENDANCE_OPENED
+  ATTENDANCE_UPDATED
+  GRADE_PUBLISHED
+  ENROLLMENT_CREATED
+  QUIZ_PUBLISHED
+}
+
+/// Notifikasi internal best-effort; dedupe via `dedupe_key` per pengguna.
+model Notification {
+  id         String           @id @default(uuid()) @db.Uuid
+  user_id    String           @db.Uuid
+  type       NotificationType
+  title      String           @db.VarChar(150)
+  message    String           @db.Text
+  link       String?          @db.VarChar(255)
+  dedupe_key String?          @db.VarChar(150)
+  is_read    Boolean          @default(false)
+  created_at DateTime         @default(now())
+
+  // Relations
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, dedupe_key])
+  @@index([user_id, is_read, created_at])
+  @@map("notifications")
 }

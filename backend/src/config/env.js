@@ -21,6 +21,143 @@ export const ENV = {
 };
 
 /**
+ * Konfigurasi pengiriman email (FR-003 — reset kata sandi).
+ *
+ * Transport:
+ *   - `smtp`   : kirim via SMTP (produksi); `SMTP_HOST` wajib diisi.
+ *   - `log`    : tulis isi email ke console (development tanpa SMTP).
+ *   - `memory` : simpan ke outbox in-memory untuk pengujian (tidak pernah kirim).
+ *
+ * Aturan resolusi (R-02 — fail-fast, lihat `resolveMailTransport`):
+ *   - `NODE_ENV=test`        : dipaksa `memory` agar suite pengujian tidak
+ *     pernah mengirim email sungguhan, sekalipun `.env` mengatur `smtp`.
+ *   - `NODE_ENV=production`  : default `smtp` dan startup GAGAL bila
+ *     `SMTP_HOST` kosong. `log`/`memory` hanya dipakai bila diminta eksplisit
+ *     dan selalu memunculkan `console.warn` karena token reset dapat bocor
+ *     ke log (transport `log`) atau email tidak pernah terkirim (`memory`).
+ *   - environment lain       : default `log` (perilaku development lama).
+ */
+
+/**
+ * Resolusi transport email murni terhadap input agar seluruh kombinasi
+ * environment dapat diuji tanpa `child_process` (R-02).
+ *
+ * @param {object} [input]
+ * @param {string} [input.nodeEnv] nilai `NODE_ENV`
+ * @param {string} [input.mailTransport] nilai `MAIL_TRANSPORT`
+ * @param {string} [input.smtpHost] nilai `SMTP_HOST`
+ * @returns {'smtp'|'log'|'memory'} transport yang efektif
+ * @throws {Error} bila transport `smtp` (eksplisit maupun default produksi)
+ *   dipilih namun `SMTP_HOST` kosong
+ */
+export function resolveMailTransport({
+  nodeEnv = process.env.NODE_ENV,
+  mailTransport = process.env.MAIL_TRANSPORT,
+  smtpHost = process.env.SMTP_HOST,
+} = {}) {
+  if (nodeEnv === 'test') {
+    return 'memory';
+  }
+
+  const raw = (mailTransport ?? '').trim().toLowerCase();
+  const explicit = ['smtp', 'log', 'memory'].includes(raw) ? raw : undefined;
+
+  // Eksplisit `smtp` (environment apa pun) maupun default produksi wajib SMTP_HOST.
+  if (explicit === 'smtp' || (nodeEnv === 'production' && !explicit)) {
+    if (!smtpHost) {
+      throw new Error(
+        '[config] Pengiriman email via SMTP membutuhkan SMTP_HOST. ' +
+          'Isi SMTP_HOST pada .env, atau set MAIL_TRANSPORT=log secara eksplisit ' +
+          'jika benar-benar ingin mencetak email ke log (tidak disarankan di produksi).'
+      );
+    }
+    return 'smtp';
+  }
+
+  if (explicit === 'log') {
+    if (nodeEnv === 'production') {
+      console.warn(
+        '[config] MAIL_TRANSPORT=log pada NODE_ENV=production: isi email — termasuk ' +
+          'tautan/token reset kata sandi — akan tercetak utuh ke log. Gunakan hanya ' +
+          'jika risiko ini dipahami; produksi sebaiknya memakai MAIL_TRANSPORT=smtp.'
+      );
+    }
+    return 'log';
+  }
+
+  if (explicit === 'memory') {
+    if (nodeEnv === 'production') {
+      console.warn(
+        '[config] MAIL_TRANSPORT=memory pada NODE_ENV=production: email tidak akan ' +
+          'pernah terkirim (hanya disimpan di memori proses).'
+      );
+    }
+    return 'memory';
+  }
+
+  // Development / environment lain tanpa nilai valid: perilaku lama dipertahankan.
+  return 'log';
+}
+
+export const MAIL = (() => {
+  const transport = resolveMailTransport();
+
+  return {
+    TRANSPORT: transport,
+    SMTP_HOST: process.env.SMTP_HOST || '',
+    SMTP_PORT: Number(process.env.SMTP_PORT || 587),
+    SMTP_SECURE: process.env.SMTP_SECURE === 'true',
+    SMTP_USER: process.env.SMTP_USER || '',
+    SMTP_PASS: process.env.SMTP_PASS || '',
+    FROM: process.env.MAIL_FROM || 'no-reply@elearning.local',
+  };
+})();
+
+/** URL dasar frontend untuk menyusun tautan (mis. tautan reset kata sandi). */
+export const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(
+  /\/+$/,
+  ''
+);
+
+/**
+ * Batas umur token reset kata sandi (menit).
+ *
+ * Rentang sah 5–120 menit mengikuti rekomendasi keamanan OWASP; nilai di luar
+ * rentang ditolak saat startup agar konfigurasi menyimpang tidak diam-diam
+ * diterima.
+ */
+export const PASSWORD_RESET_TTL_LIMITS = Object.freeze({
+  MIN_MINUTES: 5,
+  MAX_MINUTES: 120,
+  DEFAULT_MINUTES: 30,
+});
+
+export function parsePasswordResetTtlMinutes(rawValue = process.env.PASSWORD_RESET_TTL_MINUTES) {
+  const raw = rawValue === undefined || rawValue === null ? '' : String(rawValue).trim();
+  if (raw === '') {
+    return PASSWORD_RESET_TTL_LIMITS.DEFAULT_MINUTES;
+  }
+
+  const minutes = Number(raw);
+  if (
+    !Number.isInteger(minutes) ||
+    minutes < PASSWORD_RESET_TTL_LIMITS.MIN_MINUTES ||
+    minutes > PASSWORD_RESET_TTL_LIMITS.MAX_MINUTES
+  ) {
+    throw new Error(
+      `[config] PASSWORD_RESET_TTL_MINUTES tidak valid: "${raw}". ` +
+        `Nilai harus berupa bilangan bulat pada rentang ${PASSWORD_RESET_TTL_LIMITS.MIN_MINUTES}–` +
+        `${PASSWORD_RESET_TTL_LIMITS.MAX_MINUTES} menit (FR-003).`
+    );
+  }
+
+  return minutes;
+}
+
+/** Umur token reset kata sandi (menit) yang efektif untuk runtime. */
+export const PASSWORD_RESET_TTL_MINUTES = parsePasswordResetTtlMinutes();
+
+/**
  * Batas konfigurasi ukuran berkas jawaban tugas (FR-019, BR-008).
  *
  * SRS menetapkan rentang yang sah 5MB–10MB. Nilai di luar rentang tidak boleh
