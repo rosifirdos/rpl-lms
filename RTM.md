@@ -53,7 +53,7 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **FR-001** | Login dengan multi-identifier (username/email/NIM/NIDN/NIP) & password | Semua | MVP 1 | TC-AUTH-01, TC-AUTH-02, AUTH-01..07, TC-001 | 🟡 Ready to Test |
 | **FR-002** | Logout sesi pengguna dan pencabutan token aktif secara aman | Semua | MVP 1 | TC-AUTH-03, SESS-05, SESS-06 | 🟡 Ready to Test |
-| **FR-003** | Lupa kata sandi (*forgot password*) dengan perlindungan anti-enumerasi | Semua | MVP 1 | TC-AUTH-02, PWD-01..04, UI-05..08 | 🟡 Ready to Test |
+| **FR-003** | Lupa kata sandi (*forgot password*) dengan perlindungan anti-enumerasi | Semua | MVP 1 | TC-AUTH-02, PWD-01..04, UI-05..08, mvp-gap-auth-reset (R-13: validasi token via POST) | 🟡 Ready to Test |
 | **FR-004** | Pembatasan hak akses berbasis peran secara ketat (*RBAC*) | Semua | MVP 1 | TC-SECR-01, RBAC-01..08, TC-022 | 🟡 Ready to Test |
 | **FR-005** | Modul profil mandiri untuk melihat data identitas akun | Semua | MVP 1 | TC-PROF-01, PROF-01, PROF-02 | 🟡 Ready to Test |
 | **FR-006** | Pengguna dapat memperbarui data kontak dan bio profil mandiri | Semua | MVP 1 | TC-PROF-01, PROF-03, PROF-05 | 🟡 Ready to Test |
@@ -61,7 +61,7 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **FR-008** | Pergantian kata sandi mandiri dengan validasi kata sandi lama | Semua | MVP 1 | TC-AUTH-03, PWD-05..12, TC-005 | 🟡 Ready to Test |
 | **FR-009** | Halaman Timeline Pembelajaran terpusat pada dasbor | Mhs, Dsn | MVP 4 | TC-006, mvp4-phase2 | ✅ Implemented (MVP 4) |
 | **FR-010** | Timeline menampilkan batas waktu (*deadline*) tugas secara kronologis | Mhs, Dsn | MVP 4 | TC-006, mvp4-phase2 | ✅ Implemented (MVP 4) |
-| **FR-011** | Timeline menampilkan jadwal kuis dan jadwal ujian (UTS/UAS) | Mhs, Dsn | MVP 4 | TC-006, mvp4-phase2 | ✅ Implemented (MVP 4) |
+| **FR-011** | Timeline menampilkan jadwal kuis dan jadwal ujian (UTS/UAS) | Mhs, Dsn | MVP 4 | TC-006, mvp4-phase2 (R-04: `scheduled_at` → item MEETING/EXAM) | ✅ Implemented (MVP 4) |
 | **FR-012** | Navigasi pintas dari Timeline langsung ke aktivitas terkait | Mhs, Dsn | MVP 4 | TC-006, mvp4-phase2 | ✅ Implemented (MVP 4) |
 | **FR-013** | Mahasiswa melihat daftar kelas yang dienroll oleh Admin di dasbor | Mahasiswa | MVP 1/2 | TC-CLSS-01, ENR-08, TC-007 | 🟡 Ready to Test |
 | **FR-014** | Membuka ruang kelas dan melihat silabus daftar 16 pertemuan | Mahasiswa | MVP 2 | TC-CLSS-01, MTG-01, MTG-02 | 🟡 Ready to Test |
@@ -75,7 +75,7 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **FR-022** | Mahasiswa melihat perolehan skor tugas numerik (0–100) dan feedback | Mahasiswa | MVP 3 | TC-013, mvp3-phase4..5 | ✅ Implemented |
 | **FR-023** | Mahasiswa mengisi presensi hanya apabila sesi presensi telah dibuka dosen | Mahasiswa | MVP 2 | TC-ATTN-01, ATT-03, ATT-04, TC-015, TC-016 | 🟡 Ready to Test |
 | **FR-024** | Mahasiswa memantau status kehadiran dan rekapitulasi presensi kelas | Mahasiswa | MVP 2 | TC-ATTN-02, ATT-08 | 🟡 Ready to Test |
-| **FR-025** | Mahasiswa mengerjakan kuis interaktif sesuai durasi dan jadwal | Mahasiswa | MVP 4 | mvp4-phase3..4 | ✅ Implemented (MVP 4) |
+| **FR-025** | Mahasiswa mengerjakan kuis interaktif sesuai durasi dan jadwal | Mahasiswa | MVP 4 | mvp4-phase3..4 (R-01: skor dari total poin seluruh soal, esai kosong tetap dinilai; R-06: start paralel) | ✅ Implemented (MVP 4) |
 | **FR-026** | Gatekeeping akses UTS Pertemuan 8 dengan syarat kehadiran $\ge 70\%$ | Mahasiswa | MVP 5 | TC-018, TC-019 | ⛔ Blocked (MVP 5) |
 | **FR-027** | Gatekeeping akses UAS Pertemuan 16 dengan syarat kehadiran $\ge 70\%$ | Mahasiswa | MVP 5 | TC-020 | ⛔ Blocked (MVP 5) |
 | **FR-028** | Pemantauan progres pembelajaran (*course completion*) di kelas | Mahasiswa | MVP 5 | - | ⛔ Blocked (MVP 5) |
@@ -90,8 +90,8 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **FR-037** | Dosen memantau daftar kehadiran mahasiswa real-time saat sesi buka | Dosen | MVP 2 | TC-ATTN-01, ATT-05 | 🟡 Ready to Test |
 | **FR-038** | Dosen menutup sesi presensi perkuliahan sewaktu-waktu | Dosen | MVP 2 | TC-ATTN-01, ATT-02, TC-017 | 🟡 Ready to Test |
 | **FR-039** | Dosen mengoreksi status kehadiran mahasiswa (Hadir, Sakit, Izin, Alpa) | Dosen | MVP 2 | ATT-06, ATT-07 | 🟡 Ready to Test |
-| **FR-040** | Dosen membuat instrumen kuis, bank soal, dan timer durasi | Dosen | MVP 4 | mvp4-phase3..4 | ✅ Implemented (MVP 4) |
-| **FR-041** | Dosen melihat dan mengunduh rekap hasil kuis mahasiswa | Dosen | MVP 4 | mvp4-phase3..4 | ✅ Implemented (MVP 4) |
+| **FR-040** | Dosen membuat instrumen kuis, bank soal, dan timer durasi | Dosen | MVP 4 | mvp4-phase3..4 (R-11: esai tanpa opsi; R-12: konflik `order_index` 409) | ✅ Implemented (MVP 4) |
+| **FR-041** | Dosen melihat dan mengunduh rekap hasil kuis mahasiswa | Dosen | MVP 4 | mvp4-phase3..4 (R-10: roster lengkap `NOT_STARTED` + CSV; R-08: `full_name` grader) | ✅ Implemented (MVP 4) |
 | **FR-042** | Dosen mengelola pelaksanaan evaluasi UTS (P-8) dan UAS (P-16) | Dosen | MVP 5 | TC-018..020 | ⛔ Blocked (MVP 5) |
 | **FR-043** | Dosen melihat rekapitulasi nilai akhir perkuliahan kelas | Dosen | MVP 5 | - | ⛔ Blocked (MVP 5) |
 | **FR-044** | Admin mengelola master akun pengguna (CRUD Mahasiswa, Dosen, Admin) | Admin | MVP 1 | TC-USER-01, USR-01..25 | 🟡 Ready to Test |
@@ -107,7 +107,7 @@ Tujuan utama dokumen ini adalah memastikan **tidak ada kebutuhan sistem yang ter
 | **FR-054** | Sistem menolak otomatis file dengan ukuran melebihi limit konfigurasi | Sistem | MVP 2/3 | TC-MATR-01, MAT-03, TC-011, mvp3-phase3 | ✅ Implemented |
 | **FR-055** | Sistem mengalkulasi persentase kehadiran mahasiswa secara otomatis | Sistem | MVP 2 | TC-ATTN-02, ATT-08..10 | 🟡 Ready to Test |
 | **FR-056** | Penguncian otomatis tombol UTS/UAS bila kehadiran di bawah ambang batas | Sistem | MVP 5 | TC-019, TC-020 | ⛔ Blocked (MVP 5) |
-| **FR-057** | Notifikasi internal perkuliahan (tugas baru, presensi buka, nilai rilis) | Sistem | MVP 4 | mvp4-phase5 | ✅ Implemented (MVP 4) |
+| **FR-057** | Notifikasi internal perkuliahan (tugas baru, presensi buka, nilai rilis) | Sistem | MVP 4 | mvp4-phase5 (R-03: scope+throttle pengingat; R-05: dedupe regrade/koreksi; R-07: nama mata kuliah; R-09: deep-link) | ✅ Implemented (MVP 4) |
 | **FR-058** | Pencatatan otomatis ke tabel Audit Log pada setiap mutasi kritis | Sistem | MVP 1 | TC-AUDT-01, AUD-14, TC-024 | 🟡 Ready to Test |
 
 ---
